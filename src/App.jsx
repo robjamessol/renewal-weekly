@@ -251,8 +251,8 @@ Make it fun, surprising, and educational!`
         }]
       };
 
-      // Add web search tool for sections that need real-time data
-      if (useWebSearch && sectionType !== 'openingHook' && sectionType !== 'gameTrivia') {
+      // Add web search tool for ALL sections - newsletter must be up to date
+      if (useWebSearch) {
         requestBody.tools = [{
           type: 'web_search_20250305',
           name: 'web_search',
@@ -308,6 +308,16 @@ Make it fun, surprising, and educational!`
     border: '#E5E7EB',       // Light gray
     white: '#FFFFFF'
   };
+
+  // NEWSLETTER HISTORY - Save old newsletters before creating new ones
+  const [newsletterHistory, setNewsletterHistory] = useState(() => {
+    const saved = localStorage.getItem('renewalWeekly_history');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('renewalWeekly_history', JSON.stringify(newsletterHistory));
+  }, [newsletterHistory]);
 
   // USED STORIES TRACKING
   const [usedStories, setUsedStories] = useState(() => {
@@ -1105,6 +1115,18 @@ Translation: The treatments we're writing about today may be routine options in 
     }
 
     setIsLoading(prev => ({ ...prev, all: true }));
+
+    // Step 0: Save current newsletter to history before wiping
+    setAiStatus('💾 Saving current newsletter to history...');
+    const historyEntry = {
+      id: Date.now(),
+      date: new Date().toLocaleString(),
+      subjectLine: newsletterData.preHeader.subjectLine,
+      newsletterData: JSON.parse(JSON.stringify(newsletterData)),
+      currentGame: JSON.parse(JSON.stringify(currentGame))
+    };
+    setNewsletterHistory(prev => [historyEntry, ...prev].slice(0, 20)); // Keep last 20
+
     setAiStatus('🚀 Creating your newsletter with deep web research...');
 
     try {
@@ -1139,9 +1161,9 @@ Translation: The treatments we're writing about today may be routine options in 
         }
       }));
 
-      // Step 2: Generate Opening Hook
-      setAiStatus('✍️ Step 2/10: Crafting opening hook...');
-      const hookContent = await generateWithAI('openingHook', '', false);
+      // Step 2: Generate Opening Hook (with web search for current events)
+      setAiStatus('✍️ Step 2/10: Researching current events for opening hook...');
+      const hookContent = await generateWithAI('openingHook');
       if (hookContent) {
         setNewsletterData(prev => ({
           ...prev,
@@ -1329,7 +1351,7 @@ Translation: The treatments we're writing about today may be routine options in 
 
       // Step 10: Generate Trivia Game
       setAiStatus('🎮 Step 10/10: Creating trivia game...');
-      const gameContent = await generateWithAI('gameTrivia', '', false);
+      const gameContent = await generateWithAI('gameTrivia');
       if (gameContent) {
         try {
           const jsonMatch = gameContent.match(/\{[\s\S]*\}/);
@@ -1705,6 +1727,20 @@ ${currentGame.content}
             </div>
           )}
 
+          {/* Loading Overlay */}
+          {isLoading[sectionKey] && (
+            <div className="mb-4 p-6 rounded-lg text-center" style={{ backgroundColor: '#FEF3C7', border: '2px solid #F59E0B' }}>
+              <div className="flex items-center justify-center gap-3">
+                <svg className="animate-spin h-6 w-6 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="text-amber-800 font-medium">Searching the web and generating content...</span>
+              </div>
+              <p className="text-amber-600 text-sm mt-2">This may take 15-30 seconds</p>
+            </div>
+          )}
+
           {/* Image Slot */}
           {imageSlot && (
             <div className="mb-4 p-4 rounded-lg border-2 border-dashed" style={{ backgroundColor: colors.accent, borderColor: colors.primary }}>
@@ -1963,7 +1999,8 @@ ${currentGame.content}
               { id: 'dashboard', label: '📝 Edit' },
               { id: 'preview', label: '👁️ Preview' },
               { id: 'export', label: '📤 Export' },
-              { id: 'html', label: '📧 HTML' }
+              { id: 'html', label: '📧 HTML' },
+              { id: 'history', label: `📚 History (${newsletterHistory.length})` }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -2595,6 +2632,89 @@ ${currentGame.content}
               <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-auto max-h-96 text-xs font-mono">
                 {generateFullHTML()}
               </pre>
+            </div>
+          </div>
+        )}
+
+        {/* HISTORY TAB */}
+        {activeTab === 'history' && (
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="bg-white rounded-xl shadow-lg border p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">Newsletter History</h2>
+                  <p className="text-gray-500">Previous newsletters are saved when you click "Create Newsletter"</p>
+                </div>
+                {newsletterHistory.length > 0 && (
+                  <button
+                    onClick={() => {
+                      if (confirm('Clear all newsletter history?')) {
+                        setNewsletterHistory([]);
+                      }
+                    }}
+                    className="px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 font-medium text-sm"
+                  >
+                    🗑️ Clear History
+                  </button>
+                )}
+              </div>
+
+              {newsletterHistory.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-6xl mb-4">📚</p>
+                  <p className="text-gray-500 text-lg">No newsletter history yet</p>
+                  <p className="text-gray-400 mt-2">When you click "Create Newsletter", your current newsletter will be saved here</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {newsletterHistory.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="border rounded-lg p-4 hover:border-purple-300 transition-colors"
+                      style={{ borderColor: colors.border }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-800 mb-1">
+                            {entry.subjectLine || 'Untitled Newsletter'}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Saved: {entry.date}
+                          </p>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <button
+                            onClick={() => {
+                              if (confirm('Restore this newsletter? Your current work will be replaced.')) {
+                                setNewsletterData(entry.newsletterData);
+                                if (entry.currentGame) {
+                                  setCurrentGame(entry.currentGame);
+                                }
+                                setActiveTab('dashboard');
+                                setAiStatus(`✓ Restored newsletter from ${entry.date}`);
+                              }
+                            }}
+                            className="px-4 py-2 text-white rounded-lg font-medium text-sm"
+                            style={{ backgroundColor: colors.primary }}
+                          >
+                            ↩️ Restore
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm('Delete this newsletter from history?')) {
+                                setNewsletterHistory(prev => prev.filter(h => h.id !== entry.id));
+                              }
+                            }}
+                            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium text-sm"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

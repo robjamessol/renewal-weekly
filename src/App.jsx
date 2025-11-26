@@ -1,4 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+
+// Local state input component to prevent focus loss on every keystroke
+const PromptInput = ({ value, onChange, placeholder, disabled }) => {
+  const [localValue, setLocalValue] = useState(value || '');
+  const inputRef = useRef(null);
+
+  // Sync local value when parent value changes (e.g., on reset)
+  useEffect(() => {
+    setLocalValue(value || '');
+  }, [value]);
+
+  const handleBlur = () => {
+    if (localValue !== value) {
+      onChange(localValue);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      onChange(localValue);
+      inputRef.current?.blur();
+    }
+  };
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      placeholder={placeholder}
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={handleBlur}
+      onClick={(e) => e.stopPropagation()}
+      onFocus={(e) => e.stopPropagation()}
+      onKeyDown={handleKeyDown}
+      disabled={disabled}
+      className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+    />
+  );
+};
 
 const RenewalWeeklyCompiler = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -28,100 +69,197 @@ const RenewalWeeklyCompiler = () => {
     }
   }, [anthropicApiKey]);
 
-  // AI Content Generation Function
-  const generateWithAI = async (sectionType, customPrompt = '') => {
+  // AI Content Generation Function with Web Search
+  const generateWithAI = async (sectionType, customPrompt = '', useWebSearch = true) => {
     if (!anthropicApiKey) {
       setAiStatus('Please add your Anthropic API key in Settings → AI tab');
       return null;
     }
 
     setIsLoading(prev => ({ ...prev, [sectionType]: true }));
-    setAiStatus(`Generating ${sectionType}...`);
+    setAiStatus(`🔍 Researching ${sectionType}...`);
 
-    const styleContext = `Write in Renewal Weekly style:
+    // Get enabled sources for priority searching
+    const enabledSources = customSources.filter(s => s.enabled).map(s => s.name).join(', ');
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+    const styleContext = `You are writing for Renewal Weekly, a newsletter about stem cells and regenerative medicine.
+
+WRITING STYLE:
 - Voice: Smart friend who reads medical journals—hopeful but never naive
 - Tone: Confident not preachy, direct not clinical
-- Structure: Use "Here's what happened:" / "Why this matters:" / "The catch:" labels
-- Always include costs, availability, and limitations
+- Structure: Use "Here's what happened:" / "Why this matters:" / "The catch:" labels where appropriate
+- Always include costs, availability, and limitations when discussing treatments
 - Follow technical info with plain-English translation
-- Embed links as {{LINK:display text|url}} syntax
-- Audience: Adults 40-80 with chronic conditions, smart and skeptical of hype`;
+- Audience: Adults 40-80 with chronic conditions, smart and skeptical of hype
+
+CRITICAL LINK REQUIREMENTS:
+- Embed ALL links using this exact syntax: {{LINK:display text|url}}
+- EVERY source MUST link to the SPECIFIC ARTICLE, not a homepage
+- Example: {{LINK:Stanford Medicine|https://med.stanford.edu/news/all-news/2025/11/specific-article.html}} ✓
+- NOT: {{LINK:Stanford Medicine|https://med.stanford.edu}} ✗
+- Include the publication date when available
+
+TODAY'S DATE: ${today}
+PRIORITY SOURCES (check these first, but use others if they have better/newer content): ${enabledSources}`;
 
     const sectionPrompts = {
       openingHook: `${styleContext}
 
+Search the web for current events, weather, seasonal information for today (${today}).
+
 Write an opening hook (50-75 words) for today's newsletter.
-- Make it seasonal/timely for the current date
+- Make it seasonal/timely for TODAY'S date
 - Warm, slightly humorous, relatable
-- Do NOT mention stem cells or medical content
+- Do NOT mention stem cells or medical content in the hook
 - End with "—The Renewal Weekly Team"
 Pattern: Observation → Gentle reframe → "We'll handle the health intel. You handle [something relatable]."`,
 
       leadStory: `${styleContext}
 
-Write a lead story (350-400 words) about recent stem cell or regenerative medicine news.
+Search the web for the LATEST stem cell or regenerative medicine news from the past 7 days. Find a significant breakthrough, clinical trial result, or major development.
+
+Write a lead story (350-400 words) about what you find.
 Structure:
 1. Headline (clever but clear, no clickbait)
 2. Opening: "[X million] Americans with [condition]... That changed this week."
-3. "Here's what happened:" section with specifics
+3. "Here's what happened:" section with specifics from the actual article
 4. "Why this matters now:" context and implications
 5. "What's next:" forward-looking statement
 6. "Zoom out:" connection to bigger picture
-Include 2-3 {{LINK:display text|url}} embedded links.
-${customPrompt ? `Topic focus: ${customPrompt}` : 'Focus on recent breakthrough or clinical trial.'}`,
+
+IMPORTANT: Include 2-3 {{LINK:display text|url}} embedded links to the ACTUAL articles you found.
+${customPrompt ? `Topic focus: ${customPrompt}` : 'Focus on the most significant recent breakthrough or clinical trial.'}`,
 
       researchRoundup: `${styleContext}
 
-Write a Research Roundup (100-150 words) about a treatment or therapy.
+Search the web for recent news about stem cell treatments or regenerative therapies. Find a specific treatment or therapy with new research.
+
+Write a Research Roundup (100-150 words) about what you find.
 Structure:
 - "If you or someone you love has [condition], this one's worth reading twice."
-- What the research found (2-3 sentences)
-- "What you should know:" (cost range, availability, insurance status)
-- "The catch:" (honest limitation)
+- What the research found (2-3 sentences with specifics)
+- "What you should know:" (cost range, availability, insurance status if mentioned)
+- "The catch:" (honest limitation from the research)
 - "Bottom line:" (actionable next step)
-Include {{LINK:source|url}} for the source.
+
+Include {{LINK:source|url}} linking to the SPECIFIC article.
 ${customPrompt ? `Focus: ${customPrompt}` : 'Focus on MSC therapy, exosomes, or emerging treatments.'}`,
 
       secondaryStories: `${styleContext}
 
-Write 3 secondary news stories about stem cells/regenerative medicine.
+Search the web for 3 different recent stem cell or regenerative medicine news stories from the past 2 weeks. Find diverse topics.
+
+Write 3 secondary news stories.
 Each story needs:
 - Bold lead sentence that hooks (pattern: [Subject] + [did what] + [surprising element])
-- 75-150 words expanding on it
-- {{LINK:source|url}} embedded link
-Good bold leads: "Stanford just made transplants safer—without chemo." / "Type 1 diabetes was cured in mice. Humans might be next."
-Return as JSON array: [{"boldLead": "...", "content": "...", "sources": [{"title": "...", "url": "...", "date": "..."}]}]`,
+- 75-150 words expanding on it with REAL facts from the article
+- The actual source URL
+
+Return as JSON array: [{"boldLead": "...", "content": "...", "sources": [{"title": "Source Name", "url": "https://actual-article-url.com/specific-article", "date": "Nov 26, 2025"}]}]
+
+IMPORTANT: Each source URL must be the direct link to the article, NOT a homepage.`,
 
       deepDive: `${styleContext}
 
-Write a Deep Dive (200-250 words) about nutrition, lifestyle, or wellness connected to regenerative health.
+Search the web for recent research about nutrition, lifestyle, or wellness connected to regenerative health, longevity, or cellular health.
+
+Write a Deep Dive (200-250 words) about what you find.
 Structure:
 - Contrarian opening: "The [industry] wants you to believe [X]. [Source] disagrees."
 - Evidence with bullet points (use • not -)
 - "The connection to stem cells:" paragraph explaining why this matters for cellular health
 - Actionable takeaway
-Include {{LINK:source|url}} links.
+
+Include {{LINK:source|url}} links to the ACTUAL articles.
 ${customPrompt ? `Topic: ${customPrompt}` : 'Focus on anti-inflammatory foods, longevity practices, or cellular health.'}`,
 
       statSection: `${styleContext}
 
-Create a Stat of the Week about regenerative medicine.
-Format:
-- primeNumber: The big stat (e.g., "$403.86B")
-- headline: What it represents (e.g., "where the regenerative medicine market is headed by 2032")
-- content: 150-200 words with context, scale comparisons, and "Why it matters for you:" section
-Return as JSON: {"primeNumber": "...", "headline": "...", "content": "..."}`,
+Search the web for a compelling statistic about regenerative medicine, stem cell research, or the biotech industry. Find real numbers from reports or studies.
+
+Create a Stat of the Week based on what you find.
+Format as JSON:
+{
+  "primeNumber": "The big stat (e.g., '$403.86B' or '67%')",
+  "headline": "what it represents (lowercase, e.g., 'where the regenerative medicine market is headed by 2032')",
+  "content": "150-200 words with context, scale comparisons, and 'Why it matters for you:' section. Include {{LINK:text|url}} to the source article."
+}`,
 
       thePulse: `${styleContext}
 
+Search the web for 7 quick news items about: stem cells, regenerative medicine, clinical trials, biotech industry, and health innovation from the past 2 weeks.
+
 Write 7 quick hits for The Pulse section.
-Each under 25 words. Format: "[Fact statement]"
-Mix: 3-4 stem cell items, 1-2 trial updates, 1 industry news, 1 surprising health fact.
-Embed links using {{LINK:text|url}} syntax.
-Return as JSON array of strings.`
+- Each under 25 words
+- Mix: 3-4 stem cell/regenerative items, 1-2 trial updates, 1 industry news, 1 surprising health fact
+- Each MUST include a {{LINK:text|url}} to the actual article
+
+Return as JSON array of strings. Example:
+["{{LINK:Takeda|https://example.com/article1}} launched a new stem cell therapy for cartilage in Japan", ...]`,
+
+      recommendations: `${styleContext}
+
+Based on the theme of regenerative medicine and stem cells, search for interesting content to recommend this week.
+
+Find and return JSON with recommendations in these categories:
+{
+  "read": {"prefix": "text before link", "linkText": "linked text", "suffix": "text after link", "url": "actual-article-url"},
+  "watch": {"prefix": "", "linkText": "", "suffix": "", "url": ""},
+  "try": {"prefix": "", "linkText": "", "suffix": "", "url": ""},
+  "listen": {"prefix": "", "linkText": "", "suffix": "", "url": ""}
+}
+
+Find REAL, current content:
+- Read: A scientific paper, article, or in-depth piece about regenerative medicine
+- Watch: A documentary, lecture, or video about health/science
+- Try: A health practice, app, or lifestyle recommendation
+- Listen: A podcast episode about health, longevity, or medical innovation
+
+URLs must be direct links to the specific content, not homepages.`,
+
+      gameTrivia: `Create an engaging trivia game for a health newsletter. The game should have BROAD APPEAL - it doesn't need to be about stem cells or medicine specifically.
+
+Think of fun categories like:
+- Food/nutrition facts
+- Body facts and numbers
+- Health myths vs facts
+- Calorie guessing games
+- Ingredient identification
+- Famous health quotes
+- Historical health facts
+
+Return as JSON:
+{
+  "title": "Game title",
+  "intro": "Brief intro explaining the game (1-2 sentences)",
+  "content": "The actual game content with questions/prompts",
+  "answer": "The answers"
+}
+
+Make it fun, surprising, and educational!`
     };
 
     try {
+      // Build the request with optional web search tool
+      const requestBody = {
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: sectionPrompts[sectionType] || customPrompt
+        }]
+      };
+
+      // Add web search tool for sections that need real-time data
+      if (useWebSearch && sectionType !== 'openingHook' && sectionType !== 'gameTrivia') {
+        requestBody.tools = [{
+          type: 'web_search_20250305',
+          name: 'web_search',
+          max_uses: 5
+        }];
+      }
+
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -130,14 +268,7 @@ Return as JSON array of strings.`
           'anthropic-version': '2023-06-01',
           'anthropic-dangerous-direct-browser-access': 'true'
         },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1500,
-          messages: [{
-            role: 'user',
-            content: sectionPrompts[sectionType] || customPrompt
-          }]
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -146,8 +277,15 @@ Return as JSON array of strings.`
       }
 
       const data = await response.json();
-      const content = data.content[0].text;
-      
+
+      // Extract text content from the response (web search returns multiple content blocks)
+      let content = '';
+      for (const block of data.content) {
+        if (block.type === 'text') {
+          content += block.text;
+        }
+      }
+
       setAiStatus(`✓ Generated ${sectionType}`);
       setIsLoading(prev => ({ ...prev, [sectionType]: false }));
       return content;
@@ -967,11 +1105,11 @@ Translation: The treatments we're writing about today may be routine options in 
     }
 
     setIsLoading(prev => ({ ...prev, all: true }));
-    setAiStatus('Generating entire newsletter with AI...');
+    setAiStatus('🚀 Creating your newsletter with deep web research...');
 
     try {
       // Step 1: Fetch PubMed data
-      setAiStatus('Step 1/8: Fetching PubMed data...');
+      setAiStatus('📊 Step 1/10: Fetching PubMed publication data...');
       const pubmedUrl = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=stem+cell&rettype=count&retmode=json&datetype=pdat&reldate=7';
       const pubmedResponse = await fetch(pubmedUrl);
       const pubmedData = await pubmedResponse.json();
@@ -994,12 +1132,16 @@ Translation: The treatments we're writing about today may be routine options in 
             return metric;
           }),
           asOfDate: today
+        },
+        preHeader: {
+          ...prev.preHeader,
+          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
         }
       }));
 
       // Step 2: Generate Opening Hook
-      setAiStatus('Step 2/8: Generating opening hook...');
-      const hookContent = await generateWithAI('openingHook');
+      setAiStatus('✍️ Step 2/10: Crafting opening hook...');
+      const hookContent = await generateWithAI('openingHook', '', false);
       if (hookContent) {
         setNewsletterData(prev => ({
           ...prev,
@@ -1007,8 +1149,8 @@ Translation: The treatments we're writing about today may be routine options in 
         }));
       }
 
-      // Step 3: Generate Lead Story
-      setAiStatus('Step 3/8: Generating lead story...');
+      // Step 3: Generate Lead Story (with web search)
+      setAiStatus('🔍 Step 3/10: Researching lead story...');
       const leadContent = await generateWithAI('leadStory');
       if (leadContent) {
         const lines = leadContent.split('\n').filter(l => l.trim());
@@ -1025,8 +1167,8 @@ Translation: The treatments we're writing about today may be routine options in 
         }));
       }
 
-      // Step 4: Generate Research Roundup
-      setAiStatus('Step 4/8: Generating research roundup...');
+      // Step 4: Generate Research Roundup (with web search)
+      setAiStatus('🔬 Step 4/10: Researching treatment spotlight...');
       const roundupContent = await generateWithAI('researchRoundup');
       if (roundupContent) {
         setNewsletterData(prev => ({
@@ -1039,34 +1181,38 @@ Translation: The treatments we're writing about today may be routine options in 
         }));
       }
 
-      // Step 5: Generate Secondary Stories
-      setAiStatus('Step 5/8: Generating secondary stories...');
+      // Step 5: Generate Secondary Stories (with web search)
+      setAiStatus('📰 Step 5/10: Finding secondary stories...');
       const secondaryContent = await generateWithAI('secondaryStories');
       if (secondaryContent) {
         try {
-          const parsed = JSON.parse(secondaryContent);
-          if (Array.isArray(parsed) && parsed.length >= 3) {
-            setNewsletterData(prev => ({
-              ...prev,
-              secondaryStories: {
-                ...prev.secondaryStories,
-                stories: parsed.slice(0, 3).map((story, idx) => ({
-                  id: idx + 1,
-                  boldLead: story.boldLead || '',
-                  content: story.content || '',
-                  publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                  sources: story.sources || []
-                }))
-              }
-            }));
+          // Try to extract JSON from the response
+          const jsonMatch = secondaryContent.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (Array.isArray(parsed) && parsed.length >= 3) {
+              setNewsletterData(prev => ({
+                ...prev,
+                secondaryStories: {
+                  ...prev.secondaryStories,
+                  stories: parsed.slice(0, 3).map((story, idx) => ({
+                    id: idx + 1,
+                    boldLead: story.boldLead || '',
+                    content: story.content || '',
+                    publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                    sources: story.sources || []
+                  }))
+                }
+              }));
+            }
           }
         } catch (e) {
           console.error('Error parsing secondary stories:', e);
         }
       }
 
-      // Step 6: Generate Deep Dive
-      setAiStatus('Step 6/8: Generating deep dive...');
+      // Step 6: Generate Deep Dive (with web search)
+      setAiStatus('🌿 Step 6/10: Researching deep dive topic...');
       const deepDiveContent = await generateWithAI('deepDive');
       if (deepDiveContent) {
         setNewsletterData(prev => ({
@@ -1079,58 +1225,135 @@ Translation: The treatments we're writing about today may be routine options in 
         }));
       }
 
-      // Step 7: Generate Stat Section
-      setAiStatus('Step 7/8: Generating stat of the week...');
+      // Step 7: Generate Stat Section (with web search)
+      setAiStatus('📈 Step 7/10: Finding stat of the week...');
       const statContent = await generateWithAI('statSection');
       if (statContent) {
         try {
-          const parsed = JSON.parse(statContent);
-          if (parsed.primeNumber && parsed.headline && parsed.content) {
-            setNewsletterData(prev => ({
-              ...prev,
-              statSection: {
-                ...prev.statSection,
-                primeNumber: parsed.primeNumber,
-                headline: parsed.headline,
-                content: parsed.content,
-                publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-              }
-            }));
+          const jsonMatch = statContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (parsed.primeNumber && parsed.headline && parsed.content) {
+              setNewsletterData(prev => ({
+                ...prev,
+                statSection: {
+                  ...prev.statSection,
+                  primeNumber: parsed.primeNumber,
+                  headline: parsed.headline,
+                  content: parsed.content,
+                  publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                }
+              }));
+            }
           }
         } catch (e) {
           console.error('Error parsing stat section:', e);
         }
       }
 
-      // Step 8: Generate The Pulse
-      setAiStatus('Step 8/8: Generating quick hits...');
+      // Step 8: Generate The Pulse (with web search)
+      setAiStatus('⚡ Step 8/10: Gathering quick hits...');
       const pulseContent = await generateWithAI('thePulse');
       if (pulseContent) {
         try {
-          const parsed = JSON.parse(pulseContent);
-          if (Array.isArray(parsed)) {
-            setNewsletterData(prev => ({
-              ...prev,
-              thePulse: {
-                ...prev.thePulse,
-                items: parsed.slice(0, 7).map(text => ({
-                  text,
-                  source: 'AI Generated',
-                  url: '#',
-                  date: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-                }))
-              }
-            }));
+          const jsonMatch = pulseContent.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (Array.isArray(parsed)) {
+              setNewsletterData(prev => ({
+                ...prev,
+                thePulse: {
+                  ...prev.thePulse,
+                  items: parsed.slice(0, 7).map(text => ({
+                    text,
+                    source: 'Web Research',
+                    url: '#',
+                    date: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                  }))
+                }
+              }));
+            }
           }
         } catch (e) {
           console.error('Error parsing pulse section:', e);
         }
       }
 
+      // Step 9: Generate Recommendations (with web search)
+      setAiStatus('💡 Step 9/10: Finding weekly recommendations...');
+      const recsContent = await generateWithAI('recommendations');
+      if (recsContent) {
+        try {
+          const jsonMatch = recsContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            setNewsletterData(prev => ({
+              ...prev,
+              recommendations: {
+                ...prev.recommendations,
+                read: parsed.read ? {
+                  prefix: parsed.read.prefix || '',
+                  linkText: parsed.read.linkText || 'Article',
+                  suffix: parsed.read.suffix || '',
+                  url: parsed.read.url || '#',
+                  isAffiliate: false
+                } : prev.recommendations.read,
+                watch: parsed.watch ? {
+                  prefix: parsed.watch.prefix || '',
+                  linkText: parsed.watch.linkText || 'Video',
+                  suffix: parsed.watch.suffix || '',
+                  url: parsed.watch.url || '#',
+                  isAffiliate: false
+                } : prev.recommendations.watch,
+                try: parsed.try ? {
+                  prefix: parsed.try.prefix || '',
+                  linkText: parsed.try.linkText || 'Resource',
+                  suffix: parsed.try.suffix || '',
+                  url: parsed.try.url || '#',
+                  isAffiliate: false
+                } : prev.recommendations.try,
+                listen: parsed.listen ? {
+                  prefix: parsed.listen.prefix || '',
+                  linkText: parsed.listen.linkText || 'Podcast',
+                  suffix: parsed.listen.suffix || '',
+                  url: parsed.listen.url || '#',
+                  isAffiliate: false
+                } : prev.recommendations.listen
+              }
+            }));
+          }
+        } catch (e) {
+          console.error('Error parsing recommendations:', e);
+        }
+      }
+
+      // Step 10: Generate Trivia Game
+      setAiStatus('🎮 Step 10/10: Creating trivia game...');
+      const gameContent = await generateWithAI('gameTrivia', '', false);
+      if (gameContent) {
+        try {
+          const jsonMatch = gameContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (parsed.title && parsed.content && parsed.answer) {
+              setCurrentGame({
+                id: 'ai_generated',
+                title: parsed.title,
+                intro: parsed.intro || 'Test your knowledge!',
+                content: parsed.content,
+                answer: parsed.answer
+              });
+            }
+          }
+        } catch (e) {
+          console.error('Error parsing game:', e);
+        }
+      }
+
       setLastFetched(new Date().toLocaleString());
-      setAiStatus(`✓ Complete newsletter generated! (${publicationCount} PubMed publications found)`);
+      setAiStatus(`✅ Newsletter created! ${publicationCount} PubMed publications this week. Review and edit as needed.`);
     } catch (error) {
-      setAiStatus(`Error generating newsletter: ${error.message}`);
+      setAiStatus(`❌ Error: ${error.message}`);
     } finally {
       setIsLoading(prev => ({ ...prev, all: false }));
     }
@@ -1415,14 +1638,14 @@ ${currentGame.content}
   );
 
   // Section Card for Dashboard
-  const SectionCard = ({ number, title, children, sectionKey, wordCount = null, sources = [], imageSlot = null }) => (
+  const SectionCard = ({ number, title, children, sectionKey, wordCount = null, sources = [], imageSlot = null, showRefresh = true }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-4">
-      <div 
+      <div
         className="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
         onClick={() => toggleSection(sectionKey)}
       >
         <div className="flex items-center gap-3">
-          <span 
+          <span
             className="w-8 h-8 rounded-full text-white flex items-center justify-center text-sm font-bold shadow"
             style={{ backgroundColor: colors.primary }}
           >
@@ -1434,40 +1657,53 @@ ${currentGame.content}
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {isLoading[sectionKey] && <span className="text-xs px-2 py-1 rounded animate-pulse" style={{ backgroundColor: '#FEF3C7', color: '#D97706' }}>⟳ Generating...</span>}
           {imageSlot && <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: colors.accent, color: colors.primary }}>📷 Image</span>}
           <span className={`transform transition-transform text-gray-400 ${expandedSections[sectionKey] ? 'rotate-180' : ''}`}>▼</span>
         </div>
       </div>
       {expandedSections[sectionKey] && (
         <div className="p-5 border-t border-gray-100">
-          {/* Prompt Input */}
-          <div className="mb-4 flex gap-2">
-            <input
-              type="text"
-              placeholder="Enter a keyword to guide refresh..."
-              value={sectionPrompts[sectionKey] || ''}
-              onChange={(e) => { e.stopPropagation(); handlePromptChange(sectionKey, e.target.value); }}
-              onClick={(e) => e.stopPropagation()}
-              onFocus={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
-              style={{ '--tw-ring-color': colors.primary }}
-            />
-            <button
-              onClick={(e) => { e.stopPropagation(); regenerateSection(sectionKey); }}
-              disabled={isLoading[sectionKey]}
-              className="px-4 py-2 text-sm text-white rounded-lg disabled:opacity-50 font-medium whitespace-nowrap"
-              style={{ backgroundColor: colors.primary }}
-            >
-              {isLoading[sectionKey] ? '⟳ ...' : '↻ Refresh'}
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); copyToClipboard(stripLinkSyntax(getSectionContent(sectionKey)), sectionKey); }}
-              className="px-4 py-2 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium"
-            >
-              {copiedSection === sectionKey ? '✓' : '📋'}
-            </button>
-          </div>
+          {/* Prompt Input - Only show if refresh is enabled */}
+          {showRefresh && (
+            <div className="mb-4 flex gap-2">
+              <PromptInput
+                value={sectionPrompts[sectionKey] || ''}
+                onChange={(value) => handlePromptChange(sectionKey, value)}
+                placeholder="Enter a keyword to guide refresh..."
+                disabled={isLoading[sectionKey]}
+              />
+              <button
+                onClick={(e) => { e.stopPropagation(); regenerateSection(sectionKey); }}
+                disabled={isLoading[sectionKey]}
+                className="px-4 py-2 text-sm text-white rounded-lg font-medium whitespace-nowrap transition-all duration-200"
+                style={{
+                  backgroundColor: isLoading[sectionKey] ? '#F59E0B' : colors.primary,
+                  opacity: isLoading[sectionKey] ? 1 : undefined,
+                  animation: isLoading[sectionKey] ? 'pulse 1.5s ease-in-out infinite' : 'none'
+                }}
+              >
+                {isLoading[sectionKey] ? '⟳ Researching...' : '↻ Refresh Section'}
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); copyToClipboard(stripLinkSyntax(getSectionContent(sectionKey)), sectionKey); }}
+                className="px-4 py-2 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium transition-colors"
+              >
+                {copiedSection === sectionKey ? '✓ Copied!' : '📋 Copy'}
+              </button>
+            </div>
+          )}
+          {/* Copy button only when refresh is disabled */}
+          {!showRefresh && (
+            <div className="mb-4 flex justify-end">
+              <button
+                onClick={(e) => { e.stopPropagation(); copyToClipboard(stripLinkSyntax(getSectionContent(sectionKey)), sectionKey); }}
+                className="px-4 py-2 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium transition-colors"
+              >
+                {copiedSection === sectionKey ? '✓ Copied!' : '📋 Copy'}
+              </button>
+            </div>
+          )}
 
           {/* Image Slot */}
           {imageSlot && (
@@ -1556,10 +1792,14 @@ ${currentGame.content}
               <button
                 onClick={fetchAllData}
                 disabled={isLoading.all}
-                className="px-6 py-3 bg-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
-                style={{ color: colors.primary }}
+                className="px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+                style={{
+                  backgroundColor: isLoading.all ? '#F59E0B' : 'white',
+                  color: isLoading.all ? 'white' : colors.primary,
+                  animation: isLoading.all ? 'pulse 1.5s ease-in-out infinite' : 'none'
+                }}
               >
-                {isLoading.all ? '⟳ Fetching...' : '🔄 Fetch All News'}
+                {isLoading.all ? '⟳ Creating Newsletter...' : '✨ Create Newsletter'}
               </button>
             </div>
           </div>
@@ -1617,10 +1857,20 @@ ${currentGame.content}
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="font-medium text-gray-800 mb-2">How it works:</p>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Click any "Refresh" button to generate new content for that section</li>
-                    <li>• Optionally enter a keyword to guide the AI (e.g., "Parkinson's disease")</li>
-                    <li>• The AI will generate content in the Renewal Weekly style</li>
-                    <li>• Links are embedded using {`{{LINK:text|url}}`} syntax</li>
+                    <li>• <strong>"Create Newsletter"</strong> generates a complete newsletter with real-time web research</li>
+                    <li>• Click "Refresh Section" to regenerate individual sections with fresh research</li>
+                    <li>• Enter keywords to guide the AI (e.g., "Parkinson's disease", "CAR-T therapy")</li>
+                    <li>• All content uses <strong>live web search</strong> to find current news and real article links</li>
+                    <li>• Sources link to specific articles, not homepages</li>
+                    <li>• Priority is given to your configured News Sources, but better content is used when found</li>
+                  </ul>
+                </div>
+                <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                  <p className="font-medium text-amber-800 mb-2">💰 Cost Estimate:</p>
+                  <ul className="text-sm text-amber-700 space-y-1">
+                    <li>• Web searches: ~$0.01 per search ($0.15-0.20 per full newsletter)</li>
+                    <li>• Claude tokens: ~$0.03-0.10 per newsletter</li>
+                    <li>• <strong>Total per newsletter: ~$0.25-0.35</strong></li>
                   </ul>
                 </div>
               </div>
@@ -1759,8 +2009,8 @@ ${currentGame.content}
               </div>
             </SectionCard>
 
-            {/* Section 1b: THE BOTTOM LINE (TL;DR) */}
-            <SectionCard number="1b" title="The Bottom Line (TL;DR)" sectionKey="section1b">
+            {/* Section 1b: THE BOTTOM LINE (TL;DR) - No refresh, this is a manual summary */}
+            <SectionCard number="1b" title="The Bottom Line (TL;DR)" sectionKey="section1b" showRefresh={false}>
               <div className="space-y-3">
                 <p className="text-xs font-bold uppercase tracking-wider" style={{ color: colors.primary }}>{newsletterData.bottomLine.sectionLabel}</p>
                 <p className="text-sm font-medium text-gray-600">{newsletterData.bottomLine.subtitle}</p>
@@ -1775,8 +2025,8 @@ ${currentGame.content}
               </div>
             </SectionCard>
 
-            {/* Section 2: Metrics - 3x2 Grid */}
-            <SectionCard number="2" title="Metrics Dashboard" sectionKey="section2">
+            {/* Section 2: Metrics - 3x2 Grid - No refresh, compiled during full newsletter creation */}
+            <SectionCard number="2" title="Metrics Dashboard" sectionKey="section2" showRefresh={false}>
               <div className="rounded-lg p-5 text-white" style={{ background: `linear-gradient(135deg, ${colors.dark} 0%, #0F172A 100%)` }}>
                 <h3 className="font-bold mb-4 text-sm uppercase" style={{ color: colors.accent }}>{newsletterData.metricsDashboard.title}</h3>
                 <div className="grid grid-cols-3 gap-4">

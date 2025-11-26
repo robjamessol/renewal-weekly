@@ -158,7 +158,7 @@ Return as JSON array of strings.`
     }
   };
 
-  // ===== V5.1 UPDATE: BRAND PURPLE COLOR PALETTE =====
+  // ===== V5.2 UPDATE: BRAND PURPLE COLOR PALETTE =====
   const colors = {
     primary: '#7C3AED',      // Main brand purple
     secondary: '#5B21B6',    // Deeper violet
@@ -200,7 +200,7 @@ Return as JSON array of strings.`
     localStorage.setItem('renewalWeekly_customSources', JSON.stringify(customSources));
   }, [customSources]);
 
-  // ===== V5.1 UPDATE: PARSE CONTENT WITH EMBEDDED LINKS =====
+  // ===== V5.2 UPDATE: PARSE CONTENT WITH EMBEDDED LINKS =====
   const parseContentWithLinks = (content) => {
     if (!content) return [{ type: 'text', content: '' }];
     
@@ -431,7 +431,7 @@ We'll handle the health intel. You handle the mashed potatoes.
 
 
 
-    // ===== V5.1 UPDATE: METRICS DASHBOARD - 3x2 GRID =====
+    // ===== V5.2 UPDATE: METRICS DASHBOARD - 3x2 GRID =====
     metricsDashboard: {
       title: 'REGENERATIVE MEDICINE: THIS WEEK',
       metrics: [
@@ -448,7 +448,7 @@ We'll handle the health intel. You handle the mashed potatoes.
       explainerLink: 'renewalweekly.com/metrics-explained'
     },
 
-    // ===== V5.1 UPDATE: LEAD STORY WITH EMBEDDED LINKS =====
+    // ===== V5.2 UPDATE: LEAD STORY WITH EMBEDDED LINKS =====
     leadStory: {
       sectionLabel: 'THIS WEEK\'S BIG STORY',
       headline: 'Stem Cells Just Did What Doctors Said Was Impossible',
@@ -482,7 +482,7 @@ The treatment uses retinal pigment epithelial stem cells harvested from adult do
       ]
     },
 
-    // ===== V5.1 UPDATE: RESEARCH ROUNDUP WITH EMBEDDED LINKS =====
+    // ===== V5.2 UPDATE: RESEARCH ROUNDUP WITH EMBEDDED LINKS =====
     yourOptionsThisWeek: {
       sectionLabel: 'RESEARCH ROUNDUP',
       format: 'treatment_spotlight',
@@ -517,7 +517,7 @@ A new {{LINK:systematic review|https://multiplesclerosisnewstoday.com/news-posts
       isPlaceholder: true
     },
 
-    // ===== V5.1 UPDATE: SECONDARY STORIES WITH EMBEDDED LINKS =====
+    // ===== V5.2 UPDATE: SECONDARY STORIES WITH EMBEDDED LINKS =====
     secondaryStories: {
       sectionLabel: 'ON OUR RADAR',
       image: {
@@ -551,7 +551,7 @@ A new {{LINK:systematic review|https://multiplesclerosisnewstoday.com/news-posts
       initials: 'RW'
     },
 
-    // ===== V5.1 UPDATE: DEEP DIVE WITH EMBEDDED LINKS =====
+    // ===== V5.2 UPDATE: DEEP DIVE WITH EMBEDDED LINKS =====
     industryDeepDive: {
       sectionLabel: 'DEEP DIVE',
       headline: 'The Anti-Inflammatory Shopping List You Actually Need',
@@ -627,7 +627,7 @@ A new meta-analysis found that anti-inflammatory diets meaningfully improved blo
       ]
     },
 
-    // ===== V5.1 UPDATE: STAT SECTION WITH EMBEDDED LINKS =====
+    // ===== V5.2 UPDATE: STAT SECTION WITH EMBEDDED LINKS =====
     statSection: {
       sectionLabel: 'STAT OF THE WEEK',
       primeNumber: '$403.86B',
@@ -653,7 +653,7 @@ Translation: The treatments we're writing about today may be routine options in 
       ]
     },
 
-    // ===== V5.1 UPDATE: THE PULSE WITH EMBEDDED LINKS =====
+    // ===== V5.2 UPDATE: THE PULSE WITH EMBEDDED LINKS =====
     thePulse: {
       sectionLabel: 'THE PULSE',
       title: 'Quick hits from the world of health innovation',
@@ -961,27 +961,30 @@ Translation: The treatments we're writing about today may be routine options in 
   };
 
   const fetchAllData = async () => {
+    if (!anthropicApiKey) {
+      setAiStatus('Please add your Anthropic API key in Settings → AI tab');
+      return;
+    }
+
     setIsLoading(prev => ({ ...prev, all: true }));
-    setAiStatus('Fetching PubMed data...');
+    setAiStatus('Generating entire newsletter with AI...');
 
     try {
-      // Fetch PubMed publication count for stem cell research in the last 7 days
+      // Step 1: Fetch PubMed data
+      setAiStatus('Step 1/8: Fetching PubMed data...');
       const pubmedUrl = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=stem+cell&rettype=count&retmode=json&datetype=pdat&reldate=7';
-
-      const response = await fetch(pubmedUrl);
-      const data = await response.json();
-
-      const publicationCount = data?.esearchresult?.count || '47';
+      const pubmedResponse = await fetch(pubmedUrl);
+      const pubmedData = await pubmedResponse.json();
+      const publicationCount = pubmedData?.esearchresult?.count || '47';
       const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-      // Update metrics dashboard with real data
+      // Update metrics dashboard
       setNewsletterData(prev => ({
         ...prev,
         metricsDashboard: {
           ...prev.metricsDashboard,
           metrics: prev.metricsDashboard.metrics.map((metric, idx) => {
             if (idx === 0) {
-              // Update the "New Clinical Publications" metric
               return {
                 ...metric,
                 value: publicationCount,
@@ -994,10 +997,140 @@ Translation: The treatments we're writing about today may be routine options in 
         }
       }));
 
+      // Step 2: Generate Opening Hook
+      setAiStatus('Step 2/8: Generating opening hook...');
+      const hookContent = await generateWithAI('openingHook');
+      if (hookContent) {
+        setNewsletterData(prev => ({
+          ...prev,
+          openingHook: { ...prev.openingHook, content: hookContent }
+        }));
+      }
+
+      // Step 3: Generate Lead Story
+      setAiStatus('Step 3/8: Generating lead story...');
+      const leadContent = await generateWithAI('leadStory');
+      if (leadContent) {
+        const lines = leadContent.split('\n').filter(l => l.trim());
+        const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
+        const content = lines.slice(1).join('\n\n');
+        setNewsletterData(prev => ({
+          ...prev,
+          leadStory: {
+            ...prev.leadStory,
+            headline: headline || prev.leadStory.headline,
+            content: content || leadContent,
+            publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          }
+        }));
+      }
+
+      // Step 4: Generate Research Roundup
+      setAiStatus('Step 4/8: Generating research roundup...');
+      const roundupContent = await generateWithAI('researchRoundup');
+      if (roundupContent) {
+        setNewsletterData(prev => ({
+          ...prev,
+          yourOptionsThisWeek: {
+            ...prev.yourOptionsThisWeek,
+            content: roundupContent,
+            publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          }
+        }));
+      }
+
+      // Step 5: Generate Secondary Stories
+      setAiStatus('Step 5/8: Generating secondary stories...');
+      const secondaryContent = await generateWithAI('secondaryStories');
+      if (secondaryContent) {
+        try {
+          const parsed = JSON.parse(secondaryContent);
+          if (Array.isArray(parsed) && parsed.length >= 3) {
+            setNewsletterData(prev => ({
+              ...prev,
+              secondaryStories: {
+                ...prev.secondaryStories,
+                stories: parsed.slice(0, 3).map((story, idx) => ({
+                  id: idx + 1,
+                  boldLead: story.boldLead || '',
+                  content: story.content || '',
+                  publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                  sources: story.sources || []
+                }))
+              }
+            }));
+          }
+        } catch (e) {
+          console.error('Error parsing secondary stories:', e);
+        }
+      }
+
+      // Step 6: Generate Deep Dive
+      setAiStatus('Step 6/8: Generating deep dive...');
+      const deepDiveContent = await generateWithAI('deepDive');
+      if (deepDiveContent) {
+        setNewsletterData(prev => ({
+          ...prev,
+          industryDeepDive: {
+            ...prev.industryDeepDive,
+            content: deepDiveContent,
+            publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+          }
+        }));
+      }
+
+      // Step 7: Generate Stat Section
+      setAiStatus('Step 7/8: Generating stat of the week...');
+      const statContent = await generateWithAI('statSection');
+      if (statContent) {
+        try {
+          const parsed = JSON.parse(statContent);
+          if (parsed.primeNumber && parsed.headline && parsed.content) {
+            setNewsletterData(prev => ({
+              ...prev,
+              statSection: {
+                ...prev.statSection,
+                primeNumber: parsed.primeNumber,
+                headline: parsed.headline,
+                content: parsed.content,
+                publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              }
+            }));
+          }
+        } catch (e) {
+          console.error('Error parsing stat section:', e);
+        }
+      }
+
+      // Step 8: Generate The Pulse
+      setAiStatus('Step 8/8: Generating quick hits...');
+      const pulseContent = await generateWithAI('thePulse');
+      if (pulseContent) {
+        try {
+          const parsed = JSON.parse(pulseContent);
+          if (Array.isArray(parsed)) {
+            setNewsletterData(prev => ({
+              ...prev,
+              thePulse: {
+                ...prev.thePulse,
+                items: parsed.slice(0, 7).map(text => ({
+                  text,
+                  source: 'AI Generated',
+                  url: '#',
+                  date: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                }))
+              }
+            }));
+          }
+        } catch (e) {
+          console.error('Error parsing pulse section:', e);
+        }
+      }
+
       setLastFetched(new Date().toLocaleString());
-      setAiStatus(`✓ Fetched ${publicationCount} publications from PubMed`);
+      setAiStatus(`✓ Complete newsletter generated! (${publicationCount} PubMed publications found)`);
     } catch (error) {
-      setAiStatus(`Error fetching PubMed data: ${error.message}`);
+      setAiStatus(`Error generating newsletter: ${error.message}`);
     } finally {
       setIsLoading(prev => ({ ...prev, all: false }));
     }
@@ -1044,7 +1177,7 @@ Translation: The treatments we're writing about today may be routine options in 
     }
   };
 
-  // ===== V5.1 UPDATE: GENERATE HTML WITH LINK STYLING =====
+  // ===== V5.2 UPDATE: GENERATE HTML WITH LINK STYLING =====
   const generateFullHTML = () => {
     const d = newsletterData;
     
@@ -1056,7 +1189,7 @@ Translation: The treatments we're writing about today may be routine options in 
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     };
     
-    return `<!-- Renewal Weekly Newsletter HTML - v5.1 -->
+    return `<!-- Renewal Weekly Newsletter HTML - v5.2 -->
 <!-- Paste this into Beehiiv's HTML editor -->
 
 <style>
@@ -1242,7 +1375,7 @@ ${currentGame.content}
 `;
   };
 
-  // ===== V5.1 UPDATE: PREVIEW CARD WITH PURPLE STYLING =====
+  // ===== V5.2 UPDATE: PREVIEW CARD WITH PURPLE STYLING =====
   const PreviewCard = ({ sectionLabel, children }) => (
     <div style={{
       border: `1px solid ${colors.border}`,
@@ -1406,7 +1539,7 @@ ${currentGame.content}
               <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center text-2xl shadow-lg">✦</div>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">Renewal Weekly</h1>
-                <p className="text-purple-200 text-sm">Newsletter Compiler v5.1</p>
+                <p className="text-purple-200 text-sm">Newsletter Compiler v5.2</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -1899,7 +2032,7 @@ ${currentGame.content}
           </div>
         )}
 
-        {/* ===== V5.1 UPDATE: FULL PREVIEW TAB - ALL 15 SECTIONS ===== */}
+        {/* ===== V5.2 UPDATE: FULL PREVIEW TAB - ALL 15 SECTIONS ===== */}
         {activeTab === 'preview' && (
           <div className="max-w-2xl mx-auto bg-white">
             
@@ -2220,7 +2353,7 @@ ${currentGame.content}
       {/* Footer - Updated with purple gradient */}
       <footer className="text-white py-6 mt-12" style={{ background: `linear-gradient(135deg, ${colors.dark} 0%, #0F172A 100%)` }}>
         <div className="max-w-6xl mx-auto px-6 text-center text-sm">
-          <p className="font-medium">Renewal Weekly Newsletter Compiler v5.1</p>
+          <p className="font-medium">Renewal Weekly Newsletter Compiler v5.2</p>
           <p className="mt-1" style={{ color: colors.accent }}>17 sections • TL;DR + Question of the Week • 3×2 metrics • In-text hyperlinks • Purple brand</p>
         </div>
       </footer>

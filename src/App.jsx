@@ -1130,15 +1130,17 @@ Translation: The treatments we're writing about today may be routine options in 
     setAiStatus('🚀 Creating your newsletter with deep web research...');
 
     try {
-      // Step 1: Fetch PubMed data
-      setAiStatus('📊 Step 1/10: Fetching PubMed publication data...');
+      const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
+
+      // Step 1: Fetch PubMed data (Metrics Dashboard)
+      setAiStatus('📊 Fetching PubMed data... (1/12)');
       const pubmedUrl = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=stem+cell&rettype=count&retmode=json&datetype=pdat&reldate=7';
       const pubmedResponse = await fetch(pubmedUrl);
       const pubmedData = await pubmedResponse.json();
       const publicationCount = pubmedData?.esearchresult?.count || '47';
-      const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-      // Update metrics dashboard
+      // Update metrics dashboard and date
       setNewsletterData(prev => ({
         ...prev,
         metricsDashboard: {
@@ -1162,7 +1164,7 @@ Translation: The treatments we're writing about today may be routine options in 
       }));
 
       // Step 2: Generate Opening Hook (with web search for current events)
-      setAiStatus('✍️ Step 2/10: Researching current events for opening hook...');
+      setAiStatus('Writing opening hook... (2/12)');
       const hookContent = await generateWithAI('openingHook');
       if (hookContent) {
         setNewsletterData(prev => ({
@@ -1172,7 +1174,7 @@ Translation: The treatments we're writing about today may be routine options in 
       }
 
       // Step 3: Generate Lead Story (with web search)
-      setAiStatus('🔍 Step 3/10: Researching lead story...');
+      setAiStatus('Writing lead story... (3/12)');
       const leadContent = await generateWithAI('leadStory');
       if (leadContent) {
         const lines = leadContent.split('\n').filter(l => l.trim());
@@ -1189,8 +1191,49 @@ Translation: The treatments we're writing about today may be routine options in 
         }));
       }
 
-      // Step 4: Generate Research Roundup (with web search)
-      setAiStatus('🔬 Step 4/10: Researching treatment spotlight...');
+      // Step 4: Generate Bottom Line (TL;DR)
+      setAiStatus('Creating TL;DR... (4/12)');
+      const tldrPrompt = `You are writing for Renewal Weekly, a newsletter about stem cells and regenerative medicine.
+
+Based on the lead story headline: "${newsletterData.leadStory.headline}"
+
+Write 4 bullet points for "The Bottom Line" (TL;DR section).
+
+FORMAT:
+→ [Key takeaway 1 - about the lead story]
+→ [Key takeaway 2 - about a different important development]
+→ [Key takeaway 3 - practical insight for readers]
+→ [Key takeaway 4 - forward-looking or surprising fact]
+
+Each bullet: One clear insight, under 20 words, punchy and benefit-focused.
+Focus on REAL developments from the past 7 days.
+
+Return as JSON array of 4 strings (without the → symbol):
+["first point", "second point", "third point", "fourth point"]`;
+
+      const tldrContent = await generateWithAI('bottomLine', tldrPrompt, true);
+      if (tldrContent) {
+        try {
+          const jsonMatch = tldrContent.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (Array.isArray(parsed) && parsed.length >= 4) {
+              setNewsletterData(prev => ({
+                ...prev,
+                bottomLine: {
+                  ...prev.bottomLine,
+                  items: parsed.slice(0, 4)
+                }
+              }));
+            }
+          }
+        } catch (e) {
+          console.error('Error parsing bottom line:', e);
+        }
+      }
+
+      // Step 5: Generate Research Roundup (with web search)
+      setAiStatus('Writing research roundup... (5/12)');
       const roundupContent = await generateWithAI('researchRoundup');
       if (roundupContent) {
         setNewsletterData(prev => ({
@@ -1203,12 +1246,11 @@ Translation: The treatments we're writing about today may be routine options in 
         }));
       }
 
-      // Step 5: Generate Secondary Stories (with web search)
-      setAiStatus('📰 Step 5/10: Finding secondary stories...');
+      // Step 6: Generate Secondary Stories (with web search)
+      setAiStatus('Writing secondary stories... (6/12)');
       const secondaryContent = await generateWithAI('secondaryStories');
       if (secondaryContent) {
         try {
-          // Try to extract JSON from the response
           const jsonMatch = secondaryContent.match(/\[[\s\S]*\]/);
           if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0]);
@@ -1233,8 +1275,8 @@ Translation: The treatments we're writing about today may be routine options in 
         }
       }
 
-      // Step 6: Generate Deep Dive (with web search)
-      setAiStatus('🌿 Step 6/10: Researching deep dive topic...');
+      // Step 7: Generate Deep Dive (with web search)
+      setAiStatus('Writing deep dive... (7/12)');
       const deepDiveContent = await generateWithAI('deepDive');
       if (deepDiveContent) {
         setNewsletterData(prev => ({
@@ -1247,8 +1289,8 @@ Translation: The treatments we're writing about today may be routine options in 
         }));
       }
 
-      // Step 7: Generate Stat Section (with web search)
-      setAiStatus('📈 Step 7/10: Finding stat of the week...');
+      // Step 8: Generate Stat Section (with web search)
+      setAiStatus('Finding stat of the week... (8/12)');
       const statContent = await generateWithAI('statSection');
       if (statContent) {
         try {
@@ -1273,8 +1315,8 @@ Translation: The treatments we're writing about today may be routine options in 
         }
       }
 
-      // Step 8: Generate The Pulse (with web search)
-      setAiStatus('⚡ Step 8/10: Gathering quick hits...');
+      // Step 9: Generate The Pulse (with web search)
+      setAiStatus('Gathering quick hits... (9/12)');
       const pulseContent = await generateWithAI('thePulse');
       if (pulseContent) {
         try {
@@ -1301,8 +1343,55 @@ Translation: The treatments we're writing about today may be routine options in 
         }
       }
 
-      // Step 9: Generate Recommendations (with web search)
-      setAiStatus('💡 Step 9/10: Finding weekly recommendations...');
+      // Step 10: Generate Worth Knowing
+      setAiStatus('Creating Worth Knowing... (10/12)');
+      const worthKnowingPrompt = `You are writing for Renewal Weekly, a newsletter about stem cells and regenerative medicine.
+
+Create 3 items for "Worth Knowing" section.
+
+ITEM 1 - Upcoming awareness/event:
+- Health awareness day or medical event in next 2 weeks
+- Real date and what readers can do (free screenings, etc.)
+
+ITEM 2 - Red flags or guide:
+- Practical protection for health consumers
+- Examples: "5 Questions to Ask Before..." or "Red Flags When Choosing..."
+- Specific, actionable tips
+
+ITEM 3 - Resource:
+- Helpful tool or resource with real link
+- ClinicalTrials.gov search tip, reliable information source, etc.
+
+Return as JSON:
+[
+  {"type": "awareness", "title": "...", "date": "December X", "description": "2-3 sentences", "link": null},
+  {"type": "guide", "title": "5 Red Flags When...", "date": "", "description": "the 5 items listed", "link": "real url if applicable"},
+  {"type": "resource", "title": "...", "date": "", "description": "what it is and why useful", "link": "real url"}
+]`;
+
+      const worthContent = await generateWithAI('worthKnowing', worthKnowingPrompt, true);
+      if (worthContent) {
+        try {
+          const jsonMatch = worthContent.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (Array.isArray(parsed) && parsed.length >= 3) {
+              setNewsletterData(prev => ({
+                ...prev,
+                worthKnowing: {
+                  ...prev.worthKnowing,
+                  items: parsed.slice(0, 3)
+                }
+              }));
+            }
+          }
+        } catch (e) {
+          console.error('Error parsing worth knowing:', e);
+        }
+      }
+
+      // Step 11: Generate Recommendations (with web search)
+      setAiStatus('Curating recommendations... (11/12)');
       const recsContent = await generateWithAI('recommendations');
       if (recsContent) {
         try {
@@ -1349,26 +1438,51 @@ Translation: The treatments we're writing about today may be routine options in 
         }
       }
 
-      // Step 10: Generate Trivia Game
-      setAiStatus('🎮 Step 10/10: Creating trivia game...');
-      const gameContent = await generateWithAI('gameTrivia');
-      if (gameContent) {
+      // Step 12: Generate Word of the Day
+      setAiStatus('Selecting word of the day... (12/12)');
+      const wordPrompt = `You are writing for Renewal Weekly, a newsletter about stem cells and regenerative medicine.
+
+Based on the theme of this week's lead story: "${newsletterData.leadStory.headline}"
+
+Select a Word of the Day - a medical/scientific term related to stem cells, regenerative medicine, or longevity.
+
+Requirements:
+- Impressive but explainable to general audience
+- Relevant to this week's content
+- Not too basic (not "stem cell") but not too obscure
+
+Return as JSON:
+{
+  "word": "Word",
+  "definition": "clear, accessible definition without jargon",
+  "suggestedBy": "a first name",
+  "location": "City, ST"
+}`;
+
+      const wordContent = await generateWithAI('wordOfDay', wordPrompt, false);
+      if (wordContent) {
         try {
-          const jsonMatch = gameContent.match(/\{[\s\S]*\}/);
+          const jsonMatch = wordContent.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0]);
-            if (parsed.title && parsed.content && parsed.answer) {
-              setCurrentGame({
-                id: 'ai_generated',
-                title: parsed.title,
-                intro: parsed.intro || 'Test your knowledge!',
-                content: parsed.content,
-                answer: parsed.answer
-              });
+            if (parsed.word && parsed.definition) {
+              setNewsletterData(prev => ({
+                ...prev,
+                signOff: {
+                  ...prev.signOff,
+                  wordOfTheDay: {
+                    word: parsed.word,
+                    definition: parsed.definition,
+                    suggestedBy: parsed.suggestedBy || 'Community',
+                    location: parsed.location || 'USA',
+                    submitLink: prev.signOff.wordOfTheDay.submitLink
+                  }
+                }
+              }));
             }
           }
         } catch (e) {
-          console.error('Error parsing game:', e);
+          console.error('Error parsing word of day:', e);
         }
       }
 
@@ -1841,6 +1955,21 @@ ${currentGame.content}
           </div>
         </div>
       </header>
+
+      {/* AI Status Display */}
+      {aiStatus && isLoading.all && (
+        <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-b border-purple-200">
+          <div className="max-w-6xl mx-auto px-6 py-3">
+            <div className="flex items-center gap-3">
+              <svg className="animate-spin h-5 w-5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-purple-800 font-medium">{aiStatus}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Settings Panel */}
       {showSettings && (

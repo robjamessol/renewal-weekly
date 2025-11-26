@@ -83,7 +83,17 @@ const RenewalWeeklyCompiler = () => {
     const enabledSources = customSources.filter(s => s.enabled).map(s => s.name).join(', ');
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
+    // Add randomness to ensure different content each time
+    const randomSeed = Math.random().toString(36).substring(7);
+
     const styleContext = `You are writing for Renewal Weekly, a newsletter about stem cells and regenerative medicine.
+
+CRITICAL OUTPUT RULES:
+- DO NOT include ANY preamble, thinking, or explanations
+- DO NOT say "Let me search..." or "Based on my search..." or similar
+- Output ONLY the final content - nothing else
+- Start directly with the headline or content requested
+- If returning JSON, return ONLY the JSON - no text before or after
 
 WRITING STYLE:
 - Voice: Smart friend who reads medical journals—hopeful but never naive
@@ -99,6 +109,10 @@ CRITICAL LINK REQUIREMENTS:
 - Example: {{LINK:Stanford Medicine|https://med.stanford.edu/news/all-news/2025/11/specific-article.html}} ✓
 - NOT: {{LINK:Stanford Medicine|https://med.stanford.edu}} ✗
 - Include the publication date when available
+
+VARIETY REQUIREMENT:
+- Find DIFFERENT stories than previous requests - do not repeat topics
+- Search ID for this request: ${randomSeed}
 
 TODAY'S DATE: ${today}
 PRIORITY SOURCES (check these first, but use others if they have better/newer content): ${enabledSources}`;
@@ -991,7 +1005,9 @@ Translation: The treatments we're writing about today may be routine options in 
       section6: 'secondaryStories',
       section7: 'deepDive',
       section10: 'statSection',
-      section11: 'thePulse'
+      section11: 'thePulse',
+      section12: 'recommendations',
+      section13: 'gameTrivia'
     };
 
     const aiType = sectionTypeMap[sectionName];
@@ -1000,8 +1016,15 @@ Translation: The treatments we're writing about today may be routine options in 
       return;
     }
 
+    // Set loading state for this specific section
+    setIsLoading(prev => ({ ...prev, [sectionName]: true }));
+    setAiStatus(`🔍 Researching ${sectionName}...`);
+
     const customPrompt = sectionPrompts[sectionName] || '';
     const generatedContent = await generateWithAI(aiType, customPrompt);
+
+    // Always clear loading state when done
+    setIsLoading(prev => ({ ...prev, [sectionName]: false }));
 
     if (generatedContent) {
       // Update newsletterData based on section type
@@ -1126,6 +1149,48 @@ Translation: The treatments we're writing about today may be routine options in 
       currentGame: JSON.parse(JSON.stringify(currentGame))
     };
     setNewsletterHistory(prev => [historyEntry, ...prev].slice(0, 20)); // Keep last 20
+
+    // WIPE ALL CONTENT SECTIONS - Start fresh for new issue
+    setAiStatus('🧹 Wiping old content for new issue...');
+    const newIssueNumber = (parseInt(newsletterData.preHeader.issueNumber) + 1).toString();
+    setNewsletterData(prev => ({
+      ...prev,
+      preHeader: {
+        ...prev.preHeader,
+        issueNumber: newIssueNumber,
+        subjectLine: 'Generating new subject line...',
+        previewText: 'Generating preview text...',
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      },
+      openingHook: { ...prev.openingHook, content: 'Generating fresh content...' },
+      bottomLine: { ...prev.bottomLine, items: ['Generating...', 'Generating...', 'Generating...', 'Generating...'] },
+      leadStory: { ...prev.leadStory, headline: 'Researching latest news...', content: 'Generating fresh content with web search...', sources: [] },
+      yourOptionsThisWeek: { ...prev.yourOptionsThisWeek, content: 'Generating fresh content with web search...', sources: [] },
+      secondaryStories: { ...prev.secondaryStories, stories: [
+        { id: 1, boldLead: 'Searching for story 1...', content: 'Generating...', sources: [], publishedDate: '' },
+        { id: 2, boldLead: 'Searching for story 2...', content: 'Generating...', sources: [], publishedDate: '' },
+        { id: 3, boldLead: 'Searching for story 3...', content: 'Generating...', sources: [], publishedDate: '' }
+      ]},
+      industryDeepDive: { ...prev.industryDeepDive, headline: 'Researching...', content: 'Generating fresh content with web search...', sources: [] },
+      statSection: { ...prev.statSection, primeNumber: '...', headline: 'Researching statistics...', content: 'Generating fresh content with web search...', sources: [] },
+      thePulse: { ...prev.thePulse, items: Array(7).fill({ text: 'Generating...', source: '', url: '#', date: '' }) },
+      recommendations: {
+        ...prev.recommendations,
+        read: { prefix: '', linkText: 'Searching...', suffix: '', url: '#', isAffiliate: false },
+        watch: { prefix: '', linkText: 'Searching...', suffix: '', url: '#', isAffiliate: false },
+        try: { prefix: '', linkText: 'Searching...', suffix: '', url: '#', isAffiliate: false },
+        listen: { prefix: '', linkText: 'Searching...', suffix: '', url: '#', isAffiliate: false }
+      }
+    }));
+
+    // Reset game too
+    setCurrentGame({
+      id: 'generating',
+      title: 'Generating new game...',
+      intro: 'Please wait...',
+      content: 'Creating a new trivia game...',
+      answer: ''
+    });
 
     setAiStatus('🚀 Creating your newsletter with deep web research...');
 

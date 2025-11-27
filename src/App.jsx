@@ -220,7 +220,7 @@ CRITICAL: Only cite articles published within the PAST 7 DAYS. Never use older s
 
     // Section-specific configurations - uses Haiku in test mode (12x cheaper)
     const prodModel = 'claude-sonnet-4-20250514';
-    const testModel = 'claude-haiku-3-5-20241022';
+    const testModel = 'claude-3-5-haiku-20241022';
     const activeModel = testMode ? testModel : prodModel;
 
     const sectionConfig = {
@@ -2644,7 +2644,7 @@ ${currentGame.content}
             </div>
 
             {/* Section 1: Opening Hook + In Today's Edition (Combined) */}
-            <SectionCard number="1" title="Opening Hook" sectionKey="section1" showRefresh={false}>
+            <SectionCard number="1" title="Opening Hook" sectionKey="section1" showRefresh={true} wordCount="40-60 words">
               <div className="space-y-4">
                 <div className="text-sm whitespace-pre-wrap text-gray-700 leading-relaxed">
                   {newsletterData.openingHook.content}

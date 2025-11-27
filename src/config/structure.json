@@ -52,10 +52,10 @@
       "position": 3,
       "wordLimit": "280-320 words",
       "headlines": {
-        "style": "Clever but clear, no clickbait",
-        "maxWords": 8,
-        "good": ["Stem Cells Just Did What Doctors Said Was Impossible", "The Anti-Inflammatory Shopping List You Actually Need"],
-        "bad": ["BREAKING: Miracle Cure Found!", "You Won't Believe What Scientists Discovered"]
+        "style": "TEASER STYLE - Clever, punchy, creates curiosity (3-5 words)",
+        "maxWords": 5,
+        "good": ["Seeing clearly now", "The $400B bet", "Ups and mostly downs", "Back in business"],
+        "bad": ["Stem Cell Research Update", "New Treatment Found", "Important Discovery"]
       },
       "structure": [
         "Para 1: Hook - 'For [X million] Americans with [condition], the prognosis has always been the same: [limitation].'",
@@ -79,9 +79,10 @@
       "position": 4,
       "wordLimit": "120-150 words",
       "headlines": {
-        "style": "Compelling, like lead story style",
-        "maxWords": 8,
-        "example": "New MS Treatment Reverses Nerve Damage"
+        "style": "TEASER STYLE - 3-5 words, creates curiosity",
+        "maxWords": 5,
+        "good": ["Nerves fighting back", "The myelin fix", "Joints on the mend"],
+        "bad": ["MS Treatment Update", "New Research Shows"]
       },
       "structure": [
         "Line 1: Headline (8 words max)",
@@ -111,11 +112,16 @@
           "Source link"
         ]
       },
-      "boldLeadPattern": "[Subject] + [did what] + [surprising element/result]",
+      "boldLeadPattern": "TEASER STYLE - 3-5 words, creates curiosity",
       "goodBoldLeads": [
-        "Stanford just made stem cell transplants safer—without chemo.",
-        "Type 1 diabetes was cured in mice. Humans might be next.",
-        "MSC trials are up 37% in 2025—and investment is following."
+        "Chemo's exit strategy",
+        "Mice first, humans next",
+        "The 37% surge"
+      ],
+      "badBoldLeads": [
+        "Stanford Research Update",
+        "New Diabetes Treatment",
+        "Study Shows Results"
       ],
       "rules": [
         "Each story from different topic area",

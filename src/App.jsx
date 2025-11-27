@@ -241,8 +241,9 @@ CRITICAL:
           tools: [{
             type: 'web_search_20250305',
             name: 'web_search',
-            max_uses: 12, // Allow more searches for thorough research
-            allowed_domains: uniqueDomains.slice(0, 50) // Enforce sources.json at API level
+            max_uses: 12 // Allow more searches for thorough research
+            // Note: allowed_domains removed - some domains block Anthropic's crawler
+            // Instead, we guide source selection via the prompt
           }],
           messages: [{ role: 'user', content: researchPrompt }]
         })
@@ -875,36 +876,12 @@ NO preamble. Start directly with [`
 
       // Only add web search for sections that need it
       if (shouldUseWebSearch) {
-        // Build allowed domains from sources.json for API-level enforcement
-        const allowedDomains = [
-          ...(sources.stemCell?.domains || []),
-          ...(sources.longevity?.domains || []),
-          ...(sources.wellness?.domains || []),
-          ...(sources.supplements?.domains || []),
-          ...(sources.nutrition?.domains || []),
-          // Add mainstream sources
-          'menshealth.com', 'healthline.com', 'webmd.com', 'prevention.com',
-          'cnn.com', 'npr.org', 'mayoclinic.org', 'clevelandclinic.org',
-          'health.harvard.edu', 'statnews.com', 'endpoints.news',
-          'biospace.com', 'fiercebiotech.com', 'medicalxpress.com'
-        ];
-        // Domains that block Anthropic's crawler - exclude these
-        const blockedDomains = [
-          'nytimes.com', 'washingtonpost.com', 'verywellmind.com', 'verywellfit.com',
-          'verywellhealth.com', 'everydayhealth.com', 'bbc.com', 'newscientist.com',
-          'technologyreview.com', 'newsweek.com', 'theatlantic.com', 'wired.com',
-          'forbes.com', 'businessinsider.com', 'time.com', 'usatoday.com',
-          'wsj.com', 'bloomberg.com', 'theguardian.com'
-        ];
-        const uniqueAllowedDomains = [...new Set(allowedDomains)]
-          .filter(d => !blockedDomains.includes(d))
-          .slice(0, 50);
-
         requestBody.tools = [{
           type: 'web_search_20250305',
           name: 'web_search',
-          max_uses: 6,
-          allowed_domains: uniqueAllowedDomains
+          max_uses: 6
+          // Note: allowed_domains removed - some domains block Anthropic's crawler
+          // Source selection is guided via the prompt instead
         }];
       }
 
@@ -1081,15 +1058,16 @@ NO preamble. Start directly with [`
     // This handles multi-sentence preambles
     const preamblePatterns = [
       /^(Perfect!|Great!|Excellent!|Sure!|Okay!|Alright!|Absolutely!|Of course!)[^.!?]*[.!?]\s*/gi,
-      /^I (found|discovered|searched|located|identified)[^.]*\.\s*/gi,
-      /^(Based on|According to|Looking at|After searching|After reviewing|Here is|Here are|Here's|Let me)[^.]*\.\s*/gi,
+      /^I (found|discovered|searched|located|identified|need to|have found|will|can|should|'ll|'ve)[^.]*\.\s*/gi,
+      /^(Based on|According to|Looking at|After searching|After reviewing|Here is|Here are|Here's|Let me|Now I)[^.]*\.\s*/gi,
       /^This (is|was|looks|seems|appears)[^.]*\.\s*/gi,
-      /^(The search|My search|I've found|I have found)[^.]*\.\s*/gi,
-      /^[^.]*?(exactly what|what you requested|what the user|for your newsletter)[^.]*\.\s*/gi,
+      /^(The search|My search|I've found|I have found|Most of these|The article)[^.]*\.\s*/gi,
+      /^[^.]*?(exactly what|what you requested|what the user|for your newsletter|sources are older)[^.]*\.\s*/gi,
+      /^[^.]*?(I found|I need|I also|I will|I can|I should)[^.]*\.\s*/gi,
     ];
 
     // Apply preamble removal multiple times to catch nested preambles
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       for (const pattern of preamblePatterns) {
         cleaned = cleaned.replace(pattern, '');
       }

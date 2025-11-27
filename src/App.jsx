@@ -129,88 +129,80 @@ const RenewalWeeklyCompiler = () => {
 
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-    // Concise style context to reduce token usage (was ~700 tokens, now ~200)
-    const styleContext = `Renewal Weekly newsletter about stem cells/regenerative medicine. Date: ${today}
-RULES: Output ONLY final content. No preamble. JSON sections return ONLY JSON.
-STYLE: Smart, hopeful, direct. Include costs/limitations for treatments.
-LINKS: Use {{LINK:text|url}} syntax. Link to SPECIFIC articles, not homepages.`;
+    // System message - processed once, more efficient than repeating in user content
+    const systemMessage = `You write for Renewal Weekly, a newsletter about stem cells and regenerative medicine.
+Date: ${today}. Audience: Adults 40-80 interested in health innovation.
+Rules: Output ONLY final content. No preamble or thinking. JSON requests return ONLY valid JSON.
+Style: Smart friend who reads journals—hopeful but honest. Include costs/limitations.
+Links: Use {{LINK:text|url}} format. Link to SPECIFIC articles, not homepages.`;
 
-    // Section-specific configurations for efficiency
+    // Section-specific configurations - use Haiku for simple creative tasks (3x cheaper)
     const sectionConfig = {
-      openingHook: { maxTokens: 300, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      leadStory: { maxTokens: 1500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      researchRoundup: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      secondaryStories: { maxTokens: 1200, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      deepDive: { maxTokens: 800, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      statSection: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      thePulse: { maxTokens: 800, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      recommendations: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      gameTrivia: { maxTokens: 500, needsWebSearch: false, model: 'claude-sonnet-4-20250514' },
-      bottomLine: { maxTokens: 400, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      worthKnowing: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      wordOfDay: { maxTokens: 300, needsWebSearch: false, model: 'claude-sonnet-4-20250514' }
+      openingHook: { maxTokens: 250, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      leadStory: { maxTokens: 1200, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      researchRoundup: { maxTokens: 500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      secondaryStories: { maxTokens: 1000, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      deepDive: { maxTokens: 700, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      statSection: { maxTokens: 500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      thePulse: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      recommendations: { maxTokens: 500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      gameTrivia: { maxTokens: 400, needsWebSearch: false, model: 'claude-haiku-3-5-20241022' },
+      bottomLine: { maxTokens: 300, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      worthKnowing: { maxTokens: 500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      wordOfDay: { maxTokens: 200, needsWebSearch: false, model: 'claude-haiku-3-5-20241022' }
     };
 
-    // Optimized, concise prompts
+    // Ultra-concise prompts - every token counts
     const sectionPrompts = {
-      openingHook: `${styleContext}
-Write a 50-75 word opening hook. Seasonal/timely for today. Warm, humorous, relatable. NO medical content. End with "—The Renewal Weekly Team"`,
+      openingHook: `Write 50-75 word opening hook. Seasonal/timely for today. Warm, humorous. NO medical content. End with "—The Renewal Weekly Team"`,
 
-      leadStory: `${styleContext}
-Search for LATEST stem cell/regenerative medicine news (past 7 days). Write 350-400 words:
+      leadStory: `Search for LATEST stem cell/regenerative medicine news (past 7 days). Write 350-400 words:
 1. Headline (clever, clear)
-2. "[X million] Americans with [condition]... That changed this week."
-3. "Here's what happened:" with specifics
+2. Opening: "[X million] Americans with [condition]..."
+3. "Here's what happened:" specifics
 4. "Why this matters:" context
 5. "What's next:" forward-looking
-Include 2-3 {{LINK:text|url}} to actual articles.${customPrompt ? ` Focus: ${customPrompt}` : ''}`,
+Include 2-3 {{LINK:text|url}}.${customPrompt ? ` Focus: ${customPrompt}` : ''}`,
 
-      researchRoundup: `${styleContext}
-Search for recent stem cell treatment research. Write 100-150 words:
-- "If you or someone you love has [condition], this one's worth reading twice."
+      researchRoundup: `Search recent stem cell treatment research. Write 100-150 words:
+- "If you or someone you love has [condition]..."
 - Research findings (2-3 sentences)
 - "What you should know:" (cost, availability)
 - "The catch:" (limitations)
 - "Bottom line:" (next step)
 Include {{LINK:source|url}}.${customPrompt ? ` Focus: ${customPrompt}` : ''}`,
 
-      secondaryStories: `${styleContext}
-Search for 3 recent stem cell/regenerative medicine stories (past 2 weeks).
-Return JSON: [{"boldLead": "hook sentence", "content": "75-150 words with facts", "sources": [{"title": "Name", "url": "article-url", "date": "Nov 26, 2025"}]}]`,
+      secondaryStories: `Search 3 recent stem cell/regen med stories (past 2 weeks). Return JSON:
+[{"boldLead":"hook","content":"75-150 words","sources":[{"title":"","url":"","date":""}]}]`,
 
-      deepDive: `${styleContext}
-Search for nutrition/wellness research related to cellular health. Write 200-250 words:
+      deepDive: `Search nutrition/wellness research for cellular health. Write 200-250 words:
 - Contrarian opening
-- Bullet points with evidence
-- "The connection to stem cells:" paragraph
+- Bullet evidence
+- "Connection to stem cells:" paragraph
 - Actionable takeaway
 Include {{LINK:source|url}}.${customPrompt ? ` Topic: ${customPrompt}` : ''}`,
 
-      statSection: `${styleContext}
-Search for compelling regenerative medicine statistic. Return JSON:
-{"primeNumber": "$403B or 67%", "headline": "lowercase description", "content": "150-200 words with context and {{LINK:text|url}}"}`,
+      statSection: `Search compelling regenerative medicine statistic. Return JSON:
+{"primeNumber":"$403B","headline":"lowercase desc","content":"150 words with {{LINK:text|url}}"}`,
 
-      thePulse: `${styleContext}
-Search for 7 quick stem cell/biotech news items (past 2 weeks). Each under 25 words with {{LINK:text|url}}.
-Return JSON array: ["News item 1...", "News item 2..."]`,
+      thePulse: `Search 7 quick stem cell/biotech news (past 2 weeks). Each <25 words with {{LINK:text|url}}.
+Return JSON: ["item1","item2","item3","item4","item5","item6","item7"]`,
 
-      recommendations: `${styleContext}
-Search for content to recommend. Return JSON:
-{"read": {"prefix": "", "linkText": "", "suffix": "", "url": ""}, "watch": {...}, "try": {...}, "listen": {...}}
-Find real articles, videos, apps, podcasts about health/regenerative medicine.`,
+      recommendations: `Search content to recommend. Return JSON:
+{"read":{"prefix":"","linkText":"","suffix":"","url":""},"watch":{...},"try":{...},"listen":{...}}`,
 
-      gameTrivia: `Create health trivia game (broad appeal, not just stem cells). Return JSON:
-{"title": "Game title", "intro": "1-2 sentences", "content": "questions/prompts", "answer": "answers"}
-Make it fun and educational!`
+      gameTrivia: `Create fun health trivia game. Return JSON:
+{"title":"","intro":"1-2 sentences","content":"questions","answer":"answers"}`
     };
 
-    const config = sectionConfig[sectionType] || { maxTokens: 1000, needsWebSearch: useWebSearch, model: 'claude-sonnet-4-20250514' };
+    const config = sectionConfig[sectionType] || { maxTokens: 800, needsWebSearch: useWebSearch, model: 'claude-sonnet-4-20250514' };
     const shouldUseWebSearch = useWebSearch && config.needsWebSearch;
 
     try {
       const requestBody = {
         model: config.model,
         max_tokens: config.maxTokens,
+        system: systemMessage,
         messages: [{
           role: 'user',
           content: sectionPrompts[sectionType] || customPrompt
@@ -222,7 +214,7 @@ Make it fun and educational!`
         requestBody.tools = [{
           type: 'web_search_20250305',
           name: 'web_search',
-          max_uses: 3 // Reduced from 5 to save costs
+          max_uses: 3
         }];
       }
 
@@ -241,7 +233,6 @@ Make it fun and educational!`
         const errorData = await response.json();
         const errorMessage = errorData.error?.message || 'API request failed';
 
-        // Check for rate limit error and provide helpful message
         if (errorMessage.includes('rate limit')) {
           throw new Error('Rate limit reached. Please wait 60 seconds before trying again.');
         }
@@ -1195,7 +1186,7 @@ Translation: The treatments we're writing about today may be routine options in 
           openingHook: { ...prev.openingHook, content: hookContent }
         }));
       }
-      await delay(3000); // Rate limit protection: wait 3 seconds between API calls
+      await delay(2000); // Rate limit protection: wait 2 seconds between API calls
 
       // Step 3: Generate Lead Story (with web search)
       setAiStatus('Writing lead story... (3/12)');
@@ -1214,7 +1205,7 @@ Translation: The treatments we're writing about today may be routine options in 
           }
         }));
       }
-      await delay(3000); // Rate limit protection
+      await delay(2000); // Rate limit protection
 
       // Step 4: Generate Bottom Line (TL;DR)
       setAiStatus('Creating TL;DR... (4/12)');
@@ -1243,7 +1234,7 @@ Return JSON array: ["point 1", "point 2", "point 3", "point 4"]`;
           console.error('Error parsing bottom line:', e);
         }
       }
-      await delay(3000); // Rate limit protection
+      await delay(2000); // Rate limit protection
 
       // Step 5: Generate Research Roundup (with web search)
       setAiStatus('Writing research roundup... (5/12)');
@@ -1258,7 +1249,7 @@ Return JSON array: ["point 1", "point 2", "point 3", "point 4"]`;
           }
         }));
       }
-      await delay(3000); // Rate limit protection
+      await delay(2000); // Rate limit protection
 
       // Step 6: Generate Secondary Stories (with web search)
       setAiStatus('Writing secondary stories... (6/12)');
@@ -1288,7 +1279,7 @@ Return JSON array: ["point 1", "point 2", "point 3", "point 4"]`;
           console.error('Error parsing secondary stories:', e);
         }
       }
-      await delay(3000); // Rate limit protection
+      await delay(2000); // Rate limit protection
 
       // Step 7: Generate Deep Dive (with web search)
       setAiStatus('Writing deep dive... (7/12)');
@@ -1303,7 +1294,7 @@ Return JSON array: ["point 1", "point 2", "point 3", "point 4"]`;
           }
         }));
       }
-      await delay(3000); // Rate limit protection
+      await delay(2000); // Rate limit protection
 
       // Step 8: Generate Stat Section (with web search)
       setAiStatus('Finding stat of the week... (8/12)');
@@ -1330,7 +1321,7 @@ Return JSON array: ["point 1", "point 2", "point 3", "point 4"]`;
           console.error('Error parsing stat section:', e);
         }
       }
-      await delay(3000); // Rate limit protection
+      await delay(2000); // Rate limit protection
 
       // Step 9: Generate The Pulse (with web search)
       setAiStatus('Gathering quick hits... (9/12)');
@@ -1359,7 +1350,7 @@ Return JSON array: ["point 1", "point 2", "point 3", "point 4"]`;
           console.error('Error parsing pulse section:', e);
         }
       }
-      await delay(3000); // Rate limit protection
+      await delay(2000); // Rate limit protection
 
       // Step 10: Generate Worth Knowing
       setAiStatus('Creating Worth Knowing... (10/12)');
@@ -1389,7 +1380,7 @@ Return JSON: [{"type": "awareness|guide|resource", "title": "", "date": "", "des
           console.error('Error parsing worth knowing:', e);
         }
       }
-      await delay(3000); // Rate limit protection
+      await delay(2000); // Rate limit protection
 
       // Step 11: Generate Recommendations (with web search)
       setAiStatus('Curating recommendations... (11/12)');
@@ -1438,7 +1429,7 @@ Return JSON: [{"type": "awareness|guide|resource", "title": "", "date": "", "des
           console.error('Error parsing recommendations:', e);
         }
       }
-      await delay(3000); // Rate limit protection
+      await delay(2000); // Rate limit protection
 
       // Step 12: Generate Word of the Day
       setAiStatus('Selecting word of the day... (12/12)');

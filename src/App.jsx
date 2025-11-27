@@ -240,21 +240,15 @@ CRITICAL: Only cite articles published within the PAST 7 DAYS. Never use older s
 
     // Detailed prompts with exact formatting instructions
     const sectionPrompts = {
-      openingHook: `Write 50-75 word opening hook for ${today}.
+      openingHook: `Write a SHORT opening hook for ${today} (2-3 sentences, 40-60 words MAX).
 ${hookContext}
 PRIORITY ORDER: National holidays > Health awareness days > Seasonal/weather > General observations.
-IMPORTANT: This hook is STANDALONE - do NOT mention stem cells, regenerative medicine, or any newsletter content. Keep it relatable and human.
-LINKS: If referencing specific events, embed {{LINK:keyword|url}} INLINE within text. Articles must be from PAST 7 DAYS only.
-Warm, relatable tone. End with "—The Renewal Weekly Team"
+IMPORTANT: Keep it warm, relatable, and BRIEF. Thank the reader or connect on a human level.
+DO NOT mention stem cells, regenerative medicine, or newsletter content.
+DO NOT end with a sign-off - that comes later in the template.
 
-EXAMPLE FORMAT:
-Good morning. It's the week before Thanksgiving, which means you're probably already mentally budgeting for elastic waistbands.
-
-Here's a thought: What if instead of dreading the "holiday pounds," you focused on the one thing that actually matters—showing up for the people you love, however you feel?
-
-We'll handle the health intel. You handle the mashed potatoes.
-
-—The Renewal Weekly Team`,
+EXAMPLE (follow this exact length and tone):
+It's almost Thanksgiving, and perhaps unsurprisingly, we're feeling thankful today. Thankful for you, dear reader, as well as for having the opportunity each week to share the latest healthcare analyses with you. Thanks for being here, and we hope you continue to stay tuned for more.`,
 
       leadStory: `Search for a BROADLY ACCESSIBLE health/wellness story related to stem cells or regenerative medicine from the past 7 days.
 
@@ -795,27 +789,21 @@ D) Collagen synthesis and immune function`,
       readTime: '7 min read'
     },
 
-    // 1. OPENING HOOK
+    // 1. OPENING HOOK (short, 2-3 sentences)
     openingHook: {
-      content: `Good morning. It's the week before Thanksgiving, which means you're probably already mentally budgeting for elastic waistbands.
-
-Here's a thought: What if instead of dreading the "holiday pounds," you focused on the one thing that actually matters—showing up for the people you love, however you feel?
-
-We'll handle the health intel. You handle the mashed potatoes.
-
-—The Renewal Weekly Team`,
+      content: `It's almost Thanksgiving, and perhaps unsurprisingly, we're feeling thankful today. Thankful for you, dear reader, as well as for having the opportunity each week to share the latest healthcare analyses with you. Thanks for being here, and we hope you continue to stay tuned for more.`,
       sources: []
     },
 
-    // 1.5 THE BOTTOM LINE (TL;DR for scanners)
+    // 1.5 IN TODAY'S EDITION (teaser bullets with emojis)
     bottomLine: {
-      sectionLabel: 'THE BOTTOM LINE',
-      subtitle: 'If you only have 60 seconds:',
+      sectionLabel: "IN TODAY'S EDITION",
+      subtitle: '',
       items: [
-        'Stem cells restored vision in AMD patients who were told improvement was impossible—first human trial shows real promise',
-        'MSC therapy for MS is showing consistent benefits across multiple trials, but no standardized protocol exists yet',
-        'The regenerative medicine market is projected to hit $403B by 2032—more funding means more trials for you',
-        'Chronic inflammation accelerates stem cell aging. The fix? Better groceries, not more pills.'
+        '👁️ Vision restored after AMD trial',
+        '💊 New MS therapy results',
+        '📊 $403B market projection',
+        '🧬 Inflammation and stem cell aging'
       ]
     },
 
@@ -1878,20 +1866,29 @@ Return JSON: {"word": "", "definition": "accessible definition", "suggestedBy": 
       }
       await delay(2000);
 
-      // Step 13: Generate "In This Issue" / Bottom Line (references all generated content)
-      setAiStatus('📋 Creating issue summary... (13/15)');
-      const tldrPrompt = `Write 4 "In this issue" bullet points for Renewal Weekly newsletter.
+      // Step 13: Generate "In today's edition" teaser bullets with emojis
+      setAiStatus('📋 Creating issue teasers... (13/15)');
+      const tldrPrompt = `Write 4 SHORT teaser phrases for "In today's edition" section.
 
-ACTUAL CONTENT IN THIS ISSUE:
+CONTENT TO TEASE:
 - Lead Story: "${generatedLeadHeadline}"
 - Research: "${generatedResearchHeadline}"
 - Deep Dive: "${generatedDeepDiveHeadline}"
 - Stat: "${generatedStatHeadline}"
 
-Each bullet (under 25 words): Summarize ONE of these actual stories. Be specific to THIS issue's content.
-Format: Start with the key finding or insight, make it benefit-focused.
+RULES:
+- Each teaser: 3-6 words MAX (short punchy phrases, NOT full sentences)
+- Start each with a relevant emoji (🔬 🧬 💊 📊 🏥 💉 🧠 ❤️ 👁️ 🦴)
+- Tease the topic, don't summarize it
+- Make readers curious to scroll down
 
-Return JSON array: ["point about lead story", "point about research", "point about deep dive or stat", "point about another topic"]`;
+EXAMPLES:
+"🔬 Vision restored after AMD"
+"📊 $403B market projection"
+"💊 New MS trial results"
+"🧬 Inflammation and stem cell aging"
+
+Return JSON array of 4 strings: ["🔬 teaser 1", "📊 teaser 2", "💊 teaser 3", "🧬 teaser 4"]`;
 
       const tldrContent = await generateWithAI('bottomLine', tldrPrompt, false);
       if (tldrContent) {
@@ -1972,12 +1969,12 @@ Return ONLY valid JSON:
 
     switch (sectionKey) {
       case 'section1':
-        // Combined Opening Hook + In This Issue
-        return `${d.openingHook.content}\n\nIn this issue:\n${d.bottomLine.items.map(item => `→ ${item}`).join('\n')}\n\n—The Renewal Weekly Team`;
+        // Combined Opening Hook + In Today's Edition
+        return `${d.openingHook.content}\n\nIn today's edition:\n${d.bottomLine.items.join('\n')}\n\n—Renewal Weekly Team`;
 
       case 'section1b':
         // Legacy support - same as section1 now
-        return `${d.openingHook.content}\n\nIn this issue:\n${d.bottomLine.items.map(item => `→ ${item}`).join('\n')}\n\n—The Renewal Weekly Team`;
+        return `${d.openingHook.content}\n\nIn today's edition:\n${d.bottomLine.items.join('\n')}\n\n—Renewal Weekly Team`;
 
       case 'section3':
         return `${d.leadStory.sectionLabel}\n\n${d.leadStory.headline}\n\n${d.leadStory.content}`;
@@ -2036,21 +2033,20 @@ Return ONLY valid JSON:
   .rw-link { color: ${colors.text}; text-decoration: none; border-bottom: 2px solid ${colors.link}; padding-bottom: 1px; }
 </style>
 
-<!-- OPENING HOOK + IN THIS ISSUE (Combined) -->
+<!-- OPENING HOOK + IN TODAY'S EDITION -->
 <div class="rw-section">
   <div class="rw-body" style="white-space: pre-line;">
 ${d.openingHook.content}
   </div>
-  <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid ${colors.border};">
-    <p style="font-size: 15px; font-weight: 600; color: ${colors.text}; margin-bottom: 12px;">In this issue:</p>
+  <div style="margin-top: 16px;">
+    <p style="font-size: 15px; font-weight: 600; color: ${colors.text}; margin-bottom: 12px;">In today's edition:</p>
     <ul style="list-style: none; padding: 0; margin: 0;">
       ${d.bottomLine.items.map(item => `
-      <li style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; font-size: 15px; color: ${colors.text};">
-        <span style="color: ${colors.primary}; font-weight: 700;">→</span>
-        <span>${item}</span>
+      <li style="margin-bottom: 6px; font-size: 15px; color: ${colors.text};">
+        ${item}
       </li>`).join('')}
     </ul>
-    <p style="font-size: 15px; font-weight: 500; color: ${colors.text}; margin-top: 16px;">—The Renewal Weekly Team</p>
+    <p style="font-size: 15px; font-weight: 500; color: ${colors.text}; margin-top: 16px;">—Renewal Weekly Team</p>
   </div>
 </div>
 
@@ -2669,23 +2665,22 @@ ${currentGame.content}
               </div>
             </div>
 
-            {/* Section 1: Opening Hook + In This Issue (Combined) */}
-            <SectionCard number="1" title="Opening Hook + In This Issue" sectionKey="section1" showRefresh={false}>
+            {/* Section 1: Opening Hook + In Today's Edition (Combined) */}
+            <SectionCard number="1" title="Opening Hook" sectionKey="section1" showRefresh={false}>
               <div className="space-y-4">
-                <div className="bg-gray-50 rounded-lg p-4 text-sm whitespace-pre-wrap text-gray-700 leading-relaxed">
+                <div className="text-sm whitespace-pre-wrap text-gray-700 leading-relaxed">
                   {newsletterData.openingHook.content}
                 </div>
-                <div className="border-t pt-4">
-                  <p className="text-sm font-bold text-gray-800 mb-3">In this issue:</p>
+                <div className="pt-2">
+                  <p className="text-sm font-bold text-gray-800 mb-3">In today's edition:</p>
                   <ul className="space-y-2">
                     {newsletterData.bottomLine.items.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                        <span className="font-bold" style={{ color: colors.primary }}>→</span>
-                        <span>{item}</span>
+                      <li key={i} className="text-sm text-gray-700">
+                        {item}
                       </li>
                     ))}
                   </ul>
-                  <p className="text-sm font-medium text-gray-600 mt-4">—The Renewal Weekly Team</p>
+                  <p className="text-sm font-medium text-gray-600 mt-4">—Renewal Weekly Team</p>
                 </div>
               </div>
             </SectionCard>
@@ -2953,22 +2948,21 @@ ${currentGame.content}
         {activeTab === 'preview' && (
           <div className="max-w-2xl mx-auto bg-white">
             
-            {/* 1. Opening Hook + In This Issue (Combined) */}
+            {/* 1. Opening Hook + In Today's Edition */}
             <PreviewCard>
               <div style={{ fontSize: '16px', lineHeight: '1.7', color: colors.text, whiteSpace: 'pre-line' }}>
                 {newsletterData.openingHook.content}
               </div>
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: `1px solid ${colors.border}` }}>
-                <p style={{ fontSize: '15px', fontWeight: '600', color: colors.text, marginBottom: '12px' }}>In this issue:</p>
+              <div style={{ marginTop: '16px' }}>
+                <p style={{ fontSize: '15px', fontWeight: '600', color: colors.text, marginBottom: '12px' }}>In today's edition:</p>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {newsletterData.bottomLine.items.map((item, i) => (
-                    <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px', fontSize: '15px', color: colors.text }}>
-                      <span style={{ color: colors.primary, fontWeight: '700' }}>→</span>
-                      <span>{item}</span>
+                    <li key={i} style={{ marginBottom: '6px', fontSize: '15px', color: colors.text }}>
+                      {item}
                     </li>
                   ))}
                 </ul>
-                <p style={{ fontSize: '15px', fontWeight: '500', color: colors.text, marginTop: '16px' }}>—The Renewal Weekly Team</p>
+                <p style={{ fontSize: '15px', fontWeight: '500', color: colors.text, marginTop: '16px' }}>—Renewal Weekly Team</p>
               </div>
             </PreviewCard>
 

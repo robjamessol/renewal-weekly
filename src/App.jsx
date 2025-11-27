@@ -155,7 +155,8 @@ const RenewalWeeklyCompiler = () => {
       'nytimes.com', 'washingtonpost.com', 'verywellmind.com', 'verywellfit.com',
       'verywellhealth.com', 'everydayhealth.com', 'bbc.com', 'newscientist.com',
       'technologyreview.com', 'newsweek.com', 'theatlantic.com', 'wired.com',
-      'forbes.com', 'businessinsider.com', 'time.com', 'usatoday.com'
+      'forbes.com', 'businessinsider.com', 'time.com', 'usatoday.com',
+      'wsj.com', 'bloomberg.com', 'theguardian.com'
     ];
     const uniqueDomains = [...new Set([...allDomains, ...mainstreamSources])]
       .filter(d => !blockedDomains.includes(d));
@@ -892,7 +893,8 @@ NO preamble. Start directly with [`
           'nytimes.com', 'washingtonpost.com', 'verywellmind.com', 'verywellfit.com',
           'verywellhealth.com', 'everydayhealth.com', 'bbc.com', 'newscientist.com',
           'technologyreview.com', 'newsweek.com', 'theatlantic.com', 'wired.com',
-          'forbes.com', 'businessinsider.com', 'time.com', 'usatoday.com'
+          'forbes.com', 'businessinsider.com', 'time.com', 'usatoday.com',
+          'wsj.com', 'bloomberg.com', 'theguardian.com'
         ];
         const uniqueAllowedDomains = [...new Set(allowedDomains)]
           .filter(d => !blockedDomains.includes(d))

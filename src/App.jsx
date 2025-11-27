@@ -128,6 +128,31 @@ const RenewalWeeklyCompiler = () => {
     setAiStatus(`🔍 Researching ${sectionType}...`);
 
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
+    const currentDay = new Date().getDate();
+
+    // Health awareness calendar for opening hook - pick most widely recognized event
+    const healthCalendar = {
+      January: { month: ['Cervical Health Awareness', 'Glaucoma Awareness', 'Thyroid Awareness', 'Blood Donor Month'], days: {} },
+      February: { month: ['American Heart Month', 'Cancer Prevention Month'], days: { 2: 'National Wear Red Day', 4: 'World Cancer Day', 14: 'National Donor Day', 28: 'Rare Disease Day' } },
+      March: { month: ['National Kidney Month', 'National Nutrition Month', 'Colorectal Cancer Awareness', 'MS Awareness'], days: { 13: 'World Kidney Day', 14: 'World Sleep Day', 21: 'World Down Syndrome Day', 24: 'World Tuberculosis Day', 26: 'Epilepsy Awareness Day' } },
+      April: { month: ['Parkinson\'s Awareness', 'Autism Acceptance', 'Donate Life Month', 'Stress Awareness'], days: { 2: 'World Autism Awareness Day', 7: 'World Health Day', 11: 'World Parkinson\'s Day', 22: 'Earth Day', 25: 'World Malaria Day' } },
+      May: { month: ['Mental Health Awareness', 'Skin Cancer Awareness', 'Stroke Awareness', 'Lupus Awareness'], days: { 6: 'World Asthma Day', 12: 'International Nurses Day', 17: 'World Hypertension Day', 30: 'World MS Day' } },
+      June: { month: ['Men\'s Health Month', 'Alzheimer\'s & Brain Awareness', 'PTSD Awareness'], days: { 1: 'National Cancer Survivors Day', 14: 'World Blood Donor Day', 19: 'World Sickle Cell Day', 27: 'National HIV Testing Day' } },
+      July: { month: ['UV Safety Month', 'Juvenile Arthritis Awareness'], days: { 11: 'World Brain Day', 28: 'World Hepatitis Day' } },
+      August: { month: ['National Immunization Awareness', 'Psoriasis Action Month'], days: { 1: 'World Lung Cancer Day', 31: 'International Overdose Awareness Day' } },
+      September: { month: ['Suicide Prevention Month', 'Healthy Aging Month', 'Prostate Cancer Awareness', 'Childhood Cancer Awareness'], days: { 10: 'World Suicide Prevention Day', 21: 'World Alzheimer\'s Day', 29: 'World Heart Day' } },
+      October: { month: ['Breast Cancer Awareness', 'Mental Health Awareness', 'Down Syndrome Awareness'], days: { 10: 'World Mental Health Day', 12: 'World Arthritis Day', 17: 'National Mammography Day', 22: 'World Stroke Day' } },
+      November: { month: ['American Diabetes Month', 'Lung Cancer Awareness', 'Alzheimer\'s Awareness', 'Movember'], days: { 14: 'World Diabetes Day', 17: 'World Prematurity Day', 20: 'Great American Smokeout' } },
+      December: { month: ['Impaired Driving Prevention Month'], days: { 1: 'World AIDS Day', 3: 'International Day of Persons with Disabilities' } }
+    };
+
+    const monthEvents = healthCalendar[currentMonth] || { month: [], days: {} };
+    const todayEvent = monthEvents.days[currentDay] || null;
+    const upcomingEvents = Object.entries(monthEvents.days)
+      .filter(([day]) => parseInt(day) > currentDay && parseInt(day) <= currentDay + 7)
+      .map(([day, event]) => `${event} (${currentMonth} ${day})`)
+      .slice(0, 2);
 
     // System message - processed once, more efficient than repeating in user content
     const systemMessage = `You write for Renewal Weekly, a newsletter about stem cells and regenerative medicine.
@@ -136,9 +161,16 @@ Rules: Output ONLY final content. No preamble or thinking. JSON requests return 
 Style: Smart friend who reads journals—hopeful but honest. Include costs/limitations.
 Links: Use {{LINK:text|url}} format. Link to SPECIFIC articles, not homepages.`;
 
+    // Build health context for opening hook
+    const healthContext = todayEvent
+      ? `TODAY IS: ${todayEvent}. PRIORITIZE this in your hook.`
+      : upcomingEvents.length > 0
+        ? `UPCOMING: ${upcomingEvents.join(', ')}. Consider mentioning.`
+        : `This month: ${monthEvents.month[0] || 'general health awareness'}.`;
+
     // Section-specific configurations - use Haiku for simple creative tasks (3x cheaper)
     const sectionConfig = {
-      openingHook: { maxTokens: 250, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      openingHook: { maxTokens: 350, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
       leadStory: { maxTokens: 1200, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
       researchRoundup: { maxTokens: 500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
       secondaryStories: { maxTokens: 1000, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
@@ -154,7 +186,11 @@ Links: Use {{LINK:text|url}} format. Link to SPECIFIC articles, not homepages.`;
 
     // Ultra-concise prompts - every token counts
     const sectionPrompts = {
-      openingHook: `Write 50-75 word opening hook. Seasonal/timely for today. Warm, humorous. NO medical content. End with "—The Renewal Weekly Team"`,
+      openingHook: `Write 50-75 word opening hook for ${today}.
+${healthContext}
+PRIORITY: Health awareness days/events > seasonal/weather > general observations.
+If referencing a specific news event or health day, include {{LINK:keyword|source-url}} to the article.
+Warm, relatable tone. End with "—The Renewal Weekly Team"`,
 
       leadStory: `Search for LATEST stem cell/regenerative medicine news (past 7 days). Write 350-400 words:
 1. Headline (clever, clear)

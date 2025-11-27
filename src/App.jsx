@@ -92,7 +92,7 @@ const PromptInput = ({ value, onChange, placeholder, disabled }) => {
 
 const RenewalWeeklyCompiler = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [activeSettingsTab, setActiveSettingsTab] = useState('sources');
+  const [activeSettingsTab, setActiveSettingsTab] = useState('ai');
   const [isLoading, setIsLoading] = useState({});
   const [lastFetched, setLastFetched] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -2444,7 +2444,7 @@ ${currentGame.content}
         <div className="bg-white border-b border-gray-200 shadow-sm">
           <div className="max-w-6xl mx-auto px-6 py-6">
             <div className="flex gap-4 mb-4">
-              {['ai', 'sources', 'stories', 'beehiiv'].map(tab => (
+              {['ai', 'stories', 'beehiiv'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveSettingsTab(tab)}
@@ -2455,7 +2455,6 @@ ${currentGame.content}
                   }
                 >
                   {tab === 'ai' && '🤖 AI'}
-                  {tab === 'sources' && '📡 News Sources'}
                   {tab === 'stories' && `📚 Used Stories (${usedStories.length})`}
                   {tab === 'beehiiv' && '🐝 Beehiiv'}
                 </button>
@@ -2523,8 +2522,7 @@ ${currentGame.content}
                     <li>• Click "Refresh Section" to regenerate individual sections with fresh research</li>
                     <li>• Enter keywords to guide the AI (e.g., "Parkinson's disease", "CAR-T therapy")</li>
                     <li>• All content uses <strong>live web search</strong> to find current news and real article links</li>
-                    <li>• Sources link to specific articles, not homepages</li>
-                    <li>• Priority is given to your configured News Sources, but better content is used when found</li>
+                    <li>• Sources configured in <code>src/config/sources.json</code></li>
                   </ul>
                 </div>
                 <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
@@ -2534,26 +2532,6 @@ ${currentGame.content}
                     <li>• Claude tokens: ~$0.03-0.10 per newsletter</li>
                     <li>• <strong>Total per newsletter: ~$0.25-0.35</strong></li>
                   </ul>
-                </div>
-              </div>
-            )}
-
-            {activeSettingsTab === 'sources' && (
-              <div className="space-y-4">
-                <p className="text-sm text-gray-600">Manage news sources for content refresh.</p>
-                <div className="grid gap-2 max-h-48 overflow-y-auto">
-                  {customSources.map((source, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <input type="checkbox" checked={source.enabled} onChange={() => toggleSource(i)} className="w-4 h-4" style={{ accentColor: colors.primary }} />
-                      <span className="flex-1 font-medium text-gray-700">{source.name}</span>
-                      <button onClick={() => removeSource(i)} className="text-red-500 hover:text-red-700 text-sm">✕</button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <input type="text" placeholder="Source name" value={newSourceName} onChange={(e) => setNewSourceName(e.target.value)} className="flex-1 px-3 py-2 border rounded-lg text-sm" />
-                  <input type="text" placeholder="URL" value={newSourceUrl} onChange={(e) => setNewSourceUrl(e.target.value)} className="flex-1 px-3 py-2 border rounded-lg text-sm" />
-                  <button onClick={addCustomSource} className="px-4 py-2 text-white rounded-lg font-medium" style={{ backgroundColor: colors.primary }}>+ Add</button>
                 </div>
               </div>
             )}

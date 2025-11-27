@@ -7,6 +7,7 @@
       "Confident but not preachy",
       "Direct, not clinical",
       "Hopeful, not hype",
+      "Smart, not academic",
       "Human, not corporate"
     ]
   },
@@ -18,72 +19,135 @@
       "That changed this week",
       "The results are genuinely encouraging",
       "Shows promise for",
-      "The catch:"
+      "The catch:",
+      "What you should know:",
+      "Bottom line:",
+      "The short version:"
     ],
     "bad": [
       "You should really consider...",
+      "It's important to remember that...",
       "demonstrated statistically significant improvements",
       "Revolutionary breakthrough!",
       "You won't believe...",
-      "This miracle cure..."
+      "This miracle cure...",
+      "We are pleased to present...",
+      "In exciting news...",
+      "Scientists are excited..."
     ]
+  },
+
+  "sentencePatterns": {
+    "contrastSetup": {
+      "description": "Long context followed by short punchy impact",
+      "pattern": "[X million] Americans with [condition], the prognosis has always been the same: [limitation]. That changed this week.",
+      "example": "For 20 million Americans with age-related macular degeneration, the prognosis has always been the same: We can slow it down, but we can't bring back what you've lost. That changed this week."
+    },
+    "heresWhat": {
+      "description": "Break down complex info with clear labels",
+      "labels": ["Here's what happened:", "Why this matters now:", "What's next:", "The catch:", "Bottom line:"],
+      "example": "**Here's what happened:** Patients gained the ability to read 21 additional letters on an eye chart."
+    },
+    "relatableTranslation": {
+      "description": "Follow technical info with real-world meaning",
+      "pattern": "[Technical finding]. For context, that's [relatable comparison].",
+      "example": "21 additional letters on an eye chart. For context, that's the difference between needing help crossing the street and reading a restaurant menu."
+    },
+    "honestCaveat": {
+      "description": "Acknowledge limitations without being negative",
+      "labels": ["The catch:", "What you should know:", "Bottom line:"],
+      "example": "**The catch:** Results varied based on how cells were delivered. There's no standardized protocol yet."
+    },
+    "contrarianOpening": {
+      "description": "Challenge common assumptions",
+      "pattern": "The [industry] wants you to believe [common belief]. [Source] disagrees.",
+      "example": "The supplement aisle wants you to believe you need pills for everything. Harvard disagrees."
+    }
   },
 
   "formatting": {
     "rules": [
       "Use {{LINK:display text|url}} for links embedded naturally in sentences",
-      "Use **bold** for section headers only: **Here's what happened:** **The catch:**",
-      "NEVER use standalone dashes or hyphens (-) except in hyphenated words",
-      "NEVER use em dashes in mid-sentence. Use periods instead.",
+      "Use **bold** for section labels: **Here's what happened:** **The catch:**",
+      "Use • for bullet points, not -",
+      "Short paragraphs: 2-3 sentences max",
       "Separate paragraphs with blank lines",
-      "NO markdown headers (no # or ##)"
+      "NO markdown headers (no # or ##)",
+      "Use em dashes (—) for asides, not parentheses",
+      "Use colons before explanations"
     ],
-    "linkStyle": "Charcoal text (#1F2937) with 2px purple underline (#8B5CF6)"
+    "linkStyle": {
+      "rule": "Embed links in natural reading flow, link meaningful words",
+      "good": "Researchers at the {{LINK:University of Michigan|url}} published results...",
+      "bad": "Read the study here: [link]"
+    }
   },
 
-  "wordsToUse": [
-    "genuinely encouraging",
-    "shows promise",
-    "got better",
-    "the catch",
-    "what you should know",
-    "bottom line",
-    "here's what happened"
-  ],
+  "wordsToUse": {
+    "instead": {
+      "Revolutionary": "Genuinely encouraging",
+      "Breakthrough": "Changed this week",
+      "You should": "Here's what that means",
+      "It's important to note": "The catch:",
+      "Studies show": "[Source] found that",
+      "Significant improvement": "Got better",
+      "May help with": "Shows promise for",
+      "Consult your doctor": "Ask your [specialist] about"
+    },
+    "phrases": [
+      "genuinely encouraging",
+      "shows promise",
+      "got better",
+      "the catch",
+      "what you should know",
+      "bottom line",
+      "here's what happened",
+      "why this matters",
+      "the short version"
+    ]
+  },
 
   "wordsToAvoid": [
     "revolutionary",
     "miracle",
     "breakthrough",
+    "cure",
     "you won't believe",
     "game-changer",
     "cutting-edge",
     "unprecedented",
-    "groundbreaking"
+    "groundbreaking",
+    "this changes everything",
+    "scientists are excited",
+    "in conclusion",
+    "as we all know",
+    "it goes without saying",
+    "at the end of the day",
+    "leverage",
+    "synergy",
+    "optimize"
   ],
 
-  "patterns": {
-    "contrastSetup": {
-      "description": "Long context followed by short punchy impact",
-      "example": "For 20 million Americans, the prognosis has always been the same. That changed this week."
-    },
-    "relatableTranslation": {
-      "description": "Follow technical info with real-world meaning",
-      "example": "21 additional letters on an eye chart. That's the difference between needing help crossing the street and reading a menu."
-    },
-    "honestCaveat": {
-      "description": "Acknowledge limitations without being negative",
-      "labels": ["The catch:", "What you should know:", "Bottom line:"]
-    }
+  "trustTest": {
+    "description": "Before publishing any content, ask these 5 questions",
+    "questions": [
+      "Would I send this to my parent with arthritis? (Is it clear and respectful?)",
+      "Would a doctor cringe? (Is it accurate without overpromising?)",
+      "Would a skeptic roll their eyes? (Is it honest about limitations?)",
+      "Would a scanner get value? (Can someone skim and learn something?)",
+      "Would I click the links? (Are they genuinely useful?)"
+    ]
   },
 
   "sectionWordLimits": {
-    "openingHook": { "min": 50, "max": 75 },
+    "openingHook": { "min": 40, "max": 60, "sentences": "2-3" },
+    "inTodaysEdition": { "max": 6, "note": "words per teaser, with emoji" },
     "leadStory": { "min": 280, "max": 320 },
     "researchRoundup": { "min": 120, "max": 150 },
     "secondaryStories": { "min": 75, "max": 100, "note": "per story" },
     "deepDive": { "min": 180, "max": 220 },
     "statSection": { "min": 120, "max": 150 },
-    "thePulse": { "max": 25, "note": "per item" }
+    "thePulse": { "max": 25, "note": "per item" },
+    "worthKnowing": { "max": 100, "note": "per item" }
   }
 }

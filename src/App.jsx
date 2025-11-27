@@ -259,59 +259,65 @@ We'll handle the health intel. You handle the mashed potatoes.
 
 —The Renewal Weekly Team`,
 
-      leadStory: `Search for LATEST stem cell/regenerative medicine breakthrough news (past 7 days).${customPrompt ? ` Focus on: ${customPrompt}` : ''}
+      leadStory: `Search for a DIFFERENT stem cell/regenerative medicine story from the past 7 days.
+${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
+⚠️ DO NOT write about: "${customPrompt.split('|')[0].replace('AVOID_TOPIC:', '')}"
+Find a COMPLETELY DIFFERENT story - different condition, different institution, different research.
+${customPrompt.split('|')[1] ? `Focus on: ${customPrompt.split('|')[1]}` : ''}` : (customPrompt ? `Focus on: ${customPrompt}` : '')}
 
-OUTPUT FORMAT (follow EXACTLY):
-Line 1: Clever, clear headline (no markdown, no asterisks)
+STRICT WORD LIMIT: 280-320 words total. No exceptions.
 
-Then write 350-400 words of CONTINUOUS PROSE with these sections:
+OUTPUT FORMAT:
+Line 1: Clever headline (8 words max, no markdown)
 
-Paragraph 1: Hook with statistics - "For [X million] Americans with [condition], the prognosis has always been..."
+Then write TIGHT, PUNCHY prose:
 
-Paragraph 2: Short impact statement - "That changed this week."
+Para 1 (2 sentences max): "For [X million] Americans with [condition], the prognosis has always been the same: [limitation]."
 
-Paragraph 3-4: **Here's what happened:** Specifics of the research/trial. Include {{LINK:institution or journal name|url}} inline.
+Para 2 (1 sentence): "That changed this week."
 
-Paragraph 5-6: **Why this matters now:** Context for readers. What makes this different from past attempts?
+Para 3: **Here's what happened:** Key findings in 2-3 sentences. One {{LINK:source|url}}.
 
-Paragraph 7: **What's next:** Forward-looking info about trials, timelines, next steps.
+Para 4: **Why this matters now:** 2 sentences. What's different about this approach?
 
-Paragraph 8: Include a quote from a researcher if available.
+Para 5: **What's next:** 1-2 sentences. Timeline, next steps.
 
-Final paragraph: **The zoom out:** Bigger picture context. Link to {{LINK:source|url}}.
+Para 6: One short quote from researcher (1 sentence).
 
-CRITICAL FORMATTING:
-- Separate paragraphs with blank lines
-- Use **bold** for section headers only (Here's what happened:, Why this matters now:, What's next:, The zoom out:)
-- Embed links naturally in sentences: "Researchers at the {{LINK:University of Michigan|https://example.com}} published..."
-- NO markdown headers (no # or ##)
-- NO bullet points in the main content
-- Write like a smart friend explaining exciting news`,
+Para 7: **The zoom out:** 1-2 sentences. Bigger picture. One {{LINK:source|url}}.
 
-      researchRoundup: `Search recent stem cell treatment research for a specific condition (past 2 weeks).${customPrompt ? ` Focus on: ${customPrompt}` : ''}
+WRITING RULES:
+- Every sentence must earn its place. Cut filler words.
+- NO redundant explanations (don't explain the condition twice)
+- NO flowery language ("watch your vision slowly vanish as cells die")
+- YES: "Patients got better" NOT: "demonstrated statistically significant improvements"
+- Keep paragraphs to 2-3 sentences MAX
+- Total: 280-320 words. Count them.`,
 
-OUTPUT FORMAT (follow EXACTLY):
-Line 1: Subtitle in format "Treatment Spotlight: [Therapy Type] for [Condition]"
-Example: "Treatment Spotlight: MSC Therapy for Multiple Sclerosis"
+      researchRoundup: `Search for stem cell treatment research for a DIFFERENT condition (past 2 weeks).
+${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
+⚠️ DO NOT write about: "${customPrompt.split('|')[0].replace('AVOID_TOPIC:', '')}"
+Find a DIFFERENT condition/treatment entirely.
+${customPrompt.split('|')[1] ? `Focus on: ${customPrompt.split('|')[1]}` : ''}` : (customPrompt ? `Focus on: ${customPrompt}` : '')}
 
-Then write 150-200 words of CONTINUOUS PROSE:
+STRICT WORD LIMIT: 120-150 words. No exceptions.
 
-Paragraph 1: "If you or someone you love has [condition], this one's worth reading twice."
+OUTPUT FORMAT:
+Line 1: "Treatment Spotlight: [Therapy] for [Condition]"
 
-Paragraph 2: Research findings with {{LINK:source name|url}} embedded. What did the study/review find? Be specific about improvements, outcomes.
+Then write TIGHT prose (5 short paragraphs):
 
-Paragraph 3: **What you should know:** Practical info - cost ranges ($X,000-$XX,000), availability, how to access (clinical trials vs private clinics).
+Para 1: "If you or someone you love has [condition], this one's worth reading twice."
 
-Paragraph 4: **The catch:** Honest limitations - varied results, no standardized protocol, experimental status.
+Para 2: Research findings (2 sentences max). One {{LINK:source|url}}.
 
-Paragraph 5: **Bottom line:** Actionable next step. Link to {{LINK:ClinicalTrials.gov|https://clinicaltrials.gov}} or relevant resource.
+Para 3: **What you should know:** Cost range, availability (1-2 sentences).
 
-CRITICAL:
-- First line MUST be the subtitle only
-- Use **bold** for section headers only
-- Embed links naturally in sentences
-- Include specific numbers (costs, percentages, patient counts)
-- Be hopeful but honest about limitations`,
+Para 4: **The catch:** Key limitation (1 sentence).
+
+Para 5: **Bottom line:** Next step (1 sentence). {{LINK:ClinicalTrials.gov|https://clinicaltrials.gov}}.
+
+Total: 120-150 words. Be specific with numbers.`,
 
       secondaryStories: `Search 3 different recent stem cell/regenerative medicine stories (past 2 weeks). Each story should be from a DIFFERENT topic area.
 
@@ -337,36 +343,38 @@ Return ONLY valid JSON array with this EXACT structure:
 EXAMPLE boldLead: "Stanford just made stem cell transplants safer—without chemo."
 EXAMPLE content: "A new antibody therapy can prepare patients for stem cell transplants without toxic chemotherapy or radiation. In a {{LINK:Phase 1 trial|https://example.com}}, children with Fanconi anemia achieved nearly complete donor cell replacement..."`,
 
-      deepDive: `Search nutrition/wellness/lifestyle research related to cellular health and regeneration.${customPrompt ? ` Topic: ${customPrompt}` : ''}
+      deepDive: `Search for a DIFFERENT nutrition/wellness topic related to cellular health.
+${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
+⚠️ DO NOT write about: "${customPrompt.split('|')[0].replace('AVOID_TOPIC:', '')}"
+Find a DIFFERENT topic entirely.
+${customPrompt.split('|')[1] ? `Topic: ${customPrompt.split('|')[1]}` : ''}` : (customPrompt ? `Topic: ${customPrompt}` : '')}
 
-OUTPUT FORMAT (follow EXACTLY):
-Line 1: Catchy headline (no markdown, no asterisks) e.g. "The Anti-Inflammatory Shopping List You Actually Need"
+STRICT WORD LIMIT: 180-220 words. No exceptions.
 
-Then write 200-300 words:
+OUTPUT FORMAT:
+Line 1: Catchy headline (8 words max, no markdown)
 
-Paragraph 1: Contrarian/surprising opening that challenges conventional wisdom. "The supplement aisle wants you to believe..." or "Everyone says X, but research shows..."
+Then write TIGHT prose:
 
-Paragraph 2: Reference {{LINK:institution/journal|url}} research with specific findings.
+Para 1: Contrarian opening (1-2 sentences). "The supplement aisle wants you to believe..."
 
-Paragraph 3-4: **What to add:** or **What works:**
-Use bullet format with • symbol:
-• Item one — specific recommendation
-• Item two — why it matters
-• Item three — how much/how often
+Para 2: Research reference with {{LINK:source|url}} (2 sentences).
 
-Paragraph 5: **What to limit:** or **What to avoid:**
-• Item one
-• Item two
+Para 3: **What to add:** (use • bullets)
+• Item — specific amount
+• Item — specific amount
+• Item — specific amount
 
-Paragraph 6: **The connection to stem cells:** How this relates to cellular health/regeneration. Chronic inflammation, cell aging, bone marrow health, etc.
+Para 4: **What to limit:**
+• Item
+• Item
 
-Final paragraph: Actionable takeaway with {{LINK:resource|url}}. "Start with one swap: X → Y."
+Para 5: **The connection to stem cells:** (2 sentences max)
 
-CRITICAL:
-- Use • for bullet points (not - or *)
-- Use — (em dash) within bullet items
-- Embed links in sentences naturally
-- Be specific: "2-3 servings/week" not "eat more"`,
+Para 6: One actionable takeaway. {{LINK:resource|url}}.
+
+Use • for bullets, — for em dashes. Be specific: "2-3 servings/week".
+Total: 180-220 words.`,
 
       statSection: `Search for a compelling, surprising statistic about regenerative medicine, stem cell research, or the biotech industry.
 
@@ -1218,7 +1226,27 @@ Translation: The treatments we're writing about today may be routine options in 
     setIsLoading(prev => ({ ...prev, [sectionName]: true }));
     setAiStatus(`🔍 Researching ${sectionName}...`);
 
-    const customPrompt = sectionPrompts[sectionName] || '';
+    // Build custom prompt with context about what to avoid
+    let customPrompt = sectionPrompts[sectionName] || '';
+
+    // For lead story, tell AI to find a DIFFERENT story
+    if (aiType === 'leadStory' && newsletterData.leadStory.headline) {
+      const currentHeadline = newsletterData.leadStory.headline;
+      customPrompt = `AVOID_TOPIC:${currentHeadline}|${customPrompt}`;
+    }
+
+    // For research roundup, avoid current topic
+    if (aiType === 'researchRoundup' && newsletterData.yourOptionsThisWeek.subtitle) {
+      const currentSubtitle = newsletterData.yourOptionsThisWeek.subtitle;
+      customPrompt = `AVOID_TOPIC:${currentSubtitle}|${customPrompt}`;
+    }
+
+    // For deep dive, avoid current topic
+    if (aiType === 'deepDive' && newsletterData.industryDeepDive.headline) {
+      const currentHeadline = newsletterData.industryDeepDive.headline;
+      customPrompt = `AVOID_TOPIC:${currentHeadline}|${customPrompt}`;
+    }
+
     const generatedContent = await generateWithAI(aiType, customPrompt);
 
     // Always clear loading state when done

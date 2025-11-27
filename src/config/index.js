@@ -47,10 +47,32 @@ ${s.formatting.rules.join('\n')}`;
 // Build audience context string
 export const getAudienceContext = () => {
   const a = audience;
-  return `AUDIENCE: ${a.demographics.ageRange} with ${a.conditions.slice(0, 3).join(', ')}, and similar conditions.
-They are: ${a.psychographics.mindset.slice(0, 3).join(', ')}.
-They want: ${a.contentPreferences.want.slice(0, 3).join(', ')}.
-They don't want: ${a.contentPreferences.dontWant.slice(0, 3).join(', ')}.`;
+  const conditions = a.conditions?.primary || a.conditions || [];
+  const mindset = a.psychographics?.mindset || [];
+  const concerns = a.psychographics?.concerns || [];
+  const want = a.contentPreferences?.want || [];
+  const dontWant = a.contentPreferences?.dontWant || [];
+  const effectivePhrases = a.messagingGuidance?.effectivePhrases || [];
+
+  return `AUDIENCE PROFILE:
+- Demographics: ${a.demographics.ageRange}, ${a.demographics.education || 'educated'}
+- Motivations: ${a.healthJourney?.motivations?.slice(0, 3).join('; ') || 'Improve quality of life, stay informed'}
+- Common Conditions: ${conditions.slice(0, 4).join('; ')}
+
+WHO THEY ARE:
+- ${mindset.slice(0, 4).join('\n- ')}
+
+THEIR CONCERNS:
+- ${concerns.slice(0, 3).join('\n- ')}
+
+WHAT THEY WANT FROM CONTENT:
+- ${want.slice(0, 5).join('\n- ')}
+
+WHAT THEY DON'T WANT:
+- ${dontWant.slice(0, 4).join('\n- ')}
+
+EFFECTIVE PHRASES TO USE:
+${effectivePhrases.slice(0, 4).map(p => `"${p}"`).join(', ')}`;
 };
 
 // Export raw configs for direct access

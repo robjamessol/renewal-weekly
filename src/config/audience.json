@@ -2,9 +2,23 @@
   "description": "Target audience profile for Renewal Weekly",
 
   "demographics": {
-    "ageRange": "40-80 years old",
-    "primaryAge": "55-70",
-    "gender": "All genders, slight skew toward women (health decision makers)"
+    "ageRange": "45-75 years old",
+    "primaryAge": "55-68",
+    "gender": "All genders, slight skew toward women (health decision makers for families)",
+    "income": {
+      "range": "Wide range - from middle-class to affluent",
+      "note": "Some paid $25K+ for treatments; others are researching options or improving quality of life on a budget"
+    },
+    "education": "College-educated or equivalent life experience; many professionals, executives, entrepreneurs",
+    "location": "Primarily US, with concentration in states with stem cell clinics (FL, TX, CA, AZ, CO)",
+    "occupation": [
+      "Business owners and entrepreneurs",
+      "Corporate executives and managers",
+      "Medical and legal professionals",
+      "Successful retirees",
+      "Real estate investors",
+      "Self-employed consultants"
+    ]
   },
 
   "interests": [
@@ -14,11 +28,27 @@
     "Chronic disease management",
     "Alternative treatments",
     "Clinical trials",
-    "Health optimization"
-    "Nutritional research"
-    "Health and wellbeing"
+    "Health optimization",
+    "Nutritional research",
+    "Health and wellbeing",
     "Supplement Vitamins Research"
   ],
+
+  "healthJourney": {
+    "stages": [
+      "Some are post-conventional medicine, seeking alternatives",
+      "Some are proactively optimizing health and longevity",
+      "Some are researching options for themselves or loved ones",
+      "Some have already tried stem cell treatments and want to stay informed"
+    ],
+    "motivations": [
+      "Improve quality of life",
+      "Stay active and independent longer",
+      "Explore options beyond standard care",
+      "Make informed decisions about health investments",
+      "Stay ahead of the curve on regenerative medicine"
+    ]
+  },
 
   "conditions": [
     "Degenerative diseases (MS, Parkinson's, Alzheimer's)",
@@ -28,56 +58,151 @@
     "Joint issues (arthritis, cartilage damage)",
     "Heart disease",
     "Diabetes",
-    "Cancer (in remission or prevention)"
-    "Inflammation"
+    "Cancer (in remission or prevention)",
+    "Inflammation",
     "Sports Injuries"
   ],
 
   "psychographics": {
+    "identity": [
+      "Proactive about their health",
+      "Like to stay informed and make their own decisions",
+      "Often the health decision-maker for their family",
+      "Value being ahead of the curve"
+    ],
     "mindset": [
-      "Smart and skeptical",
-      "Research-oriented",
-      "Tired of hype and miracle claims",
-      "Willing to invest in proven treatments",
-      "Proactive about health"
+      "Intelligent and curious",
+      "Research-oriented - they like to understand their options",
+      "Open to new approaches but want evidence",
+      "Practical - care about what actually works"
     ],
-    "challenges": [
-      "Brain fog and fatigue",
-      "Information overload",
-      "Difficulty distinguishing real science from scams",
-      "High cost of experimental treatments",
-      "Limited access to clinical trials"
+    "values": [
+      "Quality of life and staying active",
+      "Independence and self-reliance",
+      "Time with family and loved ones",
+      "Making informed decisions",
+      "Staying mentally and physically engaged"
     ],
-    "goals": [
-      "Stay informed about legitimate advances",
-      "Find clinical trials they qualify for",
-      "Understand costs and realistic expectations",
-      "Make informed decisions with their doctors"
+    "concerns": [
+      "Distinguishing real science from hype",
+      "Understanding costs and what's realistic",
+      "Finding trustworthy information",
+      "Knowing which treatments are worth exploring"
+    ]
+  },
+
+  "buyingBehavior": {
+    "decisionMaking": [
+      "Research before committing",
+      "Seek multiple opinions and sources",
+      "Value peer recommendations",
+      "Look for credentialed experts and published research"
+    ],
+    "trustIndicators": [
+      "FDA involvement (even if investigational)",
+      "Published clinical trial data with real numbers",
+      "Named researchers at recognized institutions",
+      "Transparent about limitations and realistic outcomes",
+      "Clear information about costs"
     ]
   },
 
   "contentPreferences": {
     "want": [
-      "Specific numbers (costs, success rates, timelines)",
-      "Honest assessment of limitations",
-      "Actionable next steps",
-      "Links to primary sources",
-      "Plain English explanations of complex science"
+      "Specific numbers: success rates, costs, timelines, trial sizes",
+      "Honest assessment of what works AND what doesn't",
+      "Insider knowledge they can't get from mainstream media",
+      "Actionable next steps: how to access treatments or trials",
+      "Cost-benefit analysis for expensive treatments",
+      "Red flags to avoid scams and bad clinics",
+      "Updates on FDA approvals and regulatory changes",
+      "Links to primary sources for their own research"
     ],
     "dontWant": [
-      "Hype or sensationalism",
-      "Vague promises",
-      "Corporate jargon",
-      "Condescending explanations",
-      "Overly technical language"
+      "Hype, sensationalism, or miracle claims",
+      "Vague promises without specific data",
+      "Condescending explanations that assume they're ignorant",
+      "Corporate jargon and marketing speak",
+      "Content that tells them to 'just ask your doctor'",
+      "Overly cautious advice that dismisses regenerative medicine",
+      "Testimonials without scientific backing"
+    ],
+    "preferredFormat": [
+      "Scannable with clear headers and bullet points",
+      "Lead with the important takeaway, then details",
+      "Short paragraphs (brain fog is real for this audience)",
+      "Links to dive deeper if they want more",
+      "Visual elements: stats, numbers, charts"
     ]
   },
 
-  "trustSignals": [
-    "Citations from peer-reviewed journals",
-    "References to FDA status and clinical trial phases",
-    "Honest discussion of costs and insurance coverage",
-    "Acknowledgment of what we don't know yet",
-    "Links to ClinicalTrials.gov for verification"
-  ]
+  "engagementTriggers": {
+    "highEngagement": [
+      "New FDA approvals or breakthrough trials",
+      "Cost breakdowns and insurance workarounds",
+      "Clinic comparison guides and red flags",
+      "Success stories with specific conditions they have",
+      "Clinical trial enrollment opportunities",
+      "International treatment options (especially Japan, Panama, Mexico)"
+    ],
+    "mediumEngagement": [
+      "General stem cell science updates",
+      "Longevity and anti-aging research",
+      "Supplement and lifestyle optimization",
+      "Industry investment and market trends"
+    ],
+    "lowEngagement": [
+      "Generic health tips they've heard before",
+      "Content that's too basic or elementary",
+      "Purely academic research with no practical application"
+    ]
+  },
+
+  "messagingGuidance": {
+    "toneKeywords": [
+      "Informed insider",
+      "Realistic optimism",
+      "Practical guidance",
+      "Respectful intelligence",
+      "Honest assessment"
+    ],
+    "effectivePhrases": [
+      "Here's what the data actually shows",
+      "What your doctor might not know yet",
+      "The real cost breakdown",
+      "How to get access",
+      "What we're watching",
+      "The honest assessment"
+    ],
+    "avoidPhrases": [
+      "Miracle cure",
+      "Revolutionary breakthrough",
+      "You won't believe",
+      "Ask your doctor (alone - always provide more)",
+      "It's never too late (dismissive of their urgency)"
+    ]
+  },
+
+  "audienceSegments": {
+    "activePatients": {
+      "description": "Currently dealing with a specific condition, seeking treatment options",
+      "priority": "Highest",
+      "contentNeed": "Specific treatment guides, clinical trial info, cost/access details"
+    },
+    "healthOptimizers": {
+      "description": "No acute condition but investing in longevity and prevention",
+      "priority": "High",
+      "contentNeed": "Anti-aging research, biohacking, preventive treatments"
+    },
+    "caregivers": {
+      "description": "Researching for a spouse, parent, or family member",
+      "priority": "High",
+      "contentNeed": "Clear explanations they can share, practical next steps"
+    },
+    "postTreatment": {
+      "description": "Already had stem cell therapy, monitoring field for follow-ups",
+      "priority": "Medium",
+      "contentNeed": "New developments, maintenance protocols, when to retreat"
+    }
+  }
 }

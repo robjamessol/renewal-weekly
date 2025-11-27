@@ -1,5 +1,6 @@
 {
   "description": "Preferred research sources by topic category. The AI will prioritize these domains when searching for articles.",
+  "note": "Blocked by Anthropic crawler: nytimes.com, washingtonpost.com, bbc.com, newscientist.com, verywellmind.com, verywellfit.com, verywellhealth.com, everydayhealth.com, technologyreview.com, newsweek.com, theatlantic.com, wired.com, forbes.com, businessinsider.com, time.com, usatoday.com",
 
   "stemCell": {
     "label": "Stem Cell & Regenerative Medicine",
@@ -20,7 +21,6 @@
       "statnews.com",
       "genengnews.com",
       "the-scientist.com",
-      "newscientist.com",
       "eurekalert.org",
       "medicalxpress.com",
       "sciencedaily.com",
@@ -29,7 +29,42 @@
       "diabetes.org",
       "parkinson.org",
       "alzforum.org",
-      "who.int"
+      "who.int",
+      "med.stanford.edu",
+      "hsci.harvard.edu",
+      "ninds.nih.gov",
+      "stemcell.ucla.edu",
+      "nyscf.org",
+      "openmd.com",
+      "nibib.nih.gov",
+      "cirm.ca.gov",
+      "eurostemcell.org",
+      "stemcellsportal.com",
+      "stemcell.com",
+      "terrapinn.com",
+      "bioinformant.com",
+      "regmednet.com",
+      "stemedix.com",
+      "regenerativemedicinefoundation.org",
+      "alliancerm.org",
+      "tandfonline.com",
+      "cedars-sinai.org",
+      "nidcr.nih.gov",
+      "reprocell.com",
+      "armstg.org",
+      "regmedfoundation.org",
+      "futuremedicine.com",
+      "wakehealth.edu",
+      "clinicaltrials.gov",
+      "ctti-clinicaltrials.org",
+      "centerwatch.com",
+      "clinicalleader.com",
+      "appliedclinicaltrialsonline.com",
+      "biopharmadive.com",
+      "clinicalresearchnewsonline.com",
+      "clinicaltrialsarena.com",
+      "trialsitenews.com",
+      "citeline.com"
     ]
   },
 
@@ -49,16 +84,27 @@
       "fightaging.org",
       "longevityalliance.org",
       "agingbiotech.org",
-      "newscientist.com",
       "medicalxpress.com",
-      "technologyreview.com",
       "sciencedirect.com",
       "sciencealert.com",
       "scitechdaily.com",
-      "bbc.com",
-      "nytimes.com",
-      "washingtonpost.com",
-      "newsweek.com"
+      "longevity.stanford.edu",
+      "afar.org",
+      "labiotech.eu",
+      "lifeextension.com",
+      "mdpi.com",
+      "livescience.com",
+      "blueprint.bryanjohnson.com",
+      "insidetracker.com",
+      "healio.com",
+      "agingconsortium.org",
+      "heales.org",
+      "news.uthscsa.edu",
+      "milkeninstitute.org",
+      "xprize.org",
+      "americanagingassociation.org",
+      "a4m.com",
+      "uchealth.org"
     ]
   },
 
@@ -73,9 +119,7 @@
       "thelancet.com",
       "cell.com",
       "aging-us.com",
-      "newscientist.com",
       "fightaging.org",
-      "technologyreview.com",
       "medicalnewstoday.com",
       "eurekalert.org",
       "worldhealth.net",
@@ -101,17 +145,20 @@
       "psychologytoday.com",
       "healthline.com",
       "webmd.com",
-      "verywellmind.com",
-      "everydayhealth.com",
       "prevention.com",
       "greatergood.berkeley.edu",
       "helpguide.org",
       "mhanational.org",
       "mindbodygreen.com",
       "wellandgood.com",
-      "nytimes.com",
-      "washingtonpost.com",
-      "npr.org"
+      "npr.org",
+      "kff.org",
+      "health.gov",
+      "fiercehealthcare.com",
+      "medscape.com",
+      "reuters.com",
+      "abcnews.go.com",
+      "cnn.com"
     ]
   },
 
@@ -136,7 +183,12 @@
       "frontiersin.org",
       "bmj.com",
       "nature.com",
-      "crnusa.org"
+      "crnusa.org",
+      "examine.com",
+      "nccih.nih.gov",
+      "andjrnl.org",
+      "pcrm.org",
+      "tuftshealthletter.com"
     ]
   },
 
@@ -157,7 +209,13 @@
       "cdc.gov",
       "eatright.org",
       "nutraingredients.com",
-      "frontiersin.org"
+      "frontiersin.org",
+      "ama-assn.org",
+      "commonfund.nih.gov",
+      "nutritioninsight.com",
+      "heart.org",
+      "healthyeatingresearch.org",
+      "jn.nutrition.org"
     ]
   },
 
@@ -170,12 +228,11 @@
       "who.int",
       "nhs.uk",
       "eatright.org",
-      "verywellfit.com",
       "self.com",
       "runnersworld.com",
       "npr.org",
-      "nytimes.com",
-      "washingtonpost.com"
+      "menshealth.com",
+      "acefitness.org"
     ]
   }
 }

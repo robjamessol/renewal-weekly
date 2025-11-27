@@ -146,11 +146,20 @@ const RenewalWeeklyCompiler = () => {
     // Add mainstream health sources not in sources.json
     const mainstreamSources = [
       'menshealth.com', 'healthline.com', 'webmd.com', 'prevention.com',
-      'cnn.com', 'npr.org', 'nytimes.com', 'washingtonpost.com',
-      'mayoclinic.org', 'clevelandclinic.org', 'health.harvard.edu',
-      'statnews.com', 'endpoints.news', 'biospace.com', 'fiercebiotech.com'
+      'cnn.com', 'npr.org', 'mayoclinic.org', 'clevelandclinic.org',
+      'health.harvard.edu', 'statnews.com', 'endpoints.news',
+      'biospace.com', 'fiercebiotech.com', 'medicalxpress.com'
     ];
-    const uniqueDomains = [...new Set([...allDomains, ...mainstreamSources])];
+    // Domains that block Anthropic's crawler - exclude these
+    const blockedDomains = [
+      'nytimes.com', 'washingtonpost.com', 'verywellmind.com', 'verywellfit.com',
+      'verywellhealth.com', 'everydayhealth.com', 'bbc.com', 'newscientist.com',
+      'technologyreview.com', 'newsweek.com', 'theatlantic.com', 'wired.com',
+      'forbes.com', 'businessinsider.com', 'time.com', 'usatoday.com',
+      'wsj.com', 'bloomberg.com', 'theguardian.com'
+    ];
+    const uniqueDomains = [...new Set([...allDomains, ...mainstreamSources])]
+      .filter(d => !blockedDomains.includes(d));
 
     // Build audience context from audience.json
     const audienceInterests = audience.interests?.join(', ') || 'stem cells, regenerative medicine';
@@ -875,15 +884,26 @@ NO preamble. Start directly with [`
           ...(sources.nutrition?.domains || []),
           // Add mainstream sources
           'menshealth.com', 'healthline.com', 'webmd.com', 'prevention.com',
-          'cnn.com', 'npr.org', 'nytimes.com', 'mayoclinic.org',
-          'statnews.com', 'endpoints.news', 'biospace.com', 'fiercebiotech.com'
+          'cnn.com', 'npr.org', 'mayoclinic.org', 'clevelandclinic.org',
+          'health.harvard.edu', 'statnews.com', 'endpoints.news',
+          'biospace.com', 'fiercebiotech.com', 'medicalxpress.com'
         ];
-        const uniqueAllowedDomains = [...new Set(allowedDomains)].slice(0, 50);
+        // Domains that block Anthropic's crawler - exclude these
+        const blockedDomains = [
+          'nytimes.com', 'washingtonpost.com', 'verywellmind.com', 'verywellfit.com',
+          'verywellhealth.com', 'everydayhealth.com', 'bbc.com', 'newscientist.com',
+          'technologyreview.com', 'newsweek.com', 'theatlantic.com', 'wired.com',
+          'forbes.com', 'businessinsider.com', 'time.com', 'usatoday.com',
+          'wsj.com', 'bloomberg.com', 'theguardian.com'
+        ];
+        const uniqueAllowedDomains = [...new Set(allowedDomains)]
+          .filter(d => !blockedDomains.includes(d))
+          .slice(0, 50);
 
         requestBody.tools = [{
           type: 'web_search_20250305',
           name: 'web_search',
-          max_uses: 6, // Enough for thorough section research
+          max_uses: 6,
           allowed_domains: uniqueAllowedDomains
         }];
       }

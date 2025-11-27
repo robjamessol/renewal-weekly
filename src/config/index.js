@@ -49,27 +49,26 @@ export const getAudienceContext = () => {
   const a = audience;
   const conditions = a.conditions?.primary || a.conditions || [];
   const mindset = a.psychographics?.mindset || [];
-  const frustrations = a.psychographics?.frustrations || [];
+  const concerns = a.psychographics?.concerns || [];
   const want = a.contentPreferences?.want || [];
   const dontWant = a.contentPreferences?.dontWant || [];
   const effectivePhrases = a.messagingGuidance?.effectivePhrases || [];
 
   return `AUDIENCE PROFILE:
-- Demographics: ${a.demographics.ageRange}, ${a.demographics.income?.household || 'health-invested'}, ${a.demographics.education || 'educated'}
-- Health Journey: ${a.healthJourney?.stage || 'Post-conventional medicine seekers'}
-- Primary Conditions: ${conditions.slice(0, 4).join('; ')}
+- Demographics: ${a.demographics.ageRange}, ${a.demographics.education || 'educated'}
+- Motivations: ${a.healthJourney?.motivations?.slice(0, 3).join('; ') || 'Improve quality of life, stay informed'}
+- Common Conditions: ${conditions.slice(0, 4).join('; ')}
 
 WHO THEY ARE:
-- ${mindset.slice(0, 3).join('\n- ')}
-- Have already paid $25K+ for stem cell treatment (serious health investors)
+- ${mindset.slice(0, 4).join('\n- ')}
 
-THEIR FRUSTRATIONS:
-- ${frustrations.slice(0, 3).join('\n- ')}
+THEIR CONCERNS:
+- ${concerns.slice(0, 3).join('\n- ')}
 
 WHAT THEY WANT FROM CONTENT:
 - ${want.slice(0, 5).join('\n- ')}
 
-WHAT THEY HATE:
+WHAT THEY DON'T WANT:
 - ${dontWant.slice(0, 4).join('\n- ')}
 
 EFFECTIVE PHRASES TO USE:

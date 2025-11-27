@@ -200,25 +200,40 @@ const RenewalWeeklyCompiler = () => {
     }
 
     // System message - built from config files (edit src/config/*.json to customize)
-    const systemMessage = `You write for Renewal Weekly, a health newsletter about stem cells and regenerative medicine.
+    const systemMessage = `You write for Renewal Weekly, a health newsletter about stem cells, regenerative medicine, AND general health/wellness.
 Date: ${today}.
 
 ${getAudienceContext()}
 
 ⚠️ CRITICAL OUTPUT RULES - FOLLOW EXACTLY:
 1. Output ONLY the final newsletter content. NOTHING ELSE.
-2. NO preamble like "Based on my search...", "I found a story...", "Let me write..."
+2. NO preamble like "Based on my search...", "I found a story...", "Let me write...", "Perfect!", "Great!"
 3. NO thinking out loud. NO commentary. NO meta-discussion about what you found.
 4. Start IMMEDIATELY with the headline or requested content.
 5. JSON requests return ONLY valid JSON - no explanation, no markdown code blocks.
 6. NEVER include citation artifacts like <cite index="..."> or [AI Generated, ...]
 7. Content must be READER-READY - as if going directly into the newsletter.
 
+⚠️ DATE REQUIREMENT - STRICTLY ENFORCED:
+- ONLY use sources from the PAST 14 DAYS (since ${new Date(Date.now() - 14*24*60*60*1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})
+- REJECT any source older than 14 days
+- If you cannot find recent sources, say so - do NOT use old content
+
+⚠️ CONTENT MIX - Balance these (not just scientific papers):
+- 40% accessible health news (CNN Health, NPR, Men's Health, Healthline, WebMD)
+- 30% stem cell/regenerative medicine (still accessible, not overly technical)
+- 30% lifestyle/wellness/longevity (trending, practical, actionable)
+
+⚠️ PLAIN ENGLISH REQUIRED:
+- Write for a general audience, not scientists
+- If you must use a technical term, explain it: "autophagy (your body's cellular cleanup system)"
+- Use conversational language like Men's Health or Healthline
+
 ${getStyleRules()}
 
 ${getSourceGuidance()}
 
-CRITICAL: Only cite articles published within the PAST 7 DAYS. Never use older sources.`;
+REMINDER: Today is ${today}. Only cite articles from the past 14 days.`;
 
     // Section-specific configurations - uses Haiku in test mode (12x cheaper)
     const prodModel = 'claude-sonnet-4-20250514';
@@ -361,20 +376,24 @@ TEASER HEADLINE RULES:
 - BAD: "Stanford Research Update", "New Diabetes Treatment", "Study Shows Results"
 NO dashes or em dashes in boldLead. Just clever, punchy phrases.`,
 
-      deepDive: `Search for a DIFFERENT nutrition/wellness topic related to cellular health.
+      deepDive: `Search for a practical nutrition/wellness topic from the PAST 14 DAYS.
 ${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
 ⚠️ DO NOT write about: "${customPrompt.split('|')[0].replace('AVOID_TOPIC:', '')}"
 Find a DIFFERENT topic entirely.
 ${customPrompt.split('|')[1] ? `Topic: ${customPrompt.split('|')[1]}` : ''}` : (customPrompt ? `Topic: ${customPrompt}` : '')}
 
-⚠️ PREFERRED SOURCES (use these for credibility):
-- Harvard Health (health.harvard.edu)
-- Mayo Clinic (mayoclinic.org)
-- NIH (nih.gov)
-- CDC (cdc.gov)
-- Healthline (healthline.com)
-- Johns Hopkins (hopkinsmedicine.org)
-- Cleveland Clinic (clevelandclinic.org)
+⚠️ DATE REQUIREMENT: Sources MUST be from the PAST 14 DAYS. Reject anything older than 2 weeks.
+
+⚠️ PLAIN ENGLISH REQUIRED:
+- Write like you're explaining to your mom or neighbor
+- If you use a technical term, immediately explain it in parentheses
+- Example: "autophagy (your body's cellular cleanup system)"
+- NO unexplained jargon: spermidine → "a compound found in aged cheese and soybeans"
+
+⚠️ PREFERRED SOURCES (recent articles only):
+- Harvard Health, Mayo Clinic, Cleveland Clinic
+- Healthline, WebMD, Men's Health, Prevention
+- NYT Well, NPR Health
 
 STRICT WORD LIMIT: 180-220 words. No exceptions.
 
@@ -383,51 +402,77 @@ Line 1: TEASER HEADLINE (3-5 words, creates curiosity)
 - GOOD: "The inflammation myth", "Your gut's secret weapon", "Pills vs. plates"
 - BAD: "Anti-Inflammatory Foods Guide", "Nutrition Tips for Health"
 
-Then write TIGHT prose:
+Then write TIGHT prose (like Men's Health or Healthline style):
 
-Para 1: Contrarian opening (1-2 sentences). "The supplement aisle wants you to believe..."
+Para 1: Contrarian hook (1-2 sentences). Challenge a common belief.
 
-Para 2: Research reference with {{LINK:source|url}} (2 sentences).
+Para 2: What the research says with {{LINK:source|url}} (2 sentences). Recent study only.
 
 Para 3: **What to add:** (use • bullets)
-• Item — specific amount
-• Item — specific amount
-• Item — specific amount
+• Food/habit — specific amount (e.g., "2-3 servings/week")
+• Food/habit — specific amount
+• Food/habit — specific amount
 
-Para 4: **What to limit:**
-• Item
+Para 4: **What to skip:**
+• Item (and why in plain terms)
 • Item
 
-Para 5: **The connection to stem cells:** (2 sentences max)
+Para 5: **Why it matters for healthy aging:** (1-2 sentences, no jargon)
 
 Para 6: One actionable takeaway. {{LINK:resource|url}}.
 
-Use • for bullets, — for em dashes. Be specific: "2-3 servings/week".
-Total: 180-220 words.`,
+Use • for bullets, — for em dashes. Total: 180-220 words.`,
 
-      statSection: `Search for a compelling, surprising statistic about regenerative medicine, stem cell research, or the biotech industry.
+      statSection: `Search for a compelling statistic about health, wellness, longevity, OR regenerative medicine from the PAST 14 DAYS.
+
+⚠️ STAT TOPICS (mix it up - not always stem cells):
+- Health statistics that affect your audience (aging, heart health, diabetes, joint health)
+- Longevity/anti-aging research numbers
+- Regenerative medicine market/trends
+- Wellness statistics (sleep, exercise, nutrition impact)
+
+⚠️ MUST include {{LINK:source|url}} to the source article in the content.
 
 Return ONLY valid JSON with this EXACT structure:
 {
   "primeNumber": "$403.86B",
   "headline": "where the regenerative medicine market is headed by 2032",
-  "content": "That's not a typo. The regenerative medicine market is projected to grow from $48 billion today to over $400 billion in the next seven years—a 27.3% annual growth rate.
+  "content": "That's not a typo. [Explain the statistic in plain English - 2 sentences max]
 
-**Why it matters for you:** More investment means more trials, faster approvals, and eventually, more affordable treatments. Cell therapy alone contributed $18.9 billion in 2024.
+**Why it matters for you:** [Personal relevance to readers - 2 sentences]
 
-For context: There are now more than 2,400 regenerative medicine clinical trials running worldwide. In the 1980s, only about 1,500 patients received stem cell transplants per year. In 2022? Nearly 23,000.
+For context: [Supporting data that makes it relatable - 2 sentences]
 
-**The backstory:** Global funding for regenerative medicine—public, private, and venture—surpassed $50 billion in 2024. Companies like {{LINK:Mesoblast|https://www.mesoblast.com}}, {{LINK:CRISPR Therapeutics|https://crisprtx.com}}, and Fate Therapeutics are leading the charge.
+**The backstory:** [Background info with {{LINK:source title|url}} - 2 sentences]
 
-Translation: The treatments we're writing about today may be routine options in a decade. {{LINK:Read the full market report|https://example.com}}."
+Translation: [What this means practically for readers] {{LINK:Read more|source-url}}."
 }
 
-CRITICAL for primeNumber:
-- Use exact format: $403B, 67%, 2,400, 47 days
-- Make it visually impactful
-- headline should be lowercase, descriptive`,
+CRITICAL:
+- primeNumber format: $403B, 67%, 2,400, 47 days (visually impactful)
+- headline: lowercase, descriptive, creates curiosity
+- content: MUST include at least one {{LINK:source|url}}
+- Plain English - explain like talking to a friend
+- Source MUST be from past 14 days`,
 
-      thePulse: `Search 7 quick stem cell/biotech/regenerative medicine news items (past 2 weeks).
+      thePulse: `Search for 7 FRESH health/wellness/biotech news items from the PAST 14 DAYS ONLY.
+
+⚠️ CRITICAL: Each refresh MUST return COMPLETELY DIFFERENT items. Never repeat topics.
+
+${customPrompt ? `⚠️ ${customPrompt}` : ''}
+
+⚠️ DATE REQUIREMENT: ONLY content from the past 14 days. Reject anything older.
+
+⚠️ SOURCE MIX (use variety - not just scientific journals):
+- 2-3 from mainstream health news (CNN Health, NPR, NYT, Men's Health, Healthline)
+- 2-3 from biotech/industry news (STAT News, Endpoints, BioPharma Dive)
+- 1-2 from scientific sources (Nature, Science, university press releases)
+
+CONTENT MIX - Balance of:
+- Regenerative medicine / stem cells
+- Longevity / anti-aging research
+- General health news your readers care about
+- Wellness trends backed by research
 
 Return ONLY valid JSON array. Each item should be ONE string with this format:
 - Company/institution name linked: {{LINK:Name|url}}
@@ -436,84 +481,105 @@ Return ONLY valid JSON array. Each item should be ONE string with this format:
 
 EXAMPLE:
 [
-  "{{LINK:Takeda|https://example.com}} launched a new autologous stem cell therapy for cartilage regeneration in Japan this month [DataM Intelligence, Nov 2025]",
-  "MSC clinical trials are {{LINK:up 37%|https://example.com}} in 2025 compared to last year [Clinical Trials Arena, Nov 20, 2025]",
-  "Scientists discovered {{LINK:\"P bodies\"|https://example.com}} play a critical role in stem cell differentiation—opening new doors for regenerative medicine [CU Boulder, Nov 3, 2025]"
+  "{{LINK:Mayo Clinic|https://example.com}} launched new stem cell treatment for knee arthritis [CNN Health, Nov 2025]",
+  "Adults over 50 who {{LINK:walk 7,000 steps daily|https://example.com}} show 50% lower mortality risk [Healthline, Nov 2025]",
+  "{{LINK:CRISPR Therapeutics|https://example.com}} received FDA approval for sickle cell gene therapy [STAT News, Nov 2025]"
 ]
 
 Return exactly 7 items. Each must have:
 - At least one {{LINK:text|url}}
 - Source attribution in [brackets] at end
-- Be under 25 words (excluding the bracketed source)`,
+- Be under 25 words (excluding the bracketed source)
+- MUST be from past 14 days - verify the date`,
 
-      recommendations: `Search for content to recommend in these categories. Find REAL, current content from the past month.
+      recommendations: `Search for FRESH, NEW content to recommend. Find REAL, WORKING URLs from the PAST 30 DAYS.
+
+⚠️ CRITICAL: Each refresh MUST return COMPLETELY DIFFERENT recommendations. Never repeat the same links.
+
+${customPrompt ? `⚠️ AVOID THESE (already used): ${customPrompt}` : ''}
+
+CONTENT STYLE - Mix of:
+- Accessible health/wellness (Men's Health, Healthline, WebMD style)
+- Lifestyle and longevity content
+- Practical, actionable resources
 
 Return ONLY valid JSON:
 {
   "read": {
-    "prefix": "Pluripotent ",
-    "linkText": "stem-cell-derived therapies",
-    "suffix": " in clinical trial: A 2025 update",
-    "url": "https://real-article-url.com"
+    "prefix": "Short intro text ",
+    "linkText": "the linked part",
+    "suffix": " context or source",
+    "url": "https://REAL-working-url.com"
   },
   "watch": {
-    "prefix": "Inside the labs trying to ",
-    "linkText": "cure autoimmune disease",
-    "suffix": " (PBS NewsHour)",
-    "url": "https://real-video-url.com"
+    "prefix": "",
+    "linkText": "Descriptive video title",
+    "suffix": " (Source/Channel)",
+    "url": "https://REAL-youtube-or-video-url.com"
   },
   "try": {
     "prefix": "The ",
-    "linkText": "anti-inflammatory diet",
-    "suffix": " guide (Johns Hopkins)",
-    "url": "https://real-resource-url.com"
+    "linkText": "tool or resource name",
+    "suffix": " (credible source)",
+    "url": "https://REAL-resource-url.com"
   },
   "listen": {
     "prefix": "",
-    "linkText": "Longevity Technology",
+    "linkText": "Podcast name or episode",
     "suffix": " podcast",
-    "url": "https://real-podcast-url.com"
+    "url": "https://REAL-podcast-url.com"
   }
 }
 
-Each recommendation should be genuinely useful for adults 40-80 interested in health/regenerative medicine.`,
+REQUIREMENTS:
+- ALL URLs must be real, working, and recent (within past 30 days for articles)
+- Content must be accessible to general audience (not just scientists)
+- Mix health, longevity, wellness, and lifestyle topics
+- Genuinely useful for adults 40-80 interested in living healthier`,
 
       gameTrivia: `Create fun health trivia game. Return JSON:
 {"title":"","intro":"1-2 sentences","content":"questions","answer":"answers"}`,
 
-      worthKnowing: `Create 3 "Worth Knowing" items for a stem cell/regenerative medicine newsletter.
+      worthKnowing: `Create 3 "Worth Knowing" items for a health/wellness newsletter.
 
-Search for current, practical information readers need to know.
+⚠️ CRITICAL: Each refresh MUST return COMPLETELY DIFFERENT items.
+
+${customPrompt ? `⚠️ ${customPrompt}` : ''}
+
+⚠️ TITLES MUST BE TEASER-STYLE (3-5 words, creates curiosity):
+- GOOD: "The clinic checklist", "Mark your calendar", "Trial finder 101"
+- BAD: "Health Awareness Event", "Important Tips", "Useful Resource"
 
 Return ONLY valid JSON array with this EXACT structure:
 [
   {
     "type": "awareness",
-    "title": "Health awareness event name",
-    "date": "Date or date range",
-    "description": "What readers can do - be specific and actionable",
+    "title": "TEASER HEADLINE (3-5 words)",
+    "date": "Specific date or date range",
+    "description": "What readers can do - be specific and actionable. Plain English.",
     "link": null
   },
   {
     "type": "guide",
-    "title": "5 Red Flags When Choosing a Stem Cell Clinic",
+    "title": "TEASER HEADLINE (3-5 words)",
     "date": "",
-    "description": "(1) First red flag. (2) Second red flag. (3) Third. (4) Fourth. (5) Fifth.",
+    "description": "(1) First tip. (2) Second tip. (3) Third tip. Use everyday language.",
     "link": "https://credible-source.com"
   },
   {
     "type": "resource",
-    "title": "Helpful tool or resource name",
+    "title": "TEASER HEADLINE (3-5 words)",
     "date": "",
-    "description": "What it is and why it's useful. Be specific.",
+    "description": "What it is and why it's useful. Plain English explanation.",
     "link": "https://real-url.com"
   }
 ]
 
 REQUIREMENTS:
-- awareness: Upcoming health event (within 2 weeks) with specific date and action readers can take
-- guide: Practical tips in numbered list format - "5 Red Flags...", "3 Questions to Ask...", etc.
-- resource: Real, working URL to helpful tool (ClinicalTrials.gov, reputable org, etc.)
+- awareness: Upcoming health event (within 2 weeks) - think beyond stem cells (heart health, mental health, etc.)
+- guide: Practical tips your mom would understand - no jargon
+- resource: Real, working URL to helpful tool
+- ALL descriptions in plain English - explain like talking to a friend
 
 NO preamble. Start directly with [`
     };
@@ -703,17 +769,35 @@ NO preamble. Start directly with [`
   // Clean AI output - remove citation artifacts, preamble, and metadata
   const cleanAIOutput = (content) => {
     if (!content) return '';
-    return content
+
+    let cleaned = content
       // Remove citation artifacts like <cite index="4-18,4-19">
       .replace(/<cite[^>]*>/g, '')
       .replace(/<\/cite>/g, '')
       // Remove [AI Generated, Nov 2025] and similar
       .replace(/\[AI Generated[^\]]*\]/gi, '')
-      // Remove preamble sentences (starts with "Based on", "I found", "Let me", "Here is", etc.)
-      .replace(/^(Based on (the|my|search|recent).*?\.|I found.*?\.|Let me.*?\.|Here (is|are).*?\.|Looking at.*?\.|After (searching|reviewing).*?\.)\s*/gi, '')
       // Remove any remaining markdown artifacts
-      .replace(/^\*\*\*+$/gm, '')
-      .trim();
+      .replace(/^\*\*\*+$/gm, '');
+
+    // Remove AI thinking/preamble - check for common patterns at START of content
+    // This handles multi-sentence preambles
+    const preamblePatterns = [
+      /^(Perfect!|Great!|Excellent!|Sure!|Okay!|Alright!|Absolutely!|Of course!)[^.!?]*[.!?]\s*/gi,
+      /^I (found|discovered|searched|located|identified)[^.]*\.\s*/gi,
+      /^(Based on|According to|Looking at|After searching|After reviewing|Here is|Here are|Here's|Let me)[^.]*\.\s*/gi,
+      /^This (is|was|looks|seems|appears)[^.]*\.\s*/gi,
+      /^(The search|My search|I've found|I have found)[^.]*\.\s*/gi,
+      /^[^.]*?(exactly what|what you requested|what the user|for your newsletter)[^.]*\.\s*/gi,
+    ];
+
+    // Apply preamble removal multiple times to catch nested preambles
+    for (let i = 0; i < 3; i++) {
+      for (const pattern of preamblePatterns) {
+        cleaned = cleaned.replace(pattern, '');
+      }
+    }
+
+    return cleaned.trim();
   };
 
   // Extract sources from content with {{LINK:text|url}} pattern
@@ -1347,6 +1431,42 @@ Translation: The treatments we're writing about today may be routine options in 
       customPrompt = `AVOID_TOPIC:${currentHeadline}|${customPrompt}`;
     }
 
+    // For recommendations, pass current URLs to avoid
+    if (aiType === 'recommendations') {
+      const currentRecs = newsletterData.recommendations;
+      const currentUrls = [
+        currentRecs.read?.url,
+        currentRecs.watch?.url,
+        currentRecs.try?.url,
+        currentRecs.listen?.url
+      ].filter(url => url && url !== '#').join(', ');
+      if (currentUrls) {
+        customPrompt = currentUrls;
+      }
+    }
+
+    // For thePulse, pass current items to avoid
+    if (aiType === 'thePulse' && newsletterData.thePulse?.items?.length > 0) {
+      const currentItems = newsletterData.thePulse.items
+        .map(item => item.text?.slice(0, 50))
+        .filter(Boolean)
+        .join('; ');
+      if (currentItems) {
+        customPrompt = `AVOID THESE TOPICS (find completely different news): ${currentItems}`;
+      }
+    }
+
+    // For worthKnowing, pass current items to avoid
+    if (aiType === 'worthKnowing' && newsletterData.worthKnowing?.items?.length > 0) {
+      const currentItems = newsletterData.worthKnowing.items
+        .map(item => item.title)
+        .filter(Boolean)
+        .join(', ');
+      if (currentItems) {
+        customPrompt = `AVOID THESE (find different topics): ${currentItems}`;
+      }
+    }
+
     const generatedContent = await generateWithAI(aiType, customPrompt);
 
     // Always clear loading state when done
@@ -1513,6 +1633,48 @@ Translation: The treatments we're writing about today may be routine options in 
               }
             } catch (e) {
               setAiStatus('Error: Could not parse JSON response for Worth Knowing section');
+            }
+            break;
+
+          case 'recommendations':
+            try {
+              const jsonMatch = generatedContent.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                updated.recommendations = {
+                  ...prev.recommendations,
+                  read: parsed.read ? {
+                    prefix: parsed.read.prefix || '',
+                    linkText: parsed.read.linkText || 'Article',
+                    suffix: parsed.read.suffix || '',
+                    url: parsed.read.url || '#',
+                    isAffiliate: false
+                  } : prev.recommendations.read,
+                  watch: parsed.watch ? {
+                    prefix: parsed.watch.prefix || '',
+                    linkText: parsed.watch.linkText || 'Video',
+                    suffix: parsed.watch.suffix || '',
+                    url: parsed.watch.url || '#',
+                    isAffiliate: false
+                  } : prev.recommendations.watch,
+                  try: parsed.try ? {
+                    prefix: parsed.try.prefix || '',
+                    linkText: parsed.try.linkText || 'Resource',
+                    suffix: parsed.try.suffix || '',
+                    url: parsed.try.url || '#',
+                    isAffiliate: false
+                  } : prev.recommendations.try,
+                  listen: parsed.listen ? {
+                    prefix: parsed.listen.prefix || '',
+                    linkText: parsed.listen.linkText || 'Podcast',
+                    suffix: parsed.listen.suffix || '',
+                    url: parsed.listen.url || '#',
+                    isAffiliate: false
+                  } : prev.recommendations.listen
+                };
+              }
+            } catch (e) {
+              setAiStatus('Error: Could not parse JSON response for recommendations');
             }
             break;
         }

@@ -26,9 +26,25 @@ export const getPreferredDomains = (categories = ['stemCell', 'longevity', 'well
 
 // Build source guidance string for prompts
 export const getSourceGuidance = () => {
-  const topDomains = getPreferredDomains(['stemCell', 'longevity', 'antiAging']);
-  return `PREFERRED SOURCES (prioritize these domains):
-${topDomains.slice(0, 15).map(d => `- ${d}`).join('\n')}`;
+  const scientificDomains = getPreferredDomains(['stemCell', 'longevity']);
+  const accessibleDomains = getPreferredDomains(['wellness', 'fitness']);
+
+  return `SOURCE PRIORITY (use a MIX - not just scientific sources):
+
+ACCESSIBLE/MAINSTREAM (prioritize for readability):
+- Men's Health, Healthline, WebMD, Prevention
+- CNN Health, NPR Health, NYT Well
+- Mayo Clinic, Cleveland Clinic, Harvard Health
+
+INDUSTRY/BIOTECH NEWS:
+- STAT News, Endpoints News, BioPharma Dive
+- Fierce Biotech, BioSpace
+
+SCIENTIFIC (use sparingly, explain findings simply):
+${scientificDomains.slice(0, 8).map(d => `- ${d}`).join('\n')}
+
+⚠️ DO NOT use sources outside these unless nothing else available.
+⚠️ If using scientific sources, translate findings to plain English.`;
 };
 
 // Build style rules string for system message

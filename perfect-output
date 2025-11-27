@@ -1,0 +1,252 @@
+<!-- Renewal Weekly Newsletter HTML - v5.2 -->
+<!-- Paste this into Beehiiv's HTML editor -->
+
+<style>
+  .rw-section { border: 1px solid #E5E7EB; border-radius: 12px; padding: 24px; margin-bottom: 24px; background: #FFFFFF; }
+  .rw-label { color: #7C3AED; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .rw-headline { font-size: 24px; font-weight: 700; color: #1F2937; margin: 0 0 16px 0; line-height: 1.3; }
+  .rw-image { width: 100%; border-radius: 8px; margin: 16px 0; }
+  .rw-credit { font-size: 12px; color: #6B7280; font-style: italic; margin-bottom: 16px; }
+  .rw-body { font-size: 16px; line-height: 1.7; color: #374151; }
+  .rw-source { font-size: 12px; color: #6B7280; margin-top: 16px; padding-top: 12px; border-top: 1px solid #E5E7EB; }
+  .rw-link { color: #1F2937; text-decoration: none; border-bottom: 2px solid #8B5CF6; padding-bottom: 1px; }
+</style>
+
+<!-- OPENING HOOK -->
+<div class="rw-section">
+  <div class="rw-body" style="white-space: pre-line;">
+Good morning. It's the week before Thanksgiving, which means you're probably already mentally budgeting for elastic waistbands.
+
+Here's a thought: What if instead of dreading the "holiday pounds," you focused on the one thing that actually matters—showing up for the people you love, however you feel?
+
+We'll handle the health intel. You handle the mashed potatoes.
+
+—The Renewal Weekly Team
+  </div>
+</div>
+
+<!-- THE BOTTOM LINE -->
+<div class="rw-section">
+  <p class="rw-label">THE BOTTOM LINE</p>
+  <p style="font-size: 14px; color: #6B7280; margin-bottom: 12px;">If you only have 60 seconds:</p>
+  <ul style="list-style: none; padding: 0; margin: 0;">
+    
+    <li style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; font-size: 15px; color: #1F2937;">
+      <span style="color: #7C3AED; font-weight: 700;">→</span>
+      <span>Stem cells restored vision in AMD patients who were told improvement was impossible—first human trial shows real promise</span>
+    </li>
+    <li style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; font-size: 15px; color: #1F2937;">
+      <span style="color: #7C3AED; font-weight: 700;">→</span>
+      <span>MSC therapy for MS is showing consistent benefits across multiple trials, but no standardized protocol exists yet</span>
+    </li>
+    <li style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; font-size: 15px; color: #1F2937;">
+      <span style="color: #7C3AED; font-weight: 700;">→</span>
+      <span>The regenerative medicine market is projected to hit $403B by 2032—more funding means more trials for you</span>
+    </li>
+    <li style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; font-size: 15px; color: #1F2937;">
+      <span style="color: #7C3AED; font-weight: 700;">→</span>
+      <span>Chronic inflammation accelerates stem cell aging. The fix? Better groceries, not more pills.</span>
+    </li>
+  </ul>
+</div>
+
+<!-- METRICS DASHBOARD -->
+<div class="rw-section" style="background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%); color: white;">
+  <p class="rw-label" style="color: #EDE9FE;">REGENERATIVE MEDICINE: THIS WEEK</p>
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px;">
+    
+    <div style="text-align: center; padding: 12px;">
+      <p style="font-size: 24px; font-weight: 700; margin: 0;">47</p>
+      <p style="font-size: 12px; color: #EDE9FE; margin: 4px 0;">↑12 vs last week</p>
+      <p style="font-size: 11px; color: #94A3B8; margin: 4px 0 0 0;">New Clinical Publications</p>
+    </div>
+    <div style="text-align: center; padding: 12px;">
+      <p style="font-size: 24px; font-weight: 700; margin: 0;">$487</p>
+      <p style="font-size: 12px; color: #EDE9FE; margin: 4px 0;">↑4.2%</p>
+      <p style="font-size: 11px; color: #94A3B8; margin: 4px 0 0 0;">Stock Spotlight: VRTX</p>
+    </div>
+    <div style="text-align: center; padding: 12px;">
+      <p style="font-size: 24px; font-weight: 700; margin: 0;">1,847</p>
+      <p style="font-size: 12px; color: #EDE9FE; margin: 4px 0;">↑3.2% MTD</p>
+      <p style="font-size: 11px; color: #94A3B8; margin: 4px 0 0 0;">Active Clinical Trials</p>
+    </div>
+    <div style="text-align: center; padding: 12px;">
+      <p style="font-size: 24px; font-weight: 700; margin: 0;">13</p>
+      <p style="font-size: 12px; color: #EDE9FE; margin: 4px 0;">+4 vs 2024</p>
+      <p style="font-size: 11px; color: #94A3B8; margin: 4px 0 0 0;">FDA RMAT Designations YTD</p>
+    </div>
+    <div style="text-align: center; padding: 12px;">
+      <p style="font-size: 24px; font-weight: 700; margin: 0;">67%</p>
+      
+      <p style="font-size: 11px; color: #94A3B8; margin: 4px 0 0 0;">MSC Trials Efficacy Rate</p>
+    </div>
+    <div style="text-align: center; padding: 12px;">
+      <p style="font-size: 24px; font-weight: 700; margin: 0;">47 days</p>
+      <p style="font-size: 12px; color: #EDE9FE; margin: 4px 0;">↓8 days</p>
+      <p style="font-size: 11px; color: #94A3B8; margin: 4px 0 0 0;">Avg Trial Enrollment Time</p>
+    </div>
+  </div>
+  <p style="font-size: 10px; color: #64748B; text-align: center; margin-top: 16px;">As of November 25, 2025</p>
+</div>
+
+<!-- LEAD STORY -->
+<div class="rw-section">
+  <p class="rw-label">THIS WEEK'S BIG STORY</p>
+  <h2 class="rw-headline">Stem Cells Just Did What Doctors Said Was Impossible</h2>
+  <img src="[YOUR_IMAGE_URL]" alt="" class="rw-image" />
+  <p class="rw-credit">Getty Images</p>
+  <div class="rw-body">
+    <p>For 20 million Americans with age-related macular degeneration, the prognosis has always been the same: We can slow it down, but we can't bring back what you've lost.</p><p>That changed this week.</p><p>Researchers at the <a href="https://www.sciencedaily.com/releases/2025/11/251121090736.htm" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">University of Michigan</a> published results from the first-ever human trial using adult stem cells to treat advanced dry AMD—and patients didn't just stabilize. They got better.</p><p><strong>Here's what happened:</strong> Patients in the low-dose group gained the ability to read 21 additional letters on a standard eye chart after one year. For context, that's the difference between needing help crossing the street and reading a restaurant menu.</p><p><strong>Why this matters now:</strong></p><p>The treatment uses retinal pigment epithelial stem cells harvested from adult donor eye tissue—sidestepping the ethical debates that have slowed embryonic stem cell research for decades. Unlike previous attempts, this approach doesn't require immunosuppression drugs.</p><p><strong>What's next:</strong> The team is now monitoring 12 patients who received higher doses. If safety data holds, they'll move to larger trials.</p><p>"We were surprised by the magnitude of vision gain in the most severely affected patients," said Dr. Rajesh Rao, lead researcher.</p><p><strong>The zoom out:</strong> This is exactly the kind of rigorous, FDA-tracked research that separates real regenerative medicine from the clinics promising miracle cures. The full study was published in <a href="https://doi.org/10.1016/j.stem.2025.08.012" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">Cell Stem Cell</a>.</p>
+  </div>
+  <p class="rw-source">Sources: <a href="https://www.sciencedaily.com/releases/2025/11/251121090736.htm" class="rw-link">ScienceDaily</a> | <a href="https://doi.org/10.1016/j.stem.2025.08.012" class="rw-link">Cell Stem Cell</a></p>
+</div>
+
+<!-- RESEARCH ROUNDUP -->
+<div class="rw-section">
+  <p class="rw-label">RESEARCH ROUNDUP</p>
+  <h2 class="rw-headline">Your Weekly Dose of Health Innovation</h2>
+  <h3 style="font-size: 18px; color: #4B5563; margin-bottom: 16px;">Treatment Spotlight: MSC Therapy for Multiple Sclerosis</h3>
+  <img src="[YOUR_IMAGE_URL]" alt="" class="rw-image" />
+  <p class="rw-credit">Getty Images</p>
+  <div class="rw-body">
+    <p>If you or someone you love has MS, this one's worth reading twice.</p><p>A new <a href="https://multiplesclerosisnewstoday.com/news-posts/2025/11/17/mesenchymal-stem-cell-therapy-shows-promise-ms-review/" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">systematic review</a> just analyzed every clinical trial testing mesenchymal stem cell (MSC) therapy for multiple sclerosis—and the results are genuinely encouraging. Patients showed improvements in disability scores, walking ability, vision, and even auditory function. Side effects? Mostly mild: headache, fatigue, and low-grade fever that resolved quickly.</p><p><strong>What you should know:</strong> MSC therapy for MS is still considered experimental and isn't covered by insurance. Most patients access it through clinical trials or private clinics abroad. Costs range from $5,000–$30,000 depending on the protocol.</p><p><strong>The catch:</strong> Results varied based on how cells were delivered (IV vs. spinal injection) and where the MSCs came from. There's no standardized protocol yet.</p><p><strong>Bottom line:</strong> If you're considering this route, ask your neurologist about active clinical trials on <a href="https://clinicaltrials.gov" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">ClinicalTrials.gov</a> before exploring private options.</p>
+  </div>
+</div>
+
+<!-- SPONSOR 1 -->
+<div class="rw-section" style="background: #EDE9FE; border: 2px dashed #7C3AED;">
+  <p style="text-align: center; color: #7C3AED; font-weight: 600;">📢 SPONSOR PLACEHOLDER</p>
+</div>
+
+<!-- ON OUR RADAR -->
+<div class="rw-section">
+  <p class="rw-label">ON OUR RADAR</p>
+  <img src="[YOUR_IMAGE_URL]" alt="" class="rw-image" />
+  <p class="rw-credit">Getty Images</p>
+  
+  <div style="border-left: 3px solid #7C3AED; padding-left: 16px; margin-bottom: 20px;">
+    <p class="rw-body"><strong>Stanford just made stem cell transplants safer—without chemo.</strong> A new antibody therapy can prepare patients for stem cell transplants without toxic chemotherapy or radiation. In a <a href="https://www.sciencedaily.com/releases/2025/11/251107010324.htm" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">Phase 1 trial</a>, children with Fanconi anemia achieved nearly complete donor cell replacement using just an antibody called briquilimab. The approach could open lifesaving transplants to patients who were previously too fragile—including elderly cancer patients.</p>
+    <p style="font-size: 12px; color: #6B7280;">Source: <a href="https://www.sciencedaily.com/releases/2025/11/251107010324.htm" class="rw-link">ScienceDaily</a>, Nov 7, 2025</p>
+  </div>
+  <div style="border-left: 3px solid #7C3AED; padding-left: 16px; margin-bottom: 20px;">
+    <p class="rw-body"><strong>Type 1 diabetes was cured in mice. Humans might be next.</strong> <a href="https://med.stanford.edu/news/all-news/2025/11/type-1-diabetes-cure.html" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">Stanford researchers</a> combined blood stem cell and pancreatic islet transplants to cure autoimmune diabetes in mice—without lifelong immunosuppression drugs. The "immune system reset" prevented the body from attacking insulin-producing cells. Human trials are a logical next step.</p>
+    <p style="font-size: 12px; color: #6B7280;">Source: <a href="https://med.stanford.edu/news/all-news/2025/11/type-1-diabetes-cure.html" class="rw-link">Stanford Medicine</a>, Nov 18, 2025</p>
+  </div>
+  <div style="border-left: 3px solid #7C3AED; padding-left: 16px; margin-bottom: 20px;">
+    <p class="rw-body"><strong>MSC trials are up 37% in 2025—and investment is following.</strong> One year after the FDA approved the first mesenchymal stem cell therapy (Ryoncil), the field is experiencing a <a href="https://www.clinicaltrialsarena.com/sponsored/the-resurgence-of-mesenchymal-stem-cell-therapies/" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">resurgence</a>. There are now 89 MSC trials running in 2025, and deal value from MSC-related equity offerings is up 94% from last year.</p>
+    <p style="font-size: 12px; color: #6B7280;">Source: <a href="https://www.clinicaltrialsarena.com/sponsored/the-resurgence-of-mesenchymal-stem-cell-therapies/" class="rw-link">Clinical Trials Arena</a>, Nov 20, 2025</p>
+  </div>
+</div>
+
+<!-- DEEP DIVE -->
+<div class="rw-section">
+  <p class="rw-label">DEEP DIVE</p>
+  <h2 class="rw-headline">The Anti-Inflammatory Shopping List You Actually Need</h2>
+  <img src="[YOUR_IMAGE_URL]" alt="" class="rw-image" />
+  <p class="rw-credit">Getty Images</p>
+  <div class="rw-body">
+    <p>The supplement aisle wants you to believe fighting inflammation requires a pharmacy's worth of pills.</p><p><a href="https://nutritionsource.hsph.harvard.edu/healthy-weight/diet-reviews/anti-inflammatory-diet/" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">Harvard researchers</a> disagree.</p><p>A new meta-analysis found that anti-inflammatory diets meaningfully improved blood pressure, cholesterol, and inflammatory markers like hs-CRP. No pills required—just better groceries.</p><p><strong>What to add:</strong>
+&bull; Fatty fish (salmon, sardines, mackerel) — 2-3 servings/week
+&bull; Extra virgin olive oil — your new default cooking fat
+&bull; Colorful vegetables — especially leafy greens, tomatoes, beets
+&bull; Berries, cherries, oranges — nature's antioxidant bombs
+&bull; Nuts, especially walnuts — a handful daily
+&bull; Turmeric and ginger — use liberally</p><p><strong>What to limit:</strong>
+&bull; Processed meats (bacon, hot dogs, deli meat)
+&bull; Refined carbs (white bread, pastries)
+&bull; Fried foods and trans fats
+&bull; Sugary drinks</p><p><strong>The connection to stem cells:</strong> Chronic inflammation damages bone marrow and accelerates stem cell aging. What you eat doesn't just affect how you feel today—it affects how well your body regenerates tomorrow.</p><p><a href="https://www.hopkinsmedicine.org/health/wellness-and-prevention/anti-inflammatory-diet" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">Johns Hopkins</a> recommends the Mediterranean diet as the most evidence-backed anti-inflammatory approach. Start with one swap: butter → olive oil.</p>
+  </div>
+</div>
+
+<!-- SPONSOR 2 -->
+<div class="rw-section" style="background: #EDE9FE;">
+  <p style="text-align: center; color: #7C3AED; font-weight: 600;">TOGETHER WITH [SPONSOR NAME]</p>
+</div>
+
+<!-- WORTH KNOWING -->
+<div class="rw-section">
+  <p class="rw-label">WORTH KNOWING</p>
+  <h3 style="font-size: 18px; color: #1F2937; margin-bottom: 16px;">This week, keep these on your radar</h3>
+  
+  <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+    <p style="font-weight: 600; color: #1F2937; margin: 0 0 8px 0;">World AIDS Day <span style="font-size: 12px; background: #EDE9FE; color: #7C3AED; padding: 2px 8px; border-radius: 4px; margin-left: 8px;">December 1</span></p>
+    <p style="font-size: 14px; color: #4B5563; margin: 0;">Many clinics offer free HIV testing this week. Worth doing if it's been a while.</p>
+  </div>
+  <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+    <p style="font-weight: 600; color: #1F2937; margin: 0 0 8px 0;">5 Red Flags When Choosing a Stem Cell Clinic </p>
+    <p style="font-size: 14px; color: #4B5563; margin: 0;">Before you spend $15,000 at a private clinic, know what to look for: (1) They claim to treat everything from wrinkles to MS with the same cells. (2) They use "amniotic" or "exosome" products without explaining what's actually in them. (3) They rely entirely on testimonials instead of published data. (4) They're not FDA-compliant or won't discuss it. (5) They offer IV stem cell treatments (currently forbidden by the FDA).</p>
+  </div>
+  <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+    <p style="font-weight: 600; color: #1F2937; margin: 0 0 8px 0;">How to Find Legitimate Clinical Trials </p>
+    <p style="font-size: 14px; color: #4B5563; margin: 0;">ClinicalTrials.gov is the gold standard. Search by condition, check if it's actively recruiting, and verify it's affiliated with an academic medical center.</p>
+  </div>
+</div>
+
+<!-- STAT OF THE WEEK -->
+<div class="rw-section" style="text-align: center;">
+  <p class="rw-label">STAT OF THE WEEK</p>
+  <p style="font-size: 48px; font-weight: 800; color: #7C3AED; margin: 16px 0;">$403.86B</p>
+  <p style="font-size: 18px; color: #4B5563; margin-bottom: 16px;">where the regenerative medicine market is headed by 2032</p>
+  <img src="[YOUR_IMAGE_URL]" alt="" class="rw-image" />
+  <div class="rw-body" style="text-align: left;">
+    <p>That's not a typo. The regenerative medicine market is projected to grow from $48 billion today to over $400 billion in the next seven years—a 27.3% annual growth rate.</p><p><strong>Why it matters for you:</strong> More investment means more trials, faster approvals, and eventually, more affordable treatments. Cell therapy alone contributed $18.9 billion in 2024.</p><p>For context: There are now more than 2,400 regenerative medicine clinical trials running worldwide. In the 1980s, only about 1,500 patients received stem cell transplants per year. In 2022? Nearly 23,000.</p><p><strong>The backstory:</strong> Global funding for regenerative medicine—public, private, and venture—surpassed $50 billion in 2024. Companies like <a href="https://www.mesoblast.com" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">Mesoblast</a>, <a href="https://crisprtx.com" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">CRISPR Therapeutics</a>, and Fate Therapeutics are leading the charge.</p><p>Translation: The treatments we're writing about today may be routine options in a decade. <a href="https://www.prnewswire.com/news-releases/regenerative-medicine-market-to-skyrocket-to-usd-403-86-billion-by-2032-driven-by-cell--gene-therapy-breakthroughs-stem-cell-advancements-and-multi-indication-expansion-302624480.html" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">Read the full market report</a>.</p>
+  </div>
+</div>
+
+<!-- THE PULSE -->
+<div class="rw-section">
+  <p class="rw-label">THE PULSE</p>
+  <h3 style="font-size: 18px; color: #1F2937; margin-bottom: 16px;">Quick hits from the world of health innovation</h3>
+  <ul style="list-style: none; padding: 0;">
+    <li style="padding: 8px 0; border-bottom: 1px solid #F3F4F6;">&bull; <a href="https://www.openpr.com/news/4287050/autologous-stem-cell-non-stem-cell-therapies-market-to-hit-us" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">Takeda</a> launched a new autologous stem cell therapy for cartilage regeneration in Japan this month <span style="font-size: 12px; color: #6B7280;">[DataM Intelligence, Nov 2025]</span></li><li style="padding: 8px 0; border-bottom: 1px solid #F3F4F6;">&bull; MSC clinical trials are <a href="https://www.clinicaltrialsarena.com/sponsored/the-resurgence-of-mesenchymal-stem-cell-therapies/" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">up 37%</a> in 2025 compared to last year <span style="font-size: 12px; color: #6B7280;">[Clinical Trials Arena, Nov 20, 2025]</span></li><li style="padding: 8px 0; border-bottom: 1px solid #F3F4F6;">&bull; Scientists discovered <a href="https://www.colorado.edu/today/2025/11/03/scientists-discover-new-way-shape-what-stem-cell-becomes" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">"P bodies"</a> play a critical role in stem cell differentiation—opening new doors for regenerative medicine <span style="font-size: 12px; color: #6B7280;">[CU Boulder, Nov 3, 2025]</span></li><li style="padding: 8px 0; border-bottom: 1px solid #F3F4F6;">&bull; A new culture medium now allows researchers to create <a href="https://medicalxpress.com/news/2025-11-stem-cell-medium-canine-heart.html" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">beating dog heart cells</a> from stem cells—accelerating drug testing research <span style="font-size: 12px; color: #6B7280;">[Medical Xpress, Nov 21, 2025]</span></li><li style="padding: 8px 0; border-bottom: 1px solid #F3F4F6;">&bull; Chronic inflammation was found to fundamentally <a href="https://www.sciencedaily.com/news/health_medicine/stem_cells/" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">remodel bone marrow</a>, allowing mutated stem cells to gain dominance with age <span style="font-size: 12px; color: #6B7280;">[ScienceDaily, Nov 19, 2025]</span></li><li style="padding: 8px 0; border-bottom: 1px solid #F3F4F6;">&bull; The regenerative medicine market is projected to hit <a href="https://www.prnewswire.com/news-releases/regenerative-medicine-market-to-skyrocket-to-usd-403-86-billion-by-2032" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">$403.86 billion</a> by 2032 <span style="font-size: 12px; color: #6B7280;">[PRNewswire, Nov 24, 2025]</span></li><li style="padding: 8px 0; border-bottom: 1px solid #F3F4F6;">&bull; <a href="https://www.cell.com/cell-stem-cell/fulltext/S1934-5909(24)00445-4" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">115 pluripotent stem cell clinical trials</a> are now running globally with 83 distinct products <span style="font-size: 12px; color: #6B7280;">[Cell Stem Cell, Jan 2025]</span></li>
+  </ul>
+</div>
+
+<!-- RECS -->
+<div class="rw-section">
+  <p class="rw-label">RECS</p>
+  <p style="margin: 8px 0;"><strong>Read:</strong> Pluripotent <a href="https://www.cell.com/cell-stem-cell/fulltext/S1934-5909(24)00445-4" class="rw-link">stem-cell-derived therapies</a> in clinical trial: A 2025 update**</p>
+  <p style="margin: 8px 0;"><strong>Watch:</strong> Inside the labs trying to <a href="https://www.pbs.org/newshour/health/scientists-explore-new-frontier-in-autoimmune-disease-treatment-by-resetting-rogue-cells" class="rw-link">cure autoimmune disease</a> (PBS NewsHour)</p>
+  <p style="margin: 8px 0;"><strong>Try:</strong> The <a href="https://www.hopkinsmedicine.org/health/wellness-and-prevention/anti-inflammatory-diet" class="rw-link">anti-inflammatory diet</a> guide (Johns Hopkins)</p>
+  <p style="margin: 8px 0;"><strong>Listen:</strong> <a href="https://longevity.technology/news/" class="rw-link">Longevity Technology</a> podcast</p>
+  <p style="font-size: 12px; color: #6B7280; margin-top: 16px; padding-top: 12px; border-top: 1px solid #E5E7EB;">
+    *A message from our sponsor.<br/>
+    **This section contains affiliate links.
+  </p>
+</div>
+
+<!-- PLAY -->
+<div class="rw-section">
+  <p class="rw-label">PLAY</p>
+  <h3 style="font-size: 20px; font-weight: 600; color: #1F2937; margin-bottom: 8px;">Nutritional Facts</h3>
+  <p style="color: #4B5563; margin-bottom: 16px;">Below is the ingredient list for a popular food product. Can you guess what it is?</p>
+  <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; white-space: pre-wrap; font-family: inherit;">
+Enriched wheat flour, niacin, reduced iron, thiamin mononitrate, riboflavin, folic acid, water, high fructose corn syrup, yeast, soybean oil, salt, wheat gluten, calcium sulfate, sodium stearoyl lactylate, monoglycerides, calcium dioxide, datem, calcium iodate, ethoxylated mono and diglycerides...
+  </div>
+</div>
+
+<!-- REFERRAL -->
+<div class="rw-section" style="text-align: center; background: linear-gradient(135deg, #EDE9FE 0%, #F0F9FF 100%);">
+  <p class="rw-label">SHARE RENEWAL WEEKLY</p>
+  <p style="font-size: 18px; color: #1F2937; margin-bottom: 8px;">Share Renewal Weekly with someone who wants to stay ahead of the science.</p>
+  <p style="font-size: 14px; color: #6B7280; margin-bottom: 16px;">We're saying we'll give you free stuff if you share a link. One link.</p>
+  <p style="margin-bottom: 16px;">Your referral count: <strong>{{subscriber.referral_count}}</strong></p>
+  <a href="{{subscriber.rh_reflink}}" style="display: inline-block; padding: 12px 32px; background: #7C3AED; color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">Share Now</a>
+</div>
+
+<!-- FOOTER -->
+<div class="rw-section">
+  <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+    <p style="font-weight: 600; color: #1F2937; margin: 0 0 8px 0;">ANSWER</p>
+    <p style="font-size: 14px; color: #4B5563; margin: 0;">A loaf of white bread (Sara Lee Classic White)</p>
+  </div>
+  <div style="background: #F9FAFB; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+    <p style="font-weight: 600; color: #1F2937; margin: 0 0 8px 0;">Word of the Day</p>
+    <p style="font-size: 14px; color: #4B5563; margin: 0;"><strong>Senolytic</strong>: a class of drugs that selectively eliminate senescent "zombie" cells that accumulate with age and contribute to inflammation and tissue damage</p>
+  </div>
+  <div style="text-align: center; padding-top: 16px; border-top: 1px solid #E5E7EB;">
+    <p style="font-size: 14px; color: #6B7280;">Written by The Renewal Weekly Team</p>
+    <p style="font-size: 12px; color: #6B7280; margin-top: 16px;">© 2025 Renewal Weekly. All rights reserved.</p>
+  </div>
+</div>

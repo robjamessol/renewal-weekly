@@ -133,14 +133,24 @@ const RenewalWeeklyCompiler = () => {
 
     setAiStatus('🔬 Phase 1: Researching articles for your audience...');
 
-    // Build preferred domains from sources.json
+    // Build preferred domains from sources.json for domain allow list
     const allDomains = [
       ...(sources.stemCell?.domains || []),
       ...(sources.longevity?.domains || []),
       ...(sources.wellness?.domains || []),
-      ...(sources.nutrition?.domains || [])
+      ...(sources.supplements?.domains || []),
+      ...(sources.nutrition?.domains || []),
+      ...(sources.fitness?.domains || []),
+      ...(sources.antiAging?.domains || [])
     ];
-    const uniqueDomains = [...new Set(allDomains)].slice(0, 30);
+    // Add mainstream health sources not in sources.json
+    const mainstreamSources = [
+      'menshealth.com', 'healthline.com', 'webmd.com', 'prevention.com',
+      'cnn.com', 'npr.org', 'nytimes.com', 'washingtonpost.com',
+      'mayoclinic.org', 'clevelandclinic.org', 'health.harvard.edu',
+      'statnews.com', 'endpoints.news', 'biospace.com', 'fiercebiotech.com'
+    ];
+    const uniqueDomains = [...new Set([...allDomains, ...mainstreamSources])];
 
     // Build audience context from audience.json
     const audienceInterests = audience.interests?.join(', ') || 'stem cells, regenerative medicine';
@@ -219,7 +229,12 @@ CRITICAL:
             text: 'You are a research assistant finding articles for a health newsletter. Return ONLY valid JSON. No preamble.',
             cache_control: { type: 'ephemeral' }
           }],
-          tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 8 }],
+          tools: [{
+            type: 'web_search_20250305',
+            name: 'web_search',
+            max_uses: 12, // Allow more searches for thorough research
+            allowed_domains: uniqueDomains.slice(0, 50) // Enforce sources.json at API level
+          }],
           messages: [{ role: 'user', content: researchPrompt }]
         })
       });
@@ -851,10 +866,25 @@ NO preamble. Start directly with [`
 
       // Only add web search for sections that need it
       if (shouldUseWebSearch) {
+        // Build allowed domains from sources.json for API-level enforcement
+        const allowedDomains = [
+          ...(sources.stemCell?.domains || []),
+          ...(sources.longevity?.domains || []),
+          ...(sources.wellness?.domains || []),
+          ...(sources.supplements?.domains || []),
+          ...(sources.nutrition?.domains || []),
+          // Add mainstream sources
+          'menshealth.com', 'healthline.com', 'webmd.com', 'prevention.com',
+          'cnn.com', 'npr.org', 'nytimes.com', 'mayoclinic.org',
+          'statnews.com', 'endpoints.news', 'biospace.com', 'fiercebiotech.com'
+        ];
+        const uniqueAllowedDomains = [...new Set(allowedDomains)].slice(0, 50);
+
         requestBody.tools = [{
           type: 'web_search_20250305',
           name: 'web_search',
-          max_uses: 5
+          max_uses: 6, // Enough for thorough section research
+          allowed_domains: uniqueAllowedDomains
         }];
       }
 
@@ -865,7 +895,9 @@ NO preamble. Start directly with [`
           'x-api-key': anthropicApiKey,
           'anthropic-version': '2023-06-01',
           'anthropic-dangerous-direct-browser-access': 'true',
-          'anthropic-beta': 'prompt-caching-2024-07-31'
+          'anthropic-beta': shouldUseWebSearch
+            ? 'web-search-2025-03-05,prompt-caching-2024-07-31'
+            : 'prompt-caching-2024-07-31'
         },
         body: JSON.stringify(requestBody)
       });

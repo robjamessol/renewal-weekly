@@ -189,6 +189,26 @@ const RenewalWeeklyCompiler = () => {
     const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     const twoWeeksAgo = new Date(Date.now() - 14*24*60*60*1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
+    // Randomize topic focus each time to get different results
+    const topicFocuses = [
+      'diabetes and blood sugar management',
+      'joint pain and arthritis treatments',
+      'heart disease and cardiovascular health',
+      'vision loss and eye treatments',
+      'neurological conditions (Parkinsons, MS, Alzheimers)',
+      'chronic pain management',
+      'skin aging and wound healing',
+      'immune system and autoimmune conditions',
+      'muscle and bone regeneration',
+      'organ repair and transplant alternatives'
+    ];
+    const randomFocus = topicFocuses[Math.floor(Math.random() * topicFocuses.length)];
+    const secondaryFocus = topicFocuses[Math.floor(Math.random() * topicFocuses.length)];
+
+    // Build exclusion list from previous newsletters
+    const excludeUrls = usedUrls.slice(-30).join(', ');
+    const excludeTopics = usedStories.slice(-15).join('; ');
+
     const researchPrompt = `You are a research assistant for a health newsletter. Find 15-20 articles that would EXCITE our specific audience.
 
 TODAY'S DATE: ${today}
@@ -218,6 +238,18 @@ SCIENTIFIC: ${uniqueDomains.slice(0, 10).join(', ')}
 - 3-4 LONGEVITY / ANTI-AGING articles
 - 2-3 WELLNESS / NUTRITION articles
 - 2-3 BIOTECH INDUSTRY news
+
+=== THIS WEEK'S FOCUS (prioritize these topics) ===
+PRIMARY: ${randomFocus}
+SECONDARY: ${secondaryFocus}
+Look for recent breakthroughs, clinical trials, or news in these areas.
+
+${excludeTopics ? `=== EXCLUDE THESE (already covered) ===
+${excludeTopics}
+Find DIFFERENT stories - different conditions, different institutions.` : ''}
+
+${excludeUrls ? `=== SKIP THESE URLs (already used) ===
+${excludeUrls}` : ''}
 
 Search the web thoroughly and return ONLY valid JSON array:
 [
@@ -990,6 +1022,12 @@ NO preamble. Start directly with [`
     return saved ? JSON.parse(saved) : [];
   });
 
+  // USED URLS TRACKING - prevents same articles across newsletters
+  const [usedUrls, setUsedUrls] = useState(() => {
+    const saved = localStorage.getItem('renewalWeekly_usedUrls');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // CUSTOM NEWS SOURCES
   const [customSources, setCustomSources] = useState(() => {
     const saved = localStorage.getItem('renewalWeekly_customSources');
@@ -1008,6 +1046,10 @@ NO preamble. Start directly with [`
   useEffect(() => {
     localStorage.setItem('renewalWeekly_usedStories', JSON.stringify(usedStories));
   }, [usedStories]);
+
+  useEffect(() => {
+    localStorage.setItem('renewalWeekly_usedUrls', JSON.stringify(usedUrls));
+  }, [usedUrls]);
 
   useEffect(() => {
     localStorage.setItem('renewalWeekly_customSources', JSON.stringify(customSources));
@@ -1121,6 +1163,15 @@ NO preamble. Start directly with [`
       });
     }
     return sources;
+  };
+
+  // Save URLs to prevent reuse in future newsletters
+  const saveUrlsForExclusion = (sources) => {
+    if (!sources || sources.length === 0) return;
+    const newUrls = sources.map(s => s.url).filter(Boolean);
+    if (newUrls.length > 0) {
+      setUsedUrls(prev => [...new Set([...prev, ...newUrls])].slice(-50)); // Keep last 50
+    }
   };
 
   // GAME TEMPLATES
@@ -2243,8 +2294,9 @@ Write the lead story based on this article. Include the URL as {{LINK:source|${a
           setUsedStories(prev => [...prev.slice(-19), headline].slice(-20)); // Keep last 20
         }
 
-        // Extract sources from content
+        // Extract sources from content and save URLs for exclusion
         const sources = extractSourcesFromContent(content);
+        saveUrlsForExclusion(sources);
 
         setNewsletterData(prev => ({
           ...prev,

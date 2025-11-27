@@ -207,10 +207,12 @@ ${getAudienceContext()}
 
 ⚠️ CRITICAL OUTPUT RULES - FOLLOW EXACTLY:
 1. Output ONLY the final newsletter content. NOTHING ELSE.
-2. NO preamble like "I found a story about..." or "Let me write this up..."
-3. NO thinking out loud. NO commentary. NO "Perfect!" or "Great!"
-4. Start IMMEDIATELY with the headline or content requested.
-5. JSON requests return ONLY valid JSON - no explanation, no markdown blocks.
+2. NO preamble like "Based on my search...", "I found a story...", "Let me write..."
+3. NO thinking out loud. NO commentary. NO meta-discussion about what you found.
+4. Start IMMEDIATELY with the headline or requested content.
+5. JSON requests return ONLY valid JSON - no explanation, no markdown code blocks.
+6. NEVER include citation artifacts like <cite index="..."> or [AI Generated, ...]
+7. Content must be READER-READY - as if going directly into the newsletter.
 
 ${getStyleRules()}
 
@@ -293,41 +295,39 @@ WRITING RULES:
 - Keep paragraphs to 2-3 sentences MAX
 - Total: 280-320 words. Count them.`,
 
-      researchRoundup: `Search for SCIENTIFIC RESEARCH from peer-reviewed journals published in the PAST 2 WEEKS.
+      researchRoundup: `Find SCIENTIFIC RESEARCH from peer-reviewed journals published in the PAST 2 WEEKS.
 
-⚠️ SOURCE GUIDANCE (this is where niche research goes):
-- PRIORITIZE: Scientific journals (Nature, Cell, Science, NEJM, The Lancet, JAMA, Stem Cell Reports)
-- PRIORITIZE: Clinical trial results, published studies, peer-reviewed research
-- PRIORITIZE: PubMed, university research announcements, medical journal publications
-- This section is for deeper scientific content that's too technical for Lead Story
+⚠️ SOURCES TO USE:
+- Nature, Cell, Science, NEJM, The Lancet, JAMA, Stem Cell Reports, PubMed
 
 ${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
-⚠️ DO NOT write about: "${customPrompt.split('|')[0].replace('AVOID_TOPIC:', '')}"
-Find a COMPLETELY DIFFERENT topic.
+⚠️ AVOID: "${customPrompt.split('|')[0].replace('AVOID_TOPIC:', '')}"
 ${customPrompt.split('|')[1] ? `Focus on: ${customPrompt.split('|')[1]}` : ''}` : (customPrompt ? `Focus on: ${customPrompt}` : '')}
 
-STRICT WORD LIMIT: 120-150 words. No exceptions.
-SOURCES MUST BE FROM PAST 2 WEEKS. Nothing older.
+⚠️ OUTPUT MUST BE READER-READY (no preamble, no "I found", no meta-commentary)
 
-OUTPUT FORMAT:
-Line 1: Compelling headline (8 words max, like lead story style)
-Example: "New MS Treatment Reverses Nerve Damage" or "Sleep Study Reveals Brain Repair Secret"
+STRICT FORMAT (120-150 words total):
 
-Then write TIGHT prose:
+[HEADLINE - 8 words max, compelling]
 
-Para 1: Hook sentence about who this helps. "If you or someone you love has [condition]..."
+If you or someone you love has [condition], this is worth reading twice.
 
-Para 2: Key findings (2 sentences). Include {{LINK:source|url}}.
+[KEY FINDINGS - 2 sentences with {{LINK:source|url}}]
 
-Para 3: **What you should know:** Practical info (1-2 sentences).
+**What you should know:** [Practical info - cost, availability, access]
 
-Para 4: **The catch:** Limitation (1 sentence).
+**The catch:** [One honest limitation]
 
-Para 5: **Bottom line:** Action step (1 sentence).
+**Bottom line:** [One actionable next step]
 
-Total: 120-150 words.`,
+START DIRECTLY WITH THE HEADLINE. No introduction.`,
 
-      secondaryStories: `Search 3 different recent stem cell/regenerative medicine stories (past 2 weeks). Each story should be from a DIFFERENT topic area.
+      secondaryStories: `Search for 3 different recent stem cell/regenerative medicine stories from the PAST 14 DAYS. Each story should be from a DIFFERENT topic area.
+
+⚠️ SOURCE GUIDANCE:
+- Use ANY credible sources: mainstream news, health publications, scientific journals, industry news
+- Mix source types: 1 from mainstream media (CNN, NYT, NPR), 1 from health/science news, 1 from journals/institutions
+- Do NOT limit to just scientific journals
 
 ⚠️ OUTPUT ONLY THE JSON ARRAY. No preamble. No explanation. Start with [
 
@@ -357,6 +357,15 @@ ${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
 ⚠️ DO NOT write about: "${customPrompt.split('|')[0].replace('AVOID_TOPIC:', '')}"
 Find a DIFFERENT topic entirely.
 ${customPrompt.split('|')[1] ? `Topic: ${customPrompt.split('|')[1]}` : ''}` : (customPrompt ? `Topic: ${customPrompt}` : '')}
+
+⚠️ PREFERRED SOURCES (use these for credibility):
+- Harvard Health (health.harvard.edu)
+- Mayo Clinic (mayoclinic.org)
+- NIH (nih.gov)
+- CDC (cdc.gov)
+- Healthline (healthline.com)
+- Johns Hopkins (hopkinsmedicine.org)
+- Cleveland Clinic (clevelandclinic.org)
 
 STRICT WORD LIMIT: 180-220 words. No exceptions.
 
@@ -459,7 +468,43 @@ Return ONLY valid JSON:
 Each recommendation should be genuinely useful for adults 40-80 interested in health/regenerative medicine.`,
 
       gameTrivia: `Create fun health trivia game. Return JSON:
-{"title":"","intro":"1-2 sentences","content":"questions","answer":"answers"}`
+{"title":"","intro":"1-2 sentences","content":"questions","answer":"answers"}`,
+
+      worthKnowing: `Create 3 "Worth Knowing" items for a stem cell/regenerative medicine newsletter.
+
+Search for current, practical information readers need to know.
+
+Return ONLY valid JSON array with this EXACT structure:
+[
+  {
+    "type": "awareness",
+    "title": "Health awareness event name",
+    "date": "Date or date range",
+    "description": "What readers can do - be specific and actionable",
+    "link": null
+  },
+  {
+    "type": "guide",
+    "title": "5 Red Flags When Choosing a Stem Cell Clinic",
+    "date": "",
+    "description": "(1) First red flag. (2) Second red flag. (3) Third. (4) Fourth. (5) Fifth.",
+    "link": "https://credible-source.com"
+  },
+  {
+    "type": "resource",
+    "title": "Helpful tool or resource name",
+    "date": "",
+    "description": "What it is and why it's useful. Be specific.",
+    "link": "https://real-url.com"
+  }
+]
+
+REQUIREMENTS:
+- awareness: Upcoming health event (within 2 weeks) with specific date and action readers can take
+- guide: Practical tips in numbered list format - "5 Red Flags...", "3 Questions to Ask...", etc.
+- resource: Real, working URL to helpful tool (ClinicalTrials.gov, reputable org, etc.)
+
+NO preamble. Start directly with [`
     };
 
     const config = sectionConfig[sectionType] || { maxTokens: 800, needsWebSearch: useWebSearch, model: 'claude-sonnet-4-20250514' };
@@ -524,7 +569,8 @@ Each recommendation should be genuinely useful for adults 40-80 interested in he
 
       setAiStatus(`✓ Generated ${sectionType}`);
       setIsLoading(prev => ({ ...prev, [sectionType]: false }));
-      return content;
+      // Clean the output before returning
+      return cleanAIOutput(content);
     } catch (error) {
       setAiStatus(`Error: ${error.message}`);
       setIsLoading(prev => ({ ...prev, [sectionType]: false }));
@@ -641,6 +687,38 @@ Each recommendation should be genuinely useful for adults 40-80 interested in he
   const stripLinkSyntax = (content) => {
     if (!content) return '';
     return content.replace(/\{\{LINK:([^|]+)\|([^}]+)\}\}/g, '$1');
+  };
+
+  // Clean AI output - remove citation artifacts, preamble, and metadata
+  const cleanAIOutput = (content) => {
+    if (!content) return '';
+    return content
+      // Remove citation artifacts like <cite index="4-18,4-19">
+      .replace(/<cite[^>]*>/g, '')
+      .replace(/<\/cite>/g, '')
+      // Remove [AI Generated, Nov 2025] and similar
+      .replace(/\[AI Generated[^\]]*\]/gi, '')
+      // Remove preamble sentences (starts with "Based on", "I found", "Let me", "Here is", etc.)
+      .replace(/^(Based on (the|my|search|recent).*?\.|I found.*?\.|Let me.*?\.|Here (is|are).*?\.|Looking at.*?\.|After (searching|reviewing).*?\.)\s*/gi, '')
+      // Remove any remaining markdown artifacts
+      .replace(/^\*\*\*+$/gm, '')
+      .trim();
+  };
+
+  // Extract sources from content with {{LINK:text|url}} pattern
+  const extractSourcesFromContent = (content) => {
+    if (!content) return [];
+    const linkRegex = /\{\{LINK:([^|]+)\|([^}]+)\}\}/g;
+    const sources = [];
+    let match;
+    while ((match = linkRegex.exec(content)) !== null) {
+      sources.push({
+        title: match[1],
+        url: match[2],
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      });
+    }
+    return sources;
   };
 
   // GAME TEMPLATES
@@ -1220,6 +1298,7 @@ Translation: The treatments we're writing about today may be routine options in 
       section4: 'researchRoundup',
       section6: 'secondaryStories',
       section7: 'deepDive',
+      section9: 'worthKnowing',
       section10: 'statSection',
       section11: 'thePulse',
       section12: 'recommendations',
@@ -1278,11 +1357,14 @@ Translation: The treatments we're writing about today may be routine options in 
               const lines = generatedContent.split('\n').filter(l => l.trim());
               const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
               const content = lines.slice(1).join('\n\n');
+              const sources = extractSourcesFromContent(content);
               updated.leadStory = {
                 ...prev.leadStory,
                 headline: headline || prev.leadStory.headline,
                 content: content || generatedContent,
-                publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                sources: sources.length > 0 ? sources : prev.leadStory.sources,
+                image: { ...prev.leadStory.image, midjourneyPrompt: generateMidjourneyPrompt(headline || prev.leadStory.headline) }
               };
             } catch (e) {
               updated.leadStory = { ...prev.leadStory, content: generatedContent };
@@ -1295,12 +1377,15 @@ Translation: The treatments we're writing about today may be routine options in 
               const lines = generatedContent.split('\n').filter(l => l.trim());
               const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
               const content = lines.slice(1).join('\n\n');
+              const sources = extractSourcesFromContent(content);
               updated.yourOptionsThisWeek = {
                 ...prev.yourOptionsThisWeek,
                 title: headline || prev.yourOptionsThisWeek.title,
                 subtitle: '', // Remove subtitle - just use headline
                 content: content || generatedContent,
-                publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                sources: sources.length > 0 ? sources : prev.yourOptionsThisWeek.sources,
+                image: { ...prev.yourOptionsThisWeek.image, midjourneyPrompt: generateMidjourneyPrompt(headline || prev.yourOptionsThisWeek.title) }
               };
             } catch (e) {
               updated.yourOptionsThisWeek = { ...prev.yourOptionsThisWeek, content: generatedContent };
@@ -1339,11 +1424,14 @@ Translation: The treatments we're writing about today may be routine options in 
               const lines = generatedContent.split('\n').filter(l => l.trim());
               const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
               const content = lines.slice(1).join('\n\n');
+              const sources = extractSourcesFromContent(content);
               updated.industryDeepDive = {
                 ...prev.industryDeepDive,
                 headline: headline || prev.industryDeepDive.headline,
                 content: content || generatedContent,
-                publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+                sources: sources.length > 0 ? sources : prev.industryDeepDive.sources,
+                image: { ...prev.industryDeepDive.image, midjourneyPrompt: generateMidjourneyPrompt(headline || prev.industryDeepDive.headline, 'wellness') }
               };
             } catch (e) {
               updated.industryDeepDive = { ...prev.industryDeepDive, content: generatedContent };
@@ -1354,12 +1442,15 @@ Translation: The treatments we're writing about today may be routine options in 
             try {
               const parsed = JSON.parse(generatedContent);
               if (parsed.primeNumber && parsed.headline && parsed.content) {
+                const sources = extractSourcesFromContent(parsed.content);
                 updated.statSection = {
                   ...prev.statSection,
                   primeNumber: parsed.primeNumber,
                   headline: parsed.headline,
                   content: parsed.content,
-                  publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                  publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                  sources: sources.length > 0 ? sources : prev.statSection.sources,
+                  image: { ...prev.statSection.image, midjourneyPrompt: generateMidjourneyPrompt(parsed.headline, 'stats') }
                 };
               }
             } catch (e) {
@@ -1373,16 +1464,44 @@ Translation: The treatments we're writing about today may be routine options in 
               if (Array.isArray(parsed)) {
                 updated.thePulse = {
                   ...prev.thePulse,
-                  items: parsed.slice(0, 7).map(text => ({
-                    text,
-                    source: 'AI Generated',
-                    url: '#',
-                    date: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-                  }))
+                  items: parsed.slice(0, 7).map(text => {
+                    // Extract source from [Source, Date] at end of text if present
+                    const sourceMatch = text.match(/\[([^\]]+)\]\s*$/);
+                    const extractedSource = sourceMatch ? sourceMatch[1].split(',')[0].trim() : 'Web Research';
+                    return {
+                      text: text.replace(/\s*\[[^\]]+\]\s*$/, ''), // Remove source bracket from text
+                      source: extractedSource,
+                      url: '#',
+                      date: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                    };
+                  })
                 };
               }
             } catch (e) {
               setAiStatus('Error: Could not parse JSON response for pulse section');
+            }
+            break;
+
+          case 'worthKnowing':
+            try {
+              const jsonMatch = generatedContent.match(/\[[\s\S]*\]/);
+              if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                if (Array.isArray(parsed) && parsed.length >= 1) {
+                  updated.worthKnowing = {
+                    ...prev.worthKnowing,
+                    items: parsed.slice(0, 3).map(item => ({
+                      type: item.type || 'resource',
+                      title: item.title || '',
+                      date: item.date || '',
+                      description: item.description || '',
+                      link: item.link || null
+                    }))
+                  };
+                }
+              }
+            } catch (e) {
+              setAiStatus('Error: Could not parse JSON response for Worth Knowing section');
             }
             break;
         }
@@ -1697,12 +1816,17 @@ Translation: The treatments we're writing about today may be routine options in 
                 ...prev,
                 thePulse: {
                   ...prev.thePulse,
-                  items: parsed.slice(0, 7).map(text => ({
-                    text,
-                    source: 'Web Research',
-                    url: '#',
-                    date: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-                  }))
+                  items: parsed.slice(0, 7).map(text => {
+                    // Extract source from [Source, Date] at end of text if present
+                    const sourceMatch = text.match(/\[([^\]]+)\]\s*$/);
+                    const extractedSource = sourceMatch ? sourceMatch[1].split(',')[0].trim() : 'Web Research';
+                    return {
+                      text: text.replace(/\s*\[[^\]]+\]\s*$/, ''), // Remove source bracket from displayed text
+                      source: extractedSource,
+                      url: '#',
+                      date: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                    };
+                  })
                 }
               }));
             }
@@ -1715,24 +1839,24 @@ Translation: The treatments we're writing about today may be routine options in 
 
       // Step 8: Generate Worth Knowing
       setAiStatus('💡 Creating Worth Knowing... (8/15)');
-      const worthKnowingPrompt = `Create 3 "Worth Knowing" items for stem cells newsletter:
-1. awareness: upcoming health event (date + what readers can do)
-2. guide: "5 Red Flags When Choosing..." type tips
-3. resource: helpful tool with real URL
-Return JSON: [{"type": "awareness|guide|resource", "title": "", "date": "", "description": "", "link": "url or null"}]`;
-
-      const worthContent = await generateWithAI('worthKnowing', worthKnowingPrompt, true);
+      const worthContent = await generateWithAI('worthKnowing');
       if (worthContent) {
         try {
           const jsonMatch = worthContent.match(/\[[\s\S]*\]/);
           if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0]);
-            if (Array.isArray(parsed) && parsed.length >= 3) {
+            if (Array.isArray(parsed) && parsed.length >= 1) {
               setNewsletterData(prev => ({
                 ...prev,
                 worthKnowing: {
                   ...prev.worthKnowing,
-                  items: parsed.slice(0, 3)
+                  items: parsed.slice(0, 3).map(item => ({
+                    type: item.type || 'resource',
+                    title: item.title || '',
+                    date: item.date || '',
+                    description: item.description || '',
+                    link: item.link || null
+                  }))
                 }
               }));
             }

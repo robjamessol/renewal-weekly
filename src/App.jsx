@@ -2129,7 +2129,8 @@ Translation: The treatments we're writing about today may be routine options in 
       let leadPromptContext = '';
       if (articleDistribution?.leadStory) {
         const article = articleDistribution.leadStory;
-        leadPromptContext = `USE THIS PRE-RESEARCHED ARTICLE:
+        leadPromptContext = `
+USE THIS PRE-RESEARCHED ARTICLE (already verified for audience and recency):
 Title: "${article.title}"
 Source: ${article.source} (${article.date})
 URL: ${article.url}
@@ -2138,12 +2139,14 @@ Summary: ${article.summary}
 Write the lead story based on this article. Include the URL as {{LINK:source|${article.url}}}.`;
       }
 
-      // Pass used stories to avoid repeats
-      const usedStoriesPrompt = usedStories.length > 0
-        ? `AVOID_TOPIC:${usedStories.slice(-10).join('|')}${leadPromptContext ? '|' + leadPromptContext : ''}`
-        : leadPromptContext;
+      // Combine avoid topics and article context
+      let combinedPrompt = leadPromptContext;
+      if (usedStories.length > 0 && !leadPromptContext) {
+        // Only use AVOID_TOPIC if we don't have a pre-researched article
+        combinedPrompt = `AVOID_TOPIC:${usedStories.slice(-10).join('|')}`;
+      }
 
-      const leadContent = await generateWithAI('leadStory', usedStoriesPrompt);
+      const leadContent = await generateWithAI('leadStory', combinedPrompt);
       if (leadContent) {
         const lines = leadContent.split('\n').filter(l => l.trim());
         const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');

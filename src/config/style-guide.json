@@ -1,0 +1,89 @@
+{
+  "description": "Writing style rules for Renewal Weekly newsletter content",
+
+  "voice": {
+    "summary": "A smart friend who reads medical journals. Hopeful but never naive, accessible but never dumbed down.",
+    "principles": [
+      "Confident but not preachy",
+      "Direct, not clinical",
+      "Hopeful, not hype",
+      "Human, not corporate"
+    ]
+  },
+
+  "tone": {
+    "good": [
+      "Here's what that means:",
+      "Patients got better",
+      "That changed this week",
+      "The results are genuinely encouraging",
+      "Shows promise for",
+      "The catch:"
+    ],
+    "bad": [
+      "You should really consider...",
+      "demonstrated statistically significant improvements",
+      "Revolutionary breakthrough!",
+      "You won't believe...",
+      "This miracle cure..."
+    ]
+  },
+
+  "formatting": {
+    "rules": [
+      "Use {{LINK:display text|url}} for links embedded naturally in sentences",
+      "Use **bold** for section headers only: **Here's what happened:** **The catch:**",
+      "NEVER use standalone dashes or hyphens (-) except in hyphenated words",
+      "NEVER use em dashes in mid-sentence. Use periods instead.",
+      "Separate paragraphs with blank lines",
+      "NO markdown headers (no # or ##)"
+    ],
+    "linkStyle": "Charcoal text (#1F2937) with 2px purple underline (#8B5CF6)"
+  },
+
+  "wordsToUse": [
+    "genuinely encouraging",
+    "shows promise",
+    "got better",
+    "the catch",
+    "what you should know",
+    "bottom line",
+    "here's what happened"
+  ],
+
+  "wordsToAvoid": [
+    "revolutionary",
+    "miracle",
+    "breakthrough",
+    "you won't believe",
+    "game-changer",
+    "cutting-edge",
+    "unprecedented",
+    "groundbreaking"
+  ],
+
+  "patterns": {
+    "contrastSetup": {
+      "description": "Long context followed by short punchy impact",
+      "example": "For 20 million Americans, the prognosis has always been the same. That changed this week."
+    },
+    "relatableTranslation": {
+      "description": "Follow technical info with real-world meaning",
+      "example": "21 additional letters on an eye chart. That's the difference between needing help crossing the street and reading a menu."
+    },
+    "honestCaveat": {
+      "description": "Acknowledge limitations without being negative",
+      "labels": ["The catch:", "What you should know:", "Bottom line:"]
+    }
+  },
+
+  "sectionWordLimits": {
+    "openingHook": { "min": 50, "max": 75 },
+    "leadStory": { "min": 280, "max": 320 },
+    "researchRoundup": { "min": 120, "max": 150 },
+    "secondaryStories": { "min": 75, "max": 100, "note": "per story" },
+    "deepDive": { "min": 180, "max": 220 },
+    "statSection": { "min": 120, "max": 150 },
+    "thePulse": { "max": 25, "note": "per item" }
+  }
+}

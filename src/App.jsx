@@ -449,7 +449,12 @@ Each recommendation should be genuinely useful for adults 40-80 interested in he
       const requestBody = {
         model: config.model,
         max_tokens: config.maxTokens,
-        system: systemMessage,
+        // Use array format with cache_control for prompt caching (90% savings on cached tokens)
+        system: [{
+          type: 'text',
+          text: systemMessage,
+          cache_control: { type: 'ephemeral' }
+        }],
         messages: [{
           role: 'user',
           content: sectionPrompts[sectionType] || customPrompt
@@ -461,7 +466,7 @@ Each recommendation should be genuinely useful for adults 40-80 interested in he
         requestBody.tools = [{
           type: 'web_search_20250305',
           name: 'web_search',
-          max_uses: 3
+          max_uses: 5
         }];
       }
 
@@ -471,7 +476,8 @@ Each recommendation should be genuinely useful for adults 40-80 interested in he
           'Content-Type': 'application/json',
           'x-api-key': anthropicApiKey,
           'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
+          'anthropic-dangerous-direct-browser-access': 'true',
+          'anthropic-beta': 'prompt-caching-2024-07-31'
         },
         body: JSON.stringify(requestBody)
       });

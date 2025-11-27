@@ -1752,6 +1752,30 @@ Translation: The treatments we're writing about today may be routine options in 
       }
     }
 
+    // For leadStory, pass current headline to avoid repeating same story
+    if (aiType === 'leadStory' && newsletterData.leadStory?.headline) {
+      const currentHeadline = newsletterData.leadStory.headline;
+      if (currentHeadline && currentHeadline !== 'Researching latest news...') {
+        customPrompt = `AVOID_TOPIC:${currentHeadline}|Find a COMPLETELY DIFFERENT story - different condition, different treatment, different institution.`;
+      }
+    }
+
+    // For researchRoundup, pass current title to avoid
+    if (aiType === 'researchRoundup' && newsletterData.yourOptionsThisWeek?.title) {
+      const currentTitle = newsletterData.yourOptionsThisWeek.title;
+      if (currentTitle && currentTitle !== 'Researching...') {
+        customPrompt = `AVOID_TOPIC:${currentTitle}|Find DIFFERENT research - different condition, different study.`;
+      }
+    }
+
+    // For industryDeepDive, pass current headline to avoid
+    if (aiType === 'industryDeepDive' && newsletterData.industryDeepDive?.headline) {
+      const currentHeadline = newsletterData.industryDeepDive.headline;
+      if (currentHeadline && currentHeadline !== 'Researching...') {
+        customPrompt = `AVOID_TOPIC:${currentHeadline}|Find a DIFFERENT wellness/lifestyle topic.`;
+      }
+    }
+
     // For thePulse, pass current items to avoid
     if (aiType === 'thePulse' && newsletterData.thePulse?.items?.length > 0) {
       const currentItems = newsletterData.thePulse.items

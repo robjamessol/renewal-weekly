@@ -1528,6 +1528,53 @@ Return JSON array: ["point 1", "point 2", "point 3", "point 4"]`;
       }
       await delay(2000); // Rate limit protection
 
+      // Step 4b: Generate Subject Line and Preview Text
+      setAiStatus('Writing subject line & preview... (4b/12)');
+      const subjectPrompt = `Based on the lead story headline, create an email subject line and preview text.
+
+Lead story: "${newsletterData.leadStory.headline || 'stem cell breakthrough'}"
+
+Return ONLY valid JSON:
+{
+  "subjectLine": "Compelling subject line under 60 chars. Use the lead story angle. No clickbait.",
+  "previewText": "Preview text under 90 chars teasing 2-3 topics. Format: Lead story hint + 'Plus: topic 2 and topic 3'"
+}
+
+Example:
+{
+  "subjectLine": "Stem Cells Just Restored Vision in Patients Told It Was Impossible",
+  "previewText": "Plus: 5 red flags when choosing a stem cell clinic and the anti-inflammatory foods worth adding"
+}`;
+
+      const headerContent = await generateWithAI('bottomLine', subjectPrompt, false);
+      if (headerContent) {
+        try {
+          const jsonMatch = headerContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            setNewsletterData(prev => ({
+              ...prev,
+              preHeader: {
+                ...prev.preHeader,
+                subjectLine: parsed.subjectLine || prev.preHeader.subjectLine,
+                previewText: parsed.previewText || prev.preHeader.previewText
+              }
+            }));
+          }
+        } catch (e) {
+          // Fallback: use lead story headline as subject
+          setNewsletterData(prev => ({
+            ...prev,
+            preHeader: {
+              ...prev.preHeader,
+              subjectLine: prev.leadStory.headline || 'This Week in Regenerative Medicine',
+              previewText: 'The latest stem cell research, clinical trials, and health insights'
+            }
+          }));
+        }
+      }
+      await delay(2000); // Rate limit protection
+
       // Step 5: Generate Research Roundup (with web search)
       setAiStatus('Writing research roundup... (5/12)');
       const roundupContent = await generateWithAI('researchRoundup');

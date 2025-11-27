@@ -269,7 +269,11 @@ ${customPrompt.split('|')[1] ? `Focus on: ${customPrompt.split('|')[1]}` : ''}` 
 STRICT WORD LIMIT: 280-320 words total. No exceptions.
 
 OUTPUT FORMAT:
-Line 1: Clever headline (8 words max, no markdown)
+Line 1: TEASER HEADLINE (3-5 words max, no markdown)
+- Must be clever, punchy, and create curiosity
+- Hint at the story WITHOUT being a generic label
+- GOOD: "Ups and mostly downs", "Back in business", "Seeing clearly now", "The $400B bet"
+- BAD: "Stem Cell Research Update", "New Treatment Found", "Important Discovery"
 
 Then write TIGHT, PUNCHY prose:
 
@@ -308,7 +312,9 @@ ${customPrompt.split('|')[1] ? `Focus on: ${customPrompt.split('|')[1]}` : ''}` 
 
 STRICT FORMAT (120-150 words total):
 
-[HEADLINE - 8 words max, compelling]
+[TEASER HEADLINE - 3-5 words, clever and curiosity-inducing]
+- GOOD: "Nerves fighting back", "The myelin fix", "Joints on the mend"
+- BAD: "MS Treatment Update", "New Research Shows"
 
 If you or someone you love has [condition], this is worth reading twice.
 
@@ -333,24 +339,27 @@ START DIRECTLY WITH THE HEADLINE. No introduction.`,
 
 [
   {
-    "boldLead": "One sentence hook ending with period.",
+    "boldLead": "TEASER-STYLE HEADLINE (3-5 words) that creates curiosity",
     "content": "75-100 words. Include {{LINK:source|url}} inline. Be specific.",
     "sources": [{"title": "Source Name", "url": "https://url.com", "date": "Nov 20, 2025"}]
   },
   {
-    "boldLead": "Different topic hook.",
+    "boldLead": "Different teaser headline",
     "content": "75-100 words with {{LINK:link|url}}.",
     "sources": [{"title": "Source", "url": "https://url.com", "date": "Nov 18, 2025"}]
   },
   {
-    "boldLead": "Third topic hook.",
+    "boldLead": "Third teaser headline",
     "content": "75-100 words with {{LINK:link|url}}.",
     "sources": [{"title": "Source", "url": "https://url.com", "date": "Nov 15, 2025"}]
   }
 ]
 
-EXAMPLE boldLead: "Stanford made stem cell transplants safer without chemo."
-NO dashes or em dashes in boldLead. Just clean sentences.`,
+TEASER HEADLINE RULES:
+- 3-5 words max, creates curiosity
+- GOOD: "Chemo's exit strategy", "Mice first, humans next", "The 37% surge"
+- BAD: "Stanford Research Update", "New Diabetes Treatment", "Study Shows Results"
+NO dashes or em dashes in boldLead. Just clever, punchy phrases.`,
 
       deepDive: `Search for a DIFFERENT nutrition/wellness topic related to cellular health.
 ${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
@@ -370,7 +379,9 @@ ${customPrompt.split('|')[1] ? `Topic: ${customPrompt.split('|')[1]}` : ''}` : (
 STRICT WORD LIMIT: 180-220 words. No exceptions.
 
 OUTPUT FORMAT:
-Line 1: Catchy headline (8 words max, no markdown)
+Line 1: TEASER HEADLINE (3-5 words, creates curiosity)
+- GOOD: "The inflammation myth", "Your gut's secret weapon", "Pills vs. plates"
+- BAD: "Anti-Inflammatory Foods Guide", "Nutrition Tips for Health"
 
 Then write TIGHT prose:
 

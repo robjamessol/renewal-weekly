@@ -1855,12 +1855,25 @@ Translation: The treatments we're writing about today may be routine options in 
 
       // Step 2: Generate Lead Story (with web search)
       setAiStatus('🔍 Researching lead story... (2/15)');
-      const leadContent = await generateWithAI('leadStory');
+      // Pass used stories to avoid repeats
+      const usedStoriesPrompt = usedStories.length > 0
+        ? `AVOID_TOPIC:${usedStories.slice(-10).join('|')}` // Last 10 used stories
+        : '';
+      const leadContent = await generateWithAI('leadStory', usedStoriesPrompt);
       if (leadContent) {
         const lines = leadContent.split('\n').filter(l => l.trim());
         const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
         const content = lines.slice(1).join('\n\n');
         generatedLeadHeadline = headline;
+
+        // Track this story to avoid repeats in future
+        if (headline && headline.length > 5) {
+          setUsedStories(prev => [...prev.slice(-19), headline].slice(-20)); // Keep last 20
+        }
+
+        // Extract sources from content
+        const sources = extractSourcesFromContent(content);
+
         setNewsletterData(prev => ({
           ...prev,
           leadStory: {
@@ -1868,6 +1881,7 @@ Translation: The treatments we're writing about today may be routine options in 
             headline: headline || prev.leadStory.headline,
             content: content || leadContent,
             publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            sources: sources.length > 0 ? sources : prev.leadStory.sources,
             image: { ...prev.leadStory.image, midjourneyPrompt: generateMidjourneyPrompt(headline) }
           }
         }));
@@ -2131,12 +2145,36 @@ Return JSON: {"word": "", "definition": "accessible definition", "suggestedBy": 
           const jsonMatch = gameContent.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0]);
+            // Ensure content is always a string (AI sometimes returns object)
+            let contentStr = '';
+            if (typeof parsed.content === 'string') {
+              contentStr = parsed.content;
+            } else if (typeof parsed.questions === 'string') {
+              contentStr = parsed.questions;
+            } else if (parsed.content && typeof parsed.content === 'object') {
+              // If content is an object, stringify it nicely
+              contentStr = Object.entries(parsed.content)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join('\n');
+            }
+
+            let answerStr = '';
+            if (typeof parsed.answer === 'string') {
+              answerStr = parsed.answer;
+            } else if (typeof parsed.answers === 'string') {
+              answerStr = parsed.answers;
+            } else if (parsed.answer && typeof parsed.answer === 'object') {
+              answerStr = Object.entries(parsed.answer)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join('\n');
+            }
+
             setCurrentGame({
               id: Date.now().toString(),
               title: parsed.title || 'Health Trivia',
               intro: parsed.intro || 'Test your knowledge!',
-              content: parsed.content || parsed.questions || '',
-              answer: parsed.answer || parsed.answers || ''
+              content: contentStr,
+              answer: answerStr
             });
             setNewsletterData(prev => ({
               ...prev,

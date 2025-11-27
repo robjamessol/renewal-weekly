@@ -152,9 +152,10 @@ const RenewalWeeklyCompiler = () => {
     ];
     // Domains that block Anthropic's crawler - exclude these
     const blockedDomains = [
-      'nytimes.com', 'washingtonpost.com', 'verywellmind.com',
-      'everydayhealth.com', 'bbc.com', 'newscientist.com',
-      'technologyreview.com', 'newsweek.com'
+      'nytimes.com', 'washingtonpost.com', 'verywellmind.com', 'verywellfit.com',
+      'verywellhealth.com', 'everydayhealth.com', 'bbc.com', 'newscientist.com',
+      'technologyreview.com', 'newsweek.com', 'theatlantic.com', 'wired.com',
+      'forbes.com', 'businessinsider.com', 'time.com', 'usatoday.com'
     ];
     const uniqueDomains = [...new Set([...allDomains, ...mainstreamSources])]
       .filter(d => !blockedDomains.includes(d));
@@ -888,9 +889,10 @@ NO preamble. Start directly with [`
         ];
         // Domains that block Anthropic's crawler - exclude these
         const blockedDomains = [
-          'nytimes.com', 'washingtonpost.com', 'verywellmind.com',
-          'everydayhealth.com', 'bbc.com', 'newscientist.com',
-          'technologyreview.com', 'newsweek.com'
+          'nytimes.com', 'washingtonpost.com', 'verywellmind.com', 'verywellfit.com',
+          'verywellhealth.com', 'everydayhealth.com', 'bbc.com', 'newscientist.com',
+          'technologyreview.com', 'newsweek.com', 'theatlantic.com', 'wired.com',
+          'forbes.com', 'businessinsider.com', 'time.com', 'usatoday.com'
         ];
         const uniqueAllowedDomains = [...new Set(allowedDomains)]
           .filter(d => !blockedDomains.includes(d))

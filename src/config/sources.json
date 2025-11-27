@@ -1,6 +1,6 @@
 {
   "description": "Preferred research sources by topic category. The AI will prioritize these domains when searching for articles.",
-  "note": "Some domains block Anthropic's crawler and are excluded: nytimes.com, washingtonpost.com, bbc.com, newscientist.com, verywellmind.com, everydayhealth.com, technologyreview.com, newsweek.com",
+  "note": "Blocked by Anthropic crawler: nytimes.com, washingtonpost.com, bbc.com, newscientist.com, verywellmind.com, verywellfit.com, verywellhealth.com, everydayhealth.com, technologyreview.com, newsweek.com, theatlantic.com, wired.com, forbes.com, businessinsider.com, time.com, usatoday.com",
 
   "stemCell": {
     "label": "Stem Cell & Regenerative Medicine",
@@ -234,11 +234,11 @@
       "who.int",
       "nhs.uk",
       "eatright.org",
-      "verywellfit.com",
       "self.com",
       "runnersworld.com",
       "npr.org",
-      "menshealth.com"
+      "menshealth.com",
+      "acefitness.org"
     ]
   }
 }

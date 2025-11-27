@@ -110,7 +110,14 @@ const RenewalWeeklyCompiler = () => {
   const [anthropicApiKey, setAnthropicApiKey] = useState(() => {
     return localStorage.getItem('renewalWeekly_anthropicKey') || '';
   });
+  const [testMode, setTestMode] = useState(() => {
+    return localStorage.getItem('renewalWeekly_testMode') === 'true';
+  });
   const [aiStatus, setAiStatus] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem('renewalWeekly_testMode', testMode);
+  }, [testMode]);
 
   useEffect(() => {
     if (anthropicApiKey) {
@@ -211,20 +218,24 @@ ${getSourceGuidance()}
 
 CRITICAL: Only cite articles published within the PAST 7 DAYS. Never use older sources.`;
 
-    // Section-specific configurations - increased tokens for detailed prompts
+    // Section-specific configurations - uses Haiku in test mode (12x cheaper)
+    const prodModel = 'claude-sonnet-4-20250514';
+    const testModel = 'claude-haiku-3-5-20241022';
+    const activeModel = testMode ? testModel : prodModel;
+
     const sectionConfig = {
-      openingHook: { maxTokens: 400, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      leadStory: { maxTokens: 1500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      researchRoundup: { maxTokens: 800, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      secondaryStories: { maxTokens: 1500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      deepDive: { maxTokens: 1000, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      statSection: { maxTokens: 800, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      thePulse: { maxTokens: 1000, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      recommendations: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      gameTrivia: { maxTokens: 400, needsWebSearch: false, model: 'claude-haiku-3-5-20241022' },
-      bottomLine: { maxTokens: 400, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      worthKnowing: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      wordOfDay: { maxTokens: 200, needsWebSearch: false, model: 'claude-haiku-3-5-20241022' }
+      openingHook: { maxTokens: 400, needsWebSearch: true, model: activeModel },
+      leadStory: { maxTokens: 1500, needsWebSearch: true, model: activeModel },
+      researchRoundup: { maxTokens: 800, needsWebSearch: true, model: activeModel },
+      secondaryStories: { maxTokens: 1500, needsWebSearch: true, model: activeModel },
+      deepDive: { maxTokens: 1000, needsWebSearch: true, model: activeModel },
+      statSection: { maxTokens: 800, needsWebSearch: true, model: activeModel },
+      thePulse: { maxTokens: 1000, needsWebSearch: true, model: activeModel },
+      recommendations: { maxTokens: 600, needsWebSearch: true, model: activeModel },
+      gameTrivia: { maxTokens: 400, needsWebSearch: false, model: testModel }, // Always Haiku
+      bottomLine: { maxTokens: 400, needsWebSearch: true, model: activeModel },
+      worthKnowing: { maxTokens: 600, needsWebSearch: true, model: activeModel },
+      wordOfDay: { maxTokens: 200, needsWebSearch: false, model: testModel } // Always Haiku
     };
 
     // Detailed prompts with exact formatting instructions
@@ -2474,6 +2485,35 @@ ${currentGame.content}
                   {anthropicApiKey && (
                     <p className="text-xs mt-2 font-medium" style={{ color: colors.primary }}>✓ API key saved</p>
                   )}
+                </div>
+
+                {/* Test Mode Toggle */}
+                <div className="p-4 rounded-lg border-2" style={{
+                  backgroundColor: testMode ? '#FEF3C7' : colors.accent,
+                  borderColor: testMode ? '#F59E0B' : 'transparent'
+                }}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-sm font-bold" style={{ color: testMode ? '#B45309' : colors.primary }}>
+                        🧪 Test Mode {testMode ? 'ON' : 'OFF'}
+                      </label>
+                      <p className="text-xs mt-1" style={{ color: testMode ? '#92400E' : colors.muted }}>
+                        {testMode
+                          ? 'Using Haiku (12x cheaper) — Lower quality, great for testing'
+                          : 'Using Sonnet — Full quality for production'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setTestMode(!testMode)}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      style={{
+                        backgroundColor: testMode ? '#F59E0B' : colors.primary,
+                        color: 'white'
+                      }}
+                    >
+                      {testMode ? 'Switch to Sonnet' : 'Enable Test Mode'}
+                    </button>
+                  </div>
                 </div>
                 {aiStatus && (
                   <div className={`p-3 rounded-lg text-sm ${aiStatus.startsWith('Error') || aiStatus.startsWith('Please') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>

@@ -195,33 +195,29 @@ const RenewalWeeklyCompiler = () => {
     const systemMessage = `You write for Renewal Weekly, a health newsletter about stem cells and regenerative medicine.
 Date: ${today}. Audience: Adults 40-80 with chronic conditions—smart, skeptical, tired of hype.
 
-VOICE (follow exactly):
-"A smart friend who happens to read medical journals explaining what actually matters—hopeful but never naive, accessible but never dumbed down."
+⚠️ CRITICAL OUTPUT RULES - FOLLOW EXACTLY:
+1. Output ONLY the final newsletter content. NOTHING ELSE.
+2. NO preamble like "I found a story about..." or "Let me write this up..."
+3. NO thinking out loud. NO commentary. NO "Perfect!" or "Great!"
+4. Start IMMEDIATELY with the headline or content requested.
+5. JSON requests return ONLY valid JSON - no explanation, no markdown blocks.
 
-TONE PRINCIPLES:
-- Confident but not preachy: "Here's what that means:" NOT "You should really consider..."
-- Direct, not clinical: "Patients got better" NOT "demonstrated statistically significant improvements"
-- Hopeful, not hype: "That changed this week" NOT "Revolutionary breakthrough!"
-- Human, not corporate: Conversational language, slight humor allowed
+VOICE: "A smart friend who reads medical journals—hopeful but never naive, accessible but never dumbed down."
 
-KEY WRITING PATTERNS:
-- The Contrast Setup: Long context → Short punchy impact
-  "For 20 million Americans, the prognosis has always been the same. That changed this week."
-- Use clear labels: **Here's what happened:** **Why this matters:** **The catch:** **Bottom line:**
-- Relatable translations: Follow technical info with real-world meaning
-  "21 additional letters—that's the difference between needing help crossing the street and reading a menu."
+TONE:
+- "Here's what that means:" NOT "You should really consider..."
+- "Patients got better" NOT "demonstrated statistically significant improvements"
+- "That changed this week" NOT "Revolutionary breakthrough!"
 
-OUTPUT RULES:
-- Output ONLY final content. No preamble, no "Here's the article", no thinking out loud.
-- JSON requests return ONLY valid JSON (no markdown code blocks, no extra text)
-- Use {{LINK:display text|url}} for links—embed naturally in sentences
-- Use **bold** for section headers only, not whole paragraphs
+FORMATTING:
+- Use {{LINK:display text|url}} for links embedded naturally in sentences
+- Use **bold** for section headers only: **Here's what happened:** **The catch:**
+- NEVER use standalone dashes or hyphens (-) except in hyphenated words like "first-ever"
+- NEVER use em dashes (—) mid-sentence. Use periods instead.
 - Separate paragraphs with blank lines
 - NO markdown headers (no # or ##)
-- Link to SPECIFIC articles, not homepages
 
-WORDS TO USE: "genuinely encouraging", "shows promise", "got better", "the catch"
-WORDS TO AVOID: "revolutionary", "miracle", "breakthrough", "you won't believe"
+WORDS TO AVOID: "revolutionary", "miracle", "breakthrough", "you won't believe", any standalone "-"
 
 CRITICAL: Only cite articles published within the PAST 7 DAYS. Never use older sources.`;
 
@@ -294,54 +290,57 @@ WRITING RULES:
 - Keep paragraphs to 2-3 sentences MAX
 - Total: 280-320 words. Count them.`,
 
-      researchRoundup: `Search for stem cell treatment research for a DIFFERENT condition (past 2 weeks).
+      researchRoundup: `Search for health/medical research published in the PAST 2 WEEKS. Prioritize stem cell or regenerative medicine, but other health innovation is acceptable if more compelling.
 ${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
 ⚠️ DO NOT write about: "${customPrompt.split('|')[0].replace('AVOID_TOPIC:', '')}"
-Find a DIFFERENT condition/treatment entirely.
+Find a COMPLETELY DIFFERENT topic.
 ${customPrompt.split('|')[1] ? `Focus on: ${customPrompt.split('|')[1]}` : ''}` : (customPrompt ? `Focus on: ${customPrompt}` : '')}
 
 STRICT WORD LIMIT: 120-150 words. No exceptions.
+SOURCES MUST BE FROM PAST 2 WEEKS. Nothing older.
 
 OUTPUT FORMAT:
-Line 1: "Treatment Spotlight: [Therapy] for [Condition]"
+Line 1: Compelling headline (8 words max, like lead story style)
+Example: "New MS Treatment Reverses Nerve Damage" or "Sleep Study Reveals Brain Repair Secret"
 
-Then write TIGHT prose (5 short paragraphs):
+Then write TIGHT prose:
 
-Para 1: "If you or someone you love has [condition], this one's worth reading twice."
+Para 1: Hook sentence about who this helps. "If you or someone you love has [condition]..."
 
-Para 2: Research findings (2 sentences max). One {{LINK:source|url}}.
+Para 2: Key findings (2 sentences). Include {{LINK:source|url}}.
 
-Para 3: **What you should know:** Cost range, availability (1-2 sentences).
+Para 3: **What you should know:** Practical info (1-2 sentences).
 
-Para 4: **The catch:** Key limitation (1 sentence).
+Para 4: **The catch:** Limitation (1 sentence).
 
-Para 5: **Bottom line:** Next step (1 sentence). {{LINK:ClinicalTrials.gov|https://clinicaltrials.gov}}.
+Para 5: **Bottom line:** Action step (1 sentence).
 
-Total: 120-150 words. Be specific with numbers.`,
+Total: 120-150 words.`,
 
       secondaryStories: `Search 3 different recent stem cell/regenerative medicine stories (past 2 weeks). Each story should be from a DIFFERENT topic area.
 
-Return ONLY valid JSON array with this EXACT structure:
+⚠️ OUTPUT ONLY THE JSON ARRAY. No preamble. No explanation. Start with [
+
 [
   {
-    "boldLead": "One-sentence hook ending with period. Written in bold style.",
-    "content": "75-150 words of continuous prose. Include {{LINK:source name|url}} naturally embedded in a sentence. Explain the significance for patients. Be specific about what was achieved.",
-    "sources": [{"title": "Source Name", "url": "https://actual-url.com", "date": "Nov 20, 2025"}]
+    "boldLead": "One sentence hook ending with period.",
+    "content": "75-100 words. Include {{LINK:source|url}} inline. Be specific.",
+    "sources": [{"title": "Source Name", "url": "https://url.com", "date": "Nov 20, 2025"}]
   },
   {
-    "boldLead": "Different topic hook sentence.",
-    "content": "75-150 words with {{LINK:embedded link|url}}. Different story from #1.",
-    "sources": [{"title": "Source Name", "url": "https://actual-url.com", "date": "Nov 18, 2025"}]
+    "boldLead": "Different topic hook.",
+    "content": "75-100 words with {{LINK:link|url}}.",
+    "sources": [{"title": "Source", "url": "https://url.com", "date": "Nov 18, 2025"}]
   },
   {
-    "boldLead": "Third different topic hook.",
-    "content": "75-150 words with {{LINK:embedded link|url}}. Different from #1 and #2.",
-    "sources": [{"title": "Source Name", "url": "https://actual-url.com", "date": "Nov 15, 2025"}]
+    "boldLead": "Third topic hook.",
+    "content": "75-100 words with {{LINK:link|url}}.",
+    "sources": [{"title": "Source", "url": "https://url.com", "date": "Nov 15, 2025"}]
   }
 ]
 
-EXAMPLE boldLead: "Stanford just made stem cell transplants safer—without chemo."
-EXAMPLE content: "A new antibody therapy can prepare patients for stem cell transplants without toxic chemotherapy or radiation. In a {{LINK:Phase 1 trial|https://example.com}}, children with Fanconi anemia achieved nearly complete donor cell replacement..."`,
+EXAMPLE boldLead: "Stanford made stem cell transplants safer without chemo."
+NO dashes or em dashes in boldLead. Just clean sentences.`,
 
       deepDive: `Search for a DIFFERENT nutrition/wellness topic related to cellular health.
 ${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
@@ -604,9 +603,10 @@ Each recommendation should be genuinely useful for adults 40-80 interested in he
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              textDecoration: 'underline',
-              color: 'inherit',
-              borderBottom: '1px solid #800080'  // Purple underline
+              textDecoration: 'none',
+              color: '#1F2937',
+              borderBottom: '2px solid #8B5CF6',
+              paddingBottom: '1px'
             }}
           >
             {part.text}
@@ -1236,9 +1236,9 @@ Translation: The treatments we're writing about today may be routine options in 
     }
 
     // For research roundup, avoid current topic
-    if (aiType === 'researchRoundup' && newsletterData.yourOptionsThisWeek.subtitle) {
-      const currentSubtitle = newsletterData.yourOptionsThisWeek.subtitle;
-      customPrompt = `AVOID_TOPIC:${currentSubtitle}|${customPrompt}`;
+    if (aiType === 'researchRoundup' && newsletterData.yourOptionsThisWeek.title) {
+      const currentTitle = newsletterData.yourOptionsThisWeek.title;
+      customPrompt = `AVOID_TOPIC:${currentTitle}|${customPrompt}`;
     }
 
     // For deep dive, avoid current topic
@@ -1281,13 +1281,14 @@ Translation: The treatments we're writing about today may be routine options in 
 
           case 'researchRoundup':
             try {
-              // Extract subtitle from first line
+              // Extract headline from first line (replaces static title)
               const lines = generatedContent.split('\n').filter(l => l.trim());
-              const subtitle = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
+              const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
               const content = lines.slice(1).join('\n\n');
               updated.yourOptionsThisWeek = {
                 ...prev.yourOptionsThisWeek,
-                subtitle: subtitle || prev.yourOptionsThisWeek.subtitle,
+                title: headline || prev.yourOptionsThisWeek.title,
+                subtitle: '', // Remove subtitle - just use headline
                 content: content || generatedContent,
                 publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
               };
@@ -1298,18 +1299,24 @@ Translation: The treatments we're writing about today may be routine options in 
 
           case 'secondaryStories':
             try {
-              const parsed = JSON.parse(generatedContent);
-              if (Array.isArray(parsed) && parsed.length >= 3) {
-                updated.secondaryStories = {
-                  ...prev.secondaryStories,
-                  stories: parsed.slice(0, 3).map((story, idx) => ({
-                    id: idx + 1,
-                    boldLead: story.boldLead || '',
-                    content: story.content || '',
-                    publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                    sources: story.sources || []
-                  }))
-                };
+              // Try to extract JSON array even if there's preamble
+              const jsonMatch = generatedContent.match(/\[[\s\S]*\]/);
+              if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                if (Array.isArray(parsed) && parsed.length >= 1) {
+                  updated.secondaryStories = {
+                    ...prev.secondaryStories,
+                    stories: parsed.slice(0, 3).map((story, idx) => ({
+                      id: idx + 1,
+                      boldLead: story.boldLead || '',
+                      content: story.content || '',
+                      publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                      sources: story.sources || []
+                    }))
+                  };
+                }
+              } else {
+                setAiStatus('Error: No JSON array found in response');
               }
             } catch (e) {
               setAiStatus('Error: Could not parse JSON response for secondary stories');
@@ -1535,15 +1542,16 @@ Return JSON array: ["point 1", "point 2", "point 3", "point 4"]`;
       setAiStatus('Writing research roundup... (5/12)');
       const roundupContent = await generateWithAI('researchRoundup');
       if (roundupContent) {
-        // Extract subtitle from first line
+        // Extract headline from first line (replaces static title)
         const lines = roundupContent.split('\n').filter(l => l.trim());
-        const subtitle = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
+        const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
         const content = lines.slice(1).join('\n\n');
         setNewsletterData(prev => ({
           ...prev,
           yourOptionsThisWeek: {
             ...prev.yourOptionsThisWeek,
-            subtitle: subtitle || prev.yourOptionsThisWeek.subtitle,
+            title: headline || prev.yourOptionsThisWeek.title,
+            subtitle: '', // Remove subtitle - just use headline
             content: content || roundupContent,
             publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
           }
@@ -1823,11 +1831,11 @@ Return JSON: {"word": "", "definition": "accessible definition", "suggestedBy": 
   const generateFullHTML = () => {
     const d = newsletterData;
     
-    // Convert link syntax to HTML links - text stays charcoal, only underline is purple
+    // Convert link syntax to HTML links - charcoal text with 2px purple underline only
     const convertLinksToHTML = (content) => {
       if (!content) return '';
       return content
-        .replace(/\{\{LINK:([^|]+)\|([^}]+)\}\}/g, '<a href="$2" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">$1</a>')
+        .replace(/\{\{LINK:([^|]+)\|([^}]+)\}\}/g, '<a href="$2" style="text-decoration: none; color: #1F2937; border-bottom: 2px solid #8B5CF6; padding-bottom: 1px;">$1</a>')
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     };
     
@@ -1895,7 +1903,7 @@ ${d.openingHook.content}
 <div class="rw-section">
   <p class="rw-label">${d.yourOptionsThisWeek.sectionLabel}</p>
   <h2 class="rw-headline">${d.yourOptionsThisWeek.title}</h2>
-  <h3 style="font-size: 18px; color: #4B5563; margin-bottom: 16px;">${d.yourOptionsThisWeek.subtitle}</h3>
+  ${d.yourOptionsThisWeek.subtitle ? `<h3 style="font-size: 18px; color: #4B5563; margin-bottom: 16px;">${d.yourOptionsThisWeek.subtitle}</h3>` : ''}
   <img src="[YOUR_IMAGE_URL]" alt="" class="rw-image" />
   <p class="rw-credit">${d.yourOptionsThisWeek.image.credit}</p>
   <div class="rw-body">

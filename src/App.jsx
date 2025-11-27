@@ -191,73 +191,255 @@ const RenewalWeeklyCompiler = () => {
       hookContext = `This month: ${monthEvents.month[0] || 'seasonal content'}. Focus on timely, relatable observations.`;
     }
 
-    // System message - processed once, more efficient than repeating in user content
-    const systemMessage = `You write for Renewal Weekly, a newsletter about stem cells and regenerative medicine.
-Date: ${today}. Audience: Adults 40-80 interested in health innovation.
-Rules: Output ONLY final content. No preamble or thinking. JSON requests return ONLY valid JSON.
-Style: Smart friend who reads journals—hopeful but honest. Include costs/limitations.
-Links: Use {{LINK:text|url}} format. Link to SPECIFIC articles, not homepages.
+    // System message - processed once, incorporates style guide principles
+    const systemMessage = `You write for Renewal Weekly, a health newsletter about stem cells and regenerative medicine.
+Date: ${today}. Audience: Adults 40-80 with chronic conditions—smart, skeptical, tired of hype.
+
+VOICE (follow exactly):
+"A smart friend who happens to read medical journals explaining what actually matters—hopeful but never naive, accessible but never dumbed down."
+
+TONE PRINCIPLES:
+- Confident but not preachy: "Here's what that means:" NOT "You should really consider..."
+- Direct, not clinical: "Patients got better" NOT "demonstrated statistically significant improvements"
+- Hopeful, not hype: "That changed this week" NOT "Revolutionary breakthrough!"
+- Human, not corporate: Conversational language, slight humor allowed
+
+KEY WRITING PATTERNS:
+- The Contrast Setup: Long context → Short punchy impact
+  "For 20 million Americans, the prognosis has always been the same. That changed this week."
+- Use clear labels: **Here's what happened:** **Why this matters:** **The catch:** **Bottom line:**
+- Relatable translations: Follow technical info with real-world meaning
+  "21 additional letters—that's the difference between needing help crossing the street and reading a menu."
+
+OUTPUT RULES:
+- Output ONLY final content. No preamble, no "Here's the article", no thinking out loud.
+- JSON requests return ONLY valid JSON (no markdown code blocks, no extra text)
+- Use {{LINK:display text|url}} for links—embed naturally in sentences
+- Use **bold** for section headers only, not whole paragraphs
+- Separate paragraphs with blank lines
+- NO markdown headers (no # or ##)
+- Link to SPECIFIC articles, not homepages
+
+WORDS TO USE: "genuinely encouraging", "shows promise", "got better", "the catch"
+WORDS TO AVOID: "revolutionary", "miracle", "breakthrough", "you won't believe"
+
 CRITICAL: Only cite articles published within the PAST 7 DAYS. Never use older sources.`;
 
-    // Section-specific configurations - use Haiku for simple creative tasks (3x cheaper)
+    // Section-specific configurations - increased tokens for detailed prompts
     const sectionConfig = {
-      openingHook: { maxTokens: 350, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      leadStory: { maxTokens: 1200, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      researchRoundup: { maxTokens: 500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      secondaryStories: { maxTokens: 1000, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      deepDive: { maxTokens: 700, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      statSection: { maxTokens: 500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      thePulse: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      recommendations: { maxTokens: 500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      openingHook: { maxTokens: 400, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      leadStory: { maxTokens: 1500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      researchRoundup: { maxTokens: 800, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      secondaryStories: { maxTokens: 1500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      deepDive: { maxTokens: 1000, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      statSection: { maxTokens: 800, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      thePulse: { maxTokens: 1000, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      recommendations: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
       gameTrivia: { maxTokens: 400, needsWebSearch: false, model: 'claude-haiku-3-5-20241022' },
-      bottomLine: { maxTokens: 300, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
-      worthKnowing: { maxTokens: 500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      bottomLine: { maxTokens: 400, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      worthKnowing: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
       wordOfDay: { maxTokens: 200, needsWebSearch: false, model: 'claude-haiku-3-5-20241022' }
     };
 
-    // Ultra-concise prompts - every token counts
+    // Detailed prompts with exact formatting instructions
     const sectionPrompts = {
       openingHook: `Write 50-75 word opening hook for ${today}.
 ${hookContext}
 PRIORITY ORDER: National holidays > Health awareness days > Seasonal/weather > General observations.
 IMPORTANT: This hook is STANDALONE - do NOT mention stem cells, regenerative medicine, or any newsletter content. Keep it relatable and human.
 LINKS: If referencing specific events, embed {{LINK:keyword|url}} INLINE within text. Articles must be from PAST 7 DAYS only.
-Warm, relatable tone. End with "—The Renewal Weekly Team"`,
+Warm, relatable tone. End with "—The Renewal Weekly Team"
 
-      leadStory: `Search for LATEST stem cell/regenerative medicine news (past 7 days). Write 350-400 words:
-1. Headline (clever, clear)
-2. Opening: "[X million] Americans with [condition]..."
-3. "Here's what happened:" specifics
-4. "Why this matters:" context
-5. "What's next:" forward-looking
-Include 2-3 {{LINK:text|url}}.${customPrompt ? ` Focus: ${customPrompt}` : ''}`,
+EXAMPLE FORMAT:
+Good morning. It's the week before Thanksgiving, which means you're probably already mentally budgeting for elastic waistbands.
 
-      researchRoundup: `Search recent stem cell treatment research. Write 100-150 words:
-- "If you or someone you love has [condition]..."
-- Research findings (2-3 sentences)
-- "What you should know:" (cost, availability)
-- "The catch:" (limitations)
-- "Bottom line:" (next step)
-Include {{LINK:source|url}}.${customPrompt ? ` Focus: ${customPrompt}` : ''}`,
+Here's a thought: What if instead of dreading the "holiday pounds," you focused on the one thing that actually matters—showing up for the people you love, however you feel?
 
-      secondaryStories: `Search 3 recent stem cell/regen med stories (past 2 weeks). Return JSON:
-[{"boldLead":"hook","content":"75-150 words","sources":[{"title":"","url":"","date":""}]}]`,
+We'll handle the health intel. You handle the mashed potatoes.
 
-      deepDive: `Search nutrition/wellness research for cellular health. Write 200-250 words:
-- Contrarian opening
-- Bullet evidence
-- "Connection to stem cells:" paragraph
-- Actionable takeaway
-Include {{LINK:source|url}}.${customPrompt ? ` Topic: ${customPrompt}` : ''}`,
+—The Renewal Weekly Team`,
 
-      statSection: `Search compelling regenerative medicine statistic. Return JSON:
-{"primeNumber":"$403B","headline":"lowercase desc","content":"150 words with {{LINK:text|url}}"}`,
+      leadStory: `Search for LATEST stem cell/regenerative medicine breakthrough news (past 7 days).${customPrompt ? ` Focus on: ${customPrompt}` : ''}
 
-      thePulse: `Search 7 quick stem cell/biotech news (past 2 weeks). Each <25 words with {{LINK:text|url}}.
-Return JSON: ["item1","item2","item3","item4","item5","item6","item7"]`,
+OUTPUT FORMAT (follow EXACTLY):
+Line 1: Clever, clear headline (no markdown, no asterisks)
 
-      recommendations: `Search content to recommend. Return JSON:
-{"read":{"prefix":"","linkText":"","suffix":"","url":""},"watch":{...},"try":{...},"listen":{...}}`,
+Then write 350-400 words of CONTINUOUS PROSE with these sections:
+
+Paragraph 1: Hook with statistics - "For [X million] Americans with [condition], the prognosis has always been..."
+
+Paragraph 2: Short impact statement - "That changed this week."
+
+Paragraph 3-4: **Here's what happened:** Specifics of the research/trial. Include {{LINK:institution or journal name|url}} inline.
+
+Paragraph 5-6: **Why this matters now:** Context for readers. What makes this different from past attempts?
+
+Paragraph 7: **What's next:** Forward-looking info about trials, timelines, next steps.
+
+Paragraph 8: Include a quote from a researcher if available.
+
+Final paragraph: **The zoom out:** Bigger picture context. Link to {{LINK:source|url}}.
+
+CRITICAL FORMATTING:
+- Separate paragraphs with blank lines
+- Use **bold** for section headers only (Here's what happened:, Why this matters now:, What's next:, The zoom out:)
+- Embed links naturally in sentences: "Researchers at the {{LINK:University of Michigan|https://example.com}} published..."
+- NO markdown headers (no # or ##)
+- NO bullet points in the main content
+- Write like a smart friend explaining exciting news`,
+
+      researchRoundup: `Search recent stem cell treatment research for a specific condition (past 2 weeks).${customPrompt ? ` Focus on: ${customPrompt}` : ''}
+
+OUTPUT FORMAT (follow EXACTLY):
+Line 1: Subtitle in format "Treatment Spotlight: [Therapy Type] for [Condition]"
+Example: "Treatment Spotlight: MSC Therapy for Multiple Sclerosis"
+
+Then write 150-200 words of CONTINUOUS PROSE:
+
+Paragraph 1: "If you or someone you love has [condition], this one's worth reading twice."
+
+Paragraph 2: Research findings with {{LINK:source name|url}} embedded. What did the study/review find? Be specific about improvements, outcomes.
+
+Paragraph 3: **What you should know:** Practical info - cost ranges ($X,000-$XX,000), availability, how to access (clinical trials vs private clinics).
+
+Paragraph 4: **The catch:** Honest limitations - varied results, no standardized protocol, experimental status.
+
+Paragraph 5: **Bottom line:** Actionable next step. Link to {{LINK:ClinicalTrials.gov|https://clinicaltrials.gov}} or relevant resource.
+
+CRITICAL:
+- First line MUST be the subtitle only
+- Use **bold** for section headers only
+- Embed links naturally in sentences
+- Include specific numbers (costs, percentages, patient counts)
+- Be hopeful but honest about limitations`,
+
+      secondaryStories: `Search 3 different recent stem cell/regenerative medicine stories (past 2 weeks). Each story should be from a DIFFERENT topic area.
+
+Return ONLY valid JSON array with this EXACT structure:
+[
+  {
+    "boldLead": "One-sentence hook ending with period. Written in bold style.",
+    "content": "75-150 words of continuous prose. Include {{LINK:source name|url}} naturally embedded in a sentence. Explain the significance for patients. Be specific about what was achieved.",
+    "sources": [{"title": "Source Name", "url": "https://actual-url.com", "date": "Nov 20, 2025"}]
+  },
+  {
+    "boldLead": "Different topic hook sentence.",
+    "content": "75-150 words with {{LINK:embedded link|url}}. Different story from #1.",
+    "sources": [{"title": "Source Name", "url": "https://actual-url.com", "date": "Nov 18, 2025"}]
+  },
+  {
+    "boldLead": "Third different topic hook.",
+    "content": "75-150 words with {{LINK:embedded link|url}}. Different from #1 and #2.",
+    "sources": [{"title": "Source Name", "url": "https://actual-url.com", "date": "Nov 15, 2025"}]
+  }
+]
+
+EXAMPLE boldLead: "Stanford just made stem cell transplants safer—without chemo."
+EXAMPLE content: "A new antibody therapy can prepare patients for stem cell transplants without toxic chemotherapy or radiation. In a {{LINK:Phase 1 trial|https://example.com}}, children with Fanconi anemia achieved nearly complete donor cell replacement..."`,
+
+      deepDive: `Search nutrition/wellness/lifestyle research related to cellular health and regeneration.${customPrompt ? ` Topic: ${customPrompt}` : ''}
+
+OUTPUT FORMAT (follow EXACTLY):
+Line 1: Catchy headline (no markdown, no asterisks) e.g. "The Anti-Inflammatory Shopping List You Actually Need"
+
+Then write 200-300 words:
+
+Paragraph 1: Contrarian/surprising opening that challenges conventional wisdom. "The supplement aisle wants you to believe..." or "Everyone says X, but research shows..."
+
+Paragraph 2: Reference {{LINK:institution/journal|url}} research with specific findings.
+
+Paragraph 3-4: **What to add:** or **What works:**
+Use bullet format with • symbol:
+• Item one — specific recommendation
+• Item two — why it matters
+• Item three — how much/how often
+
+Paragraph 5: **What to limit:** or **What to avoid:**
+• Item one
+• Item two
+
+Paragraph 6: **The connection to stem cells:** How this relates to cellular health/regeneration. Chronic inflammation, cell aging, bone marrow health, etc.
+
+Final paragraph: Actionable takeaway with {{LINK:resource|url}}. "Start with one swap: X → Y."
+
+CRITICAL:
+- Use • for bullet points (not - or *)
+- Use — (em dash) within bullet items
+- Embed links in sentences naturally
+- Be specific: "2-3 servings/week" not "eat more"`,
+
+      statSection: `Search for a compelling, surprising statistic about regenerative medicine, stem cell research, or the biotech industry.
+
+Return ONLY valid JSON with this EXACT structure:
+{
+  "primeNumber": "$403.86B",
+  "headline": "where the regenerative medicine market is headed by 2032",
+  "content": "That's not a typo. The regenerative medicine market is projected to grow from $48 billion today to over $400 billion in the next seven years—a 27.3% annual growth rate.
+
+**Why it matters for you:** More investment means more trials, faster approvals, and eventually, more affordable treatments. Cell therapy alone contributed $18.9 billion in 2024.
+
+For context: There are now more than 2,400 regenerative medicine clinical trials running worldwide. In the 1980s, only about 1,500 patients received stem cell transplants per year. In 2022? Nearly 23,000.
+
+**The backstory:** Global funding for regenerative medicine—public, private, and venture—surpassed $50 billion in 2024. Companies like {{LINK:Mesoblast|https://www.mesoblast.com}}, {{LINK:CRISPR Therapeutics|https://crisprtx.com}}, and Fate Therapeutics are leading the charge.
+
+Translation: The treatments we're writing about today may be routine options in a decade. {{LINK:Read the full market report|https://example.com}}."
+}
+
+CRITICAL for primeNumber:
+- Use exact format: $403B, 67%, 2,400, 47 days
+- Make it visually impactful
+- headline should be lowercase, descriptive`,
+
+      thePulse: `Search 7 quick stem cell/biotech/regenerative medicine news items (past 2 weeks).
+
+Return ONLY valid JSON array. Each item should be ONE string with this format:
+- Company/institution name linked: {{LINK:Name|url}}
+- Brief news (under 25 words total)
+- Source and date in brackets at end: [Source Name, Month Year]
+
+EXAMPLE:
+[
+  "{{LINK:Takeda|https://example.com}} launched a new autologous stem cell therapy for cartilage regeneration in Japan this month [DataM Intelligence, Nov 2025]",
+  "MSC clinical trials are {{LINK:up 37%|https://example.com}} in 2025 compared to last year [Clinical Trials Arena, Nov 20, 2025]",
+  "Scientists discovered {{LINK:\"P bodies\"|https://example.com}} play a critical role in stem cell differentiation—opening new doors for regenerative medicine [CU Boulder, Nov 3, 2025]"
+]
+
+Return exactly 7 items. Each must have:
+- At least one {{LINK:text|url}}
+- Source attribution in [brackets] at end
+- Be under 25 words (excluding the bracketed source)`,
+
+      recommendations: `Search for content to recommend in these categories. Find REAL, current content from the past month.
+
+Return ONLY valid JSON:
+{
+  "read": {
+    "prefix": "Pluripotent ",
+    "linkText": "stem-cell-derived therapies",
+    "suffix": " in clinical trial: A 2025 update",
+    "url": "https://real-article-url.com"
+  },
+  "watch": {
+    "prefix": "Inside the labs trying to ",
+    "linkText": "cure autoimmune disease",
+    "suffix": " (PBS NewsHour)",
+    "url": "https://real-video-url.com"
+  },
+  "try": {
+    "prefix": "The ",
+    "linkText": "anti-inflammatory diet",
+    "suffix": " guide (Johns Hopkins)",
+    "url": "https://real-resource-url.com"
+  },
+  "listen": {
+    "prefix": "",
+    "linkText": "Longevity Technology",
+    "suffix": " podcast",
+    "url": "https://real-podcast-url.com"
+  }
+}
+
+Each recommendation should be genuinely useful for adults 40-80 interested in health/regenerative medicine.`,
 
       gameTrivia: `Create fun health trivia game. Return JSON:
 {"title":"","intro":"1-2 sentences","content":"questions","answer":"answers"}`
@@ -1070,11 +1252,20 @@ Translation: The treatments we're writing about today may be routine options in 
             break;
 
           case 'researchRoundup':
-            updated.yourOptionsThisWeek = {
-              ...prev.yourOptionsThisWeek,
-              content: generatedContent,
-              publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-            };
+            try {
+              // Extract subtitle from first line
+              const lines = generatedContent.split('\n').filter(l => l.trim());
+              const subtitle = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
+              const content = lines.slice(1).join('\n\n');
+              updated.yourOptionsThisWeek = {
+                ...prev.yourOptionsThisWeek,
+                subtitle: subtitle || prev.yourOptionsThisWeek.subtitle,
+                content: content || generatedContent,
+                publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              };
+            } catch (e) {
+              updated.yourOptionsThisWeek = { ...prev.yourOptionsThisWeek, content: generatedContent };
+            }
             break;
 
           case 'secondaryStories':
@@ -1098,11 +1289,20 @@ Translation: The treatments we're writing about today may be routine options in 
             break;
 
           case 'deepDive':
-            updated.industryDeepDive = {
-              ...prev.industryDeepDive,
-              content: generatedContent,
-              publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-            };
+            try {
+              // Extract headline from first line
+              const lines = generatedContent.split('\n').filter(l => l.trim());
+              const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
+              const content = lines.slice(1).join('\n\n');
+              updated.industryDeepDive = {
+                ...prev.industryDeepDive,
+                headline: headline || prev.industryDeepDive.headline,
+                content: content || generatedContent,
+                publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+              };
+            } catch (e) {
+              updated.industryDeepDive = { ...prev.industryDeepDive, content: generatedContent };
+            }
             break;
 
           case 'statSection':
@@ -1307,11 +1507,16 @@ Return JSON array: ["point 1", "point 2", "point 3", "point 4"]`;
       setAiStatus('Writing research roundup... (5/12)');
       const roundupContent = await generateWithAI('researchRoundup');
       if (roundupContent) {
+        // Extract subtitle from first line
+        const lines = roundupContent.split('\n').filter(l => l.trim());
+        const subtitle = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
+        const content = lines.slice(1).join('\n\n');
         setNewsletterData(prev => ({
           ...prev,
           yourOptionsThisWeek: {
             ...prev.yourOptionsThisWeek,
-            content: roundupContent,
+            subtitle: subtitle || prev.yourOptionsThisWeek.subtitle,
+            content: content || roundupContent,
             publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
           }
         }));
@@ -1352,11 +1557,16 @@ Return JSON array: ["point 1", "point 2", "point 3", "point 4"]`;
       setAiStatus('Writing deep dive... (7/12)');
       const deepDiveContent = await generateWithAI('deepDive');
       if (deepDiveContent) {
+        // Extract headline from first line
+        const lines = deepDiveContent.split('\n').filter(l => l.trim());
+        const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
+        const content = lines.slice(1).join('\n\n');
         setNewsletterData(prev => ({
           ...prev,
           industryDeepDive: {
             ...prev.industryDeepDive,
-            content: deepDiveContent,
+            headline: headline || prev.industryDeepDive.headline,
+            content: content || deepDiveContent,
             publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
           }
         }));

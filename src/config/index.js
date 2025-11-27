@@ -5,11 +5,13 @@
  * - sources.json     → Preferred research domains by topic
  * - style-guide.json → Writing rules, tone, words to use/avoid
  * - audience.json    → Target reader profile and preferences
+ * - structure.json   → Section-by-section format templates
  */
 
 import sources from './sources.json';
 import styleGuide from './style-guide.json';
 import audience from './audience.json';
+import structure from './structure.json';
 
 // Build preferred domains list for AI prompts
 export const getPreferredDomains = (categories = ['stemCell', 'longevity', 'wellness']) => {
@@ -76,9 +78,41 @@ ${effectivePhrases.slice(0, 4).map(p => `"${p}"`).join(', ')}`;
 };
 
 // Export raw configs for direct access
-export { sources, styleGuide, audience };
+export { sources, styleGuide, audience, structure };
 
 // Export word limits helper
 export const getWordLimits = (section) => {
   return styleGuide.sectionWordLimits[section] || { min: 100, max: 200 };
+};
+
+// Get section structure for prompts
+export const getSectionStructure = (sectionName) => {
+  return structure.sections[sectionName] || null;
+};
+
+// Build structure guidance for a specific section
+export const getStructureGuidance = (sectionName) => {
+  const section = structure.sections[sectionName];
+  if (!section) return '';
+
+  let guidance = `SECTION: ${section.name}\n`;
+  guidance += `WORD LIMIT: ${section.wordLimit || section.wordLimitPerStory || 'See structure'}\n`;
+
+  if (section.structure) {
+    guidance += `\nSTRUCTURE:\n`;
+    if (Array.isArray(section.structure)) {
+      guidance += section.structure.map((s, i) => `${i + 1}. ${s}`).join('\n');
+    }
+  }
+
+  if (section.rules) {
+    guidance += `\n\nRULES:\n`;
+    guidance += section.rules.map(r => `• ${r}`).join('\n');
+  }
+
+  if (section.example) {
+    guidance += `\n\nEXAMPLE:\n${typeof section.example === 'string' ? section.example : JSON.stringify(section.example, null, 2)}`;
+  }
+
+  return guidance;
 };

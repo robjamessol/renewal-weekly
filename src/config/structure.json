@@ -1,0 +1,208 @@
+{
+  "description": "Section-by-section structure templates for Renewal Weekly",
+
+  "sections": {
+    "openingHook": {
+      "name": "Opening Hook",
+      "position": 1,
+      "wordLimit": "40-60 words",
+      "sentences": "2-3 max",
+      "tone": "Warm, thankful, relatable",
+      "structure": [
+        "Seasonal/timely observation",
+        "Connection to reader or gratitude",
+        "Brief sign-off: Thanks for being here"
+      ],
+      "rules": [
+        "NEVER mention stem cells or medical content",
+        "DO NOT end with sign-off (it comes after the teasers)",
+        "Keep it brief and human"
+      ],
+      "example": "It's almost Thanksgiving, and perhaps unsurprisingly, we're feeling thankful today. Thankful for you, dear reader, as well as for having the opportunity each week to share the latest healthcare analyses with you. Thanks for being here, and we hope you continue to stay tuned for more."
+    },
+
+    "inTodaysEdition": {
+      "name": "In Today's Edition",
+      "position": 1.5,
+      "format": "4 teaser bullets with emojis",
+      "wordLimit": "3-6 words per teaser",
+      "structure": [
+        "Emoji + short teaser phrase for lead story",
+        "Emoji + short teaser phrase for research",
+        "Emoji + short teaser phrase for deep dive or stat",
+        "Emoji + short teaser phrase for another topic"
+      ],
+      "emojis": ["🔬", "🧬", "💊", "📊", "🏥", "💉", "🧠", "❤️", "👁️", "🦴", "⚡", "💡"],
+      "rules": [
+        "Tease, don't summarize",
+        "Make readers curious to scroll down",
+        "Each teaser starts with emoji"
+      ],
+      "signOff": "—Renewal Weekly Team",
+      "example": [
+        "👁️ Vision restored after AMD trial",
+        "💊 New MS therapy results",
+        "📊 $403B market projection",
+        "🧬 Inflammation and stem cell aging"
+      ]
+    },
+
+    "leadStory": {
+      "name": "Lead Story",
+      "position": 3,
+      "wordLimit": "280-320 words",
+      "headlines": {
+        "style": "Clever but clear, no clickbait",
+        "maxWords": 8,
+        "good": ["Stem Cells Just Did What Doctors Said Was Impossible", "The Anti-Inflammatory Shopping List You Actually Need"],
+        "bad": ["BREAKING: Miracle Cure Found!", "You Won't Believe What Scientists Discovered"]
+      },
+      "structure": [
+        "Para 1: Hook - 'For [X million] Americans with [condition], the prognosis has always been the same: [limitation].'",
+        "Para 2: Pivot - 'That changed this week.'",
+        "Para 3: **Here's what happened:** Key findings, 2-3 sentences, one {{LINK}}",
+        "Para 4: **Why this matters now:** What's different, 2 sentences",
+        "Para 5: **What's next:** Timeline, next steps, 1-2 sentences",
+        "Para 6: Quote from researcher, 1 sentence",
+        "Para 7: **The zoom out:** Bigger picture, one {{LINK}}"
+      ],
+      "sources": "PRIORITIZE mainstream health publications (CNN Health, NYT, WebMD, Healthline)",
+      "rules": [
+        "Stories should have wide appeal (affecting millions)",
+        "AVOID niche scientific journal articles (save for Research Roundup)",
+        "Every sentence must earn its place"
+      ]
+    },
+
+    "researchRoundup": {
+      "name": "Research Roundup",
+      "position": 4,
+      "wordLimit": "120-150 words",
+      "headlines": {
+        "style": "Compelling, like lead story style",
+        "maxWords": 8,
+        "example": "New MS Treatment Reverses Nerve Damage"
+      },
+      "structure": [
+        "Line 1: Headline (8 words max)",
+        "Para 1: Hook - 'If you or someone you love has [condition]...'",
+        "Para 2: Key findings, 2 sentences, include {{LINK}}",
+        "Para 3: **What you should know:** Practical info (cost, availability)",
+        "Para 4: **The catch:** Honest limitation",
+        "Para 5: **Bottom line:** Actionable next step"
+      ],
+      "sources": "PRIORITIZE scientific journals (Nature, Cell, Science, NEJM, Lancet, JAMA)",
+      "rules": [
+        "This is where niche research goes",
+        "Always include cost range if applicable",
+        "Be honest about limitations"
+      ]
+    },
+
+    "secondaryStories": {
+      "name": "On Our Radar",
+      "position": 5,
+      "format": "3 stories",
+      "wordLimitPerStory": "75-100 words",
+      "structure": {
+        "perStory": [
+          "Bold lead: Complete thought that could stand alone",
+          "Expansion: 2-3 sentences with context",
+          "Source link"
+        ]
+      },
+      "boldLeadPattern": "[Subject] + [did what] + [surprising element/result]",
+      "goodBoldLeads": [
+        "Stanford just made stem cell transplants safer—without chemo.",
+        "Type 1 diabetes was cured in mice. Humans might be next.",
+        "MSC trials are up 37% in 2025—and investment is following."
+      ],
+      "rules": [
+        "Each story from different topic area",
+        "Bold lead should work as standalone statement"
+      ]
+    },
+
+    "deepDive": {
+      "name": "Deep Dive",
+      "position": 6,
+      "wordLimit": "180-220 words",
+      "tone": "Practical guide, not lecture",
+      "structure": [
+        "Contrarian opening: Challenge common assumption",
+        "Evidence: What research actually shows",
+        "**What to add:** Bulleted list with specifics",
+        "**What to cut:** Bulleted list",
+        "**The connection to stem cells:** How this relates to regenerative health"
+      ],
+      "openingPatterns": [
+        "The [industry] wants you to believe [common belief]. [Source] disagrees.",
+        "You've probably heard [common advice]. Here's what actually works."
+      ],
+      "listFormat": "• Item name — specific recommendation (e.g., '2-3 servings/week')"
+    },
+
+    "statSection": {
+      "name": "Stat of the Week",
+      "position": 7,
+      "wordLimit": "120-150 words",
+      "tone": "Awe-inspiring but grounded",
+      "structure": [
+        "**Big number** (prominently displayed)",
+        "*What it represents* (italicized subtitle)",
+        "Para 1: Context and scale comparison",
+        "**Why it matters for you:** Personal relevance",
+        "**Translation:** Plain English meaning"
+      ],
+      "example": {
+        "number": "$403.86B",
+        "subtitle": "where the regenerative medicine market is headed by 2032",
+        "content": "That's not a typo. The regenerative medicine market is projected to grow from $48 billion today to over $400 billion in the next seven years."
+      }
+    },
+
+    "thePulse": {
+      "name": "The Pulse",
+      "position": 8,
+      "format": "3-4 quick hits",
+      "wordLimitPerItem": "25 words max",
+      "tone": "Newswire brevity",
+      "structure": "Fact + [Source, Date]",
+      "good": "Takeda launched a new autologous stem cell therapy for cartilage regeneration in Japan this month",
+      "bad": "In exciting news, Takeda has announced the launch of an innovative new therapy... (too wordy)"
+    },
+
+    "worthKnowing": {
+      "name": "Worth Knowing",
+      "position": 9,
+      "format": "3 items",
+      "tone": "Protective big sibling",
+      "types": [
+        "Awareness: Upcoming health event with date and action",
+        "Guide: '5 Red Flags When Choosing...' type tips",
+        "Resource: Helpful tool with real URL"
+      ],
+      "redFlagsFormat": {
+        "example": [
+          "(1) They claim to treat everything with the same cells.",
+          "(2) They use 'amniotic' products without explaining contents.",
+          "(3) They rely entirely on testimonials instead of data.",
+          "(4) They're not FDA-compliant or won't discuss it.",
+          "(5) They offer IV stem cell treatments (currently forbidden)."
+        ]
+      }
+    },
+
+    "recommendations": {
+      "name": "RECS",
+      "position": 10,
+      "format": "4 recommendations",
+      "categories": ["Read", "Watch", "Try", "Listen"],
+      "structure": "Category emoji + prefix + [linked item] + suffix",
+      "rules": [
+        "Each must have real, working URL",
+        "Brief description, not reviews"
+      ]
+    }
+  }
+}

@@ -1,5 +1,6 @@
 {
   "description": "Preferred research sources by topic category. The AI will prioritize these domains when searching for articles.",
+  "note": "Some domains block Anthropic's crawler and are excluded: nytimes.com, washingtonpost.com, bbc.com, newscientist.com, verywellmind.com, everydayhealth.com, technologyreview.com, newsweek.com",
 
   "stemCell": {
     "label": "Stem Cell & Regenerative Medicine",
@@ -20,7 +21,6 @@
       "statnews.com",
       "genengnews.com",
       "the-scientist.com",
-      "newscientist.com",
       "eurekalert.org",
       "medicalxpress.com",
       "sciencedaily.com",
@@ -49,16 +49,10 @@
       "fightaging.org",
       "longevityalliance.org",
       "agingbiotech.org",
-      "newscientist.com",
       "medicalxpress.com",
-      "technologyreview.com",
       "sciencedirect.com",
       "sciencealert.com",
-      "scitechdaily.com",
-      "bbc.com",
-      "nytimes.com",
-      "washingtonpost.com",
-      "newsweek.com"
+      "scitechdaily.com"
     ]
   },
 
@@ -73,9 +67,7 @@
       "thelancet.com",
       "cell.com",
       "aging-us.com",
-      "newscientist.com",
       "fightaging.org",
-      "technologyreview.com",
       "medicalnewstoday.com",
       "eurekalert.org",
       "worldhealth.net",
@@ -101,16 +93,12 @@
       "psychologytoday.com",
       "healthline.com",
       "webmd.com",
-      "verywellmind.com",
-      "everydayhealth.com",
       "prevention.com",
       "greatergood.berkeley.edu",
       "helpguide.org",
       "mhanational.org",
       "mindbodygreen.com",
       "wellandgood.com",
-      "nytimes.com",
-      "washingtonpost.com",
       "npr.org"
     ]
   },
@@ -174,8 +162,7 @@
       "self.com",
       "runnersworld.com",
       "npr.org",
-      "nytimes.com",
-      "washingtonpost.com"
+      "menshealth.com"
     ]
   }
 }

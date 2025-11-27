@@ -1,4 +1,52 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Component } from 'react';
+
+// Error Boundary Component to catch rendering errors and prevent white screen
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    this.setState({ errorInfo });
+    console.error('Newsletter App Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-8">
+          <div className="bg-white rounded-xl shadow-lg p-8 max-w-lg w-full">
+            <div className="text-center">
+              <div className="text-6xl mb-4">⚠️</div>
+              <h1 className="text-2xl font-bold text-gray-800 mb-2">Something went wrong</h1>
+              <p className="text-gray-600 mb-4">The newsletter app encountered an error. Please try refreshing the page.</p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-left">
+                <p className="text-sm text-red-800 font-mono break-all">
+                  {this.state.error?.message || 'Unknown error'}
+                </p>
+              </div>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+              >
+                Refresh Page
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Rate limiting helper - delays between API calls to avoid hitting rate limits
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Local state input component to prevent focus loss on every keystroke
 const PromptInput = ({ value, onChange, placeholder, disabled }) => {
@@ -69,7 +117,7 @@ const RenewalWeeklyCompiler = () => {
     }
   }, [anthropicApiKey]);
 
-  // AI Content Generation Function with Web Search
+  // AI Content Generation Function with Web Search - Optimized for rate limits and cost
   const generateWithAI = async (sectionType, customPrompt = '', useWebSearch = true) => {
     if (!anthropicApiKey) {
       setAiStatus('Please add your Anthropic API key in Settings → AI tab');
@@ -79,198 +127,102 @@ const RenewalWeeklyCompiler = () => {
     setIsLoading(prev => ({ ...prev, [sectionType]: true }));
     setAiStatus(`🔍 Researching ${sectionType}...`);
 
-    // Get enabled sources for priority searching
-    const enabledSources = customSources.filter(s => s.enabled).map(s => s.name).join(', ');
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-    // Add randomness to ensure different content each time
-    const randomSeed = Math.random().toString(36).substring(7);
+    // Concise style context to reduce token usage (was ~700 tokens, now ~200)
+    const styleContext = `Renewal Weekly newsletter about stem cells/regenerative medicine. Date: ${today}
+RULES: Output ONLY final content. No preamble. JSON sections return ONLY JSON.
+STYLE: Smart, hopeful, direct. Include costs/limitations for treatments.
+LINKS: Use {{LINK:text|url}} syntax. Link to SPECIFIC articles, not homepages.`;
 
-    const styleContext = `You are writing for Renewal Weekly, a newsletter about stem cells and regenerative medicine.
-
-CRITICAL OUTPUT RULES:
-- DO NOT include ANY preamble, thinking, or explanations
-- DO NOT say "Let me search..." or "Based on my search..." or similar
-- Output ONLY the final content - nothing else
-- Start directly with the headline or content requested
-- If returning JSON, return ONLY the JSON - no text before or after
-
-WRITING STYLE:
-- Voice: Smart friend who reads medical journals—hopeful but never naive
-- Tone: Confident not preachy, direct not clinical
-- Structure: Use "Here's what happened:" / "Why this matters:" / "The catch:" labels where appropriate
-- Always include costs, availability, and limitations when discussing treatments
-- Follow technical info with plain-English translation
-- Audience: Adults 40-80 with chronic conditions, smart and skeptical of hype
-
-CRITICAL LINK REQUIREMENTS:
-- Embed ALL links using this exact syntax: {{LINK:display text|url}}
-- EVERY source MUST link to the SPECIFIC ARTICLE, not a homepage
-- Example: {{LINK:Stanford Medicine|https://med.stanford.edu/news/all-news/2025/11/specific-article.html}} ✓
-- NOT: {{LINK:Stanford Medicine|https://med.stanford.edu}} ✗
-- Include the publication date when available
-
-VARIETY REQUIREMENT:
-- Find DIFFERENT stories than previous requests - do not repeat topics
-- Search ID for this request: ${randomSeed}
-
-TODAY'S DATE: ${today}
-PRIORITY SOURCES (check these first, but use others if they have better/newer content): ${enabledSources}`;
-
-    const sectionPrompts = {
-      openingHook: `${styleContext}
-
-Search the web for current events, weather, seasonal information for today (${today}).
-
-Write an opening hook (50-75 words) for today's newsletter.
-- Make it seasonal/timely for TODAY'S date
-- Warm, slightly humorous, relatable
-- Do NOT mention stem cells or medical content in the hook
-- End with "—The Renewal Weekly Team"
-Pattern: Observation → Gentle reframe → "We'll handle the health intel. You handle [something relatable]."`,
-
-      leadStory: `${styleContext}
-
-Search the web for the LATEST stem cell or regenerative medicine news from the past 7 days. Find a significant breakthrough, clinical trial result, or major development.
-
-Write a lead story (350-400 words) about what you find.
-Structure:
-1. Headline (clever but clear, no clickbait)
-2. Opening: "[X million] Americans with [condition]... That changed this week."
-3. "Here's what happened:" section with specifics from the actual article
-4. "Why this matters now:" context and implications
-5. "What's next:" forward-looking statement
-6. "Zoom out:" connection to bigger picture
-
-IMPORTANT: Include 2-3 {{LINK:display text|url}} embedded links to the ACTUAL articles you found.
-${customPrompt ? `Topic focus: ${customPrompt}` : 'Focus on the most significant recent breakthrough or clinical trial.'}`,
-
-      researchRoundup: `${styleContext}
-
-Search the web for recent news about stem cell treatments or regenerative therapies. Find a specific treatment or therapy with new research.
-
-Write a Research Roundup (100-150 words) about what you find.
-Structure:
-- "If you or someone you love has [condition], this one's worth reading twice."
-- What the research found (2-3 sentences with specifics)
-- "What you should know:" (cost range, availability, insurance status if mentioned)
-- "The catch:" (honest limitation from the research)
-- "Bottom line:" (actionable next step)
-
-Include {{LINK:source|url}} linking to the SPECIFIC article.
-${customPrompt ? `Focus: ${customPrompt}` : 'Focus on MSC therapy, exosomes, or emerging treatments.'}`,
-
-      secondaryStories: `${styleContext}
-
-Search the web for 3 different recent stem cell or regenerative medicine news stories from the past 2 weeks. Find diverse topics.
-
-Write 3 secondary news stories.
-Each story needs:
-- Bold lead sentence that hooks (pattern: [Subject] + [did what] + [surprising element])
-- 75-150 words expanding on it with REAL facts from the article
-- The actual source URL
-
-Return as JSON array: [{"boldLead": "...", "content": "...", "sources": [{"title": "Source Name", "url": "https://actual-article-url.com/specific-article", "date": "Nov 26, 2025"}]}]
-
-IMPORTANT: Each source URL must be the direct link to the article, NOT a homepage.`,
-
-      deepDive: `${styleContext}
-
-Search the web for recent research about nutrition, lifestyle, or wellness connected to regenerative health, longevity, or cellular health.
-
-Write a Deep Dive (200-250 words) about what you find.
-Structure:
-- Contrarian opening: "The [industry] wants you to believe [X]. [Source] disagrees."
-- Evidence with bullet points (use • not -)
-- "The connection to stem cells:" paragraph explaining why this matters for cellular health
-- Actionable takeaway
-
-Include {{LINK:source|url}} links to the ACTUAL articles.
-${customPrompt ? `Topic: ${customPrompt}` : 'Focus on anti-inflammatory foods, longevity practices, or cellular health.'}`,
-
-      statSection: `${styleContext}
-
-Search the web for a compelling statistic about regenerative medicine, stem cell research, or the biotech industry. Find real numbers from reports or studies.
-
-Create a Stat of the Week based on what you find.
-Format as JSON:
-{
-  "primeNumber": "The big stat (e.g., '$403.86B' or '67%')",
-  "headline": "what it represents (lowercase, e.g., 'where the regenerative medicine market is headed by 2032')",
-  "content": "150-200 words with context, scale comparisons, and 'Why it matters for you:' section. Include {{LINK:text|url}} to the source article."
-}`,
-
-      thePulse: `${styleContext}
-
-Search the web for 7 quick news items about: stem cells, regenerative medicine, clinical trials, biotech industry, and health innovation from the past 2 weeks.
-
-Write 7 quick hits for The Pulse section.
-- Each under 25 words
-- Mix: 3-4 stem cell/regenerative items, 1-2 trial updates, 1 industry news, 1 surprising health fact
-- Each MUST include a {{LINK:text|url}} to the actual article
-
-Return as JSON array of strings. Example:
-["{{LINK:Takeda|https://example.com/article1}} launched a new stem cell therapy for cartilage in Japan", ...]`,
-
-      recommendations: `${styleContext}
-
-Based on the theme of regenerative medicine and stem cells, search for interesting content to recommend this week.
-
-Find and return JSON with recommendations in these categories:
-{
-  "read": {"prefix": "text before link", "linkText": "linked text", "suffix": "text after link", "url": "actual-article-url"},
-  "watch": {"prefix": "", "linkText": "", "suffix": "", "url": ""},
-  "try": {"prefix": "", "linkText": "", "suffix": "", "url": ""},
-  "listen": {"prefix": "", "linkText": "", "suffix": "", "url": ""}
-}
-
-Find REAL, current content:
-- Read: A scientific paper, article, or in-depth piece about regenerative medicine
-- Watch: A documentary, lecture, or video about health/science
-- Try: A health practice, app, or lifestyle recommendation
-- Listen: A podcast episode about health, longevity, or medical innovation
-
-URLs must be direct links to the specific content, not homepages.`,
-
-      gameTrivia: `Create an engaging trivia game for a health newsletter. The game should have BROAD APPEAL - it doesn't need to be about stem cells or medicine specifically.
-
-Think of fun categories like:
-- Food/nutrition facts
-- Body facts and numbers
-- Health myths vs facts
-- Calorie guessing games
-- Ingredient identification
-- Famous health quotes
-- Historical health facts
-
-Return as JSON:
-{
-  "title": "Game title",
-  "intro": "Brief intro explaining the game (1-2 sentences)",
-  "content": "The actual game content with questions/prompts",
-  "answer": "The answers"
-}
-
-Make it fun, surprising, and educational!`
+    // Section-specific configurations for efficiency
+    const sectionConfig = {
+      openingHook: { maxTokens: 300, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      leadStory: { maxTokens: 1500, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      researchRoundup: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      secondaryStories: { maxTokens: 1200, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      deepDive: { maxTokens: 800, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      statSection: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      thePulse: { maxTokens: 800, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      recommendations: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      gameTrivia: { maxTokens: 500, needsWebSearch: false, model: 'claude-sonnet-4-20250514' },
+      bottomLine: { maxTokens: 400, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      worthKnowing: { maxTokens: 600, needsWebSearch: true, model: 'claude-sonnet-4-20250514' },
+      wordOfDay: { maxTokens: 300, needsWebSearch: false, model: 'claude-sonnet-4-20250514' }
     };
 
+    // Optimized, concise prompts
+    const sectionPrompts = {
+      openingHook: `${styleContext}
+Write a 50-75 word opening hook. Seasonal/timely for today. Warm, humorous, relatable. NO medical content. End with "—The Renewal Weekly Team"`,
+
+      leadStory: `${styleContext}
+Search for LATEST stem cell/regenerative medicine news (past 7 days). Write 350-400 words:
+1. Headline (clever, clear)
+2. "[X million] Americans with [condition]... That changed this week."
+3. "Here's what happened:" with specifics
+4. "Why this matters:" context
+5. "What's next:" forward-looking
+Include 2-3 {{LINK:text|url}} to actual articles.${customPrompt ? ` Focus: ${customPrompt}` : ''}`,
+
+      researchRoundup: `${styleContext}
+Search for recent stem cell treatment research. Write 100-150 words:
+- "If you or someone you love has [condition], this one's worth reading twice."
+- Research findings (2-3 sentences)
+- "What you should know:" (cost, availability)
+- "The catch:" (limitations)
+- "Bottom line:" (next step)
+Include {{LINK:source|url}}.${customPrompt ? ` Focus: ${customPrompt}` : ''}`,
+
+      secondaryStories: `${styleContext}
+Search for 3 recent stem cell/regenerative medicine stories (past 2 weeks).
+Return JSON: [{"boldLead": "hook sentence", "content": "75-150 words with facts", "sources": [{"title": "Name", "url": "article-url", "date": "Nov 26, 2025"}]}]`,
+
+      deepDive: `${styleContext}
+Search for nutrition/wellness research related to cellular health. Write 200-250 words:
+- Contrarian opening
+- Bullet points with evidence
+- "The connection to stem cells:" paragraph
+- Actionable takeaway
+Include {{LINK:source|url}}.${customPrompt ? ` Topic: ${customPrompt}` : ''}`,
+
+      statSection: `${styleContext}
+Search for compelling regenerative medicine statistic. Return JSON:
+{"primeNumber": "$403B or 67%", "headline": "lowercase description", "content": "150-200 words with context and {{LINK:text|url}}"}`,
+
+      thePulse: `${styleContext}
+Search for 7 quick stem cell/biotech news items (past 2 weeks). Each under 25 words with {{LINK:text|url}}.
+Return JSON array: ["News item 1...", "News item 2..."]`,
+
+      recommendations: `${styleContext}
+Search for content to recommend. Return JSON:
+{"read": {"prefix": "", "linkText": "", "suffix": "", "url": ""}, "watch": {...}, "try": {...}, "listen": {...}}
+Find real articles, videos, apps, podcasts about health/regenerative medicine.`,
+
+      gameTrivia: `Create health trivia game (broad appeal, not just stem cells). Return JSON:
+{"title": "Game title", "intro": "1-2 sentences", "content": "questions/prompts", "answer": "answers"}
+Make it fun and educational!`
+    };
+
+    const config = sectionConfig[sectionType] || { maxTokens: 1000, needsWebSearch: useWebSearch, model: 'claude-sonnet-4-20250514' };
+    const shouldUseWebSearch = useWebSearch && config.needsWebSearch;
+
     try {
-      // Build the request with optional web search tool
       const requestBody = {
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
+        model: config.model,
+        max_tokens: config.maxTokens,
         messages: [{
           role: 'user',
           content: sectionPrompts[sectionType] || customPrompt
         }]
       };
 
-      // Add web search tool for ALL sections - newsletter must be up to date
-      if (useWebSearch) {
+      // Only add web search for sections that need it
+      if (shouldUseWebSearch) {
         requestBody.tools = [{
           type: 'web_search_20250305',
           name: 'web_search',
-          max_uses: 5
+          max_uses: 3 // Reduced from 5 to save costs
         }];
       }
 
@@ -286,13 +238,19 @@ Make it fun, surprising, and educational!`
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'API request failed');
+        const errorData = await response.json();
+        const errorMessage = errorData.error?.message || 'API request failed';
+
+        // Check for rate limit error and provide helpful message
+        if (errorMessage.includes('rate limit')) {
+          throw new Error('Rate limit reached. Please wait 60 seconds before trying again.');
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
 
-      // Extract text content from the response (web search returns multiple content blocks)
+      // Extract text content from the response
       let content = '';
       for (const block of data.content) {
         if (block.type === 'text') {
@@ -1237,6 +1195,7 @@ Translation: The treatments we're writing about today may be routine options in 
           openingHook: { ...prev.openingHook, content: hookContent }
         }));
       }
+      await delay(3000); // Rate limit protection: wait 3 seconds between API calls
 
       // Step 3: Generate Lead Story (with web search)
       setAiStatus('Writing lead story... (3/12)');
@@ -1255,26 +1214,14 @@ Translation: The treatments we're writing about today may be routine options in 
           }
         }));
       }
+      await delay(3000); // Rate limit protection
 
       // Step 4: Generate Bottom Line (TL;DR)
       setAiStatus('Creating TL;DR... (4/12)');
-      const tldrPrompt = `You are writing for Renewal Weekly, a newsletter about stem cells and regenerative medicine.
-
-Based on the lead story headline: "${newsletterData.leadStory.headline}"
-
-Write 4 bullet points for "The Bottom Line" (TL;DR section).
-
-FORMAT:
-→ [Key takeaway 1 - about the lead story]
-→ [Key takeaway 2 - about a different important development]
-→ [Key takeaway 3 - practical insight for readers]
-→ [Key takeaway 4 - forward-looking or surprising fact]
-
-Each bullet: One clear insight, under 20 words, punchy and benefit-focused.
-Focus on REAL developments from the past 7 days.
-
-Return as JSON array of 4 strings (without the → symbol):
-["first point", "second point", "third point", "fourth point"]`;
+      const tldrPrompt = `Write 4 TL;DR bullet points for Renewal Weekly (stem cells newsletter).
+Lead story: "${newsletterData.leadStory.headline}"
+Each bullet: under 20 words, punchy, benefit-focused. Mix: 1 about lead story, 3 other developments.
+Return JSON array: ["point 1", "point 2", "point 3", "point 4"]`;
 
       const tldrContent = await generateWithAI('bottomLine', tldrPrompt, true);
       if (tldrContent) {
@@ -1296,6 +1243,7 @@ Return as JSON array of 4 strings (without the → symbol):
           console.error('Error parsing bottom line:', e);
         }
       }
+      await delay(3000); // Rate limit protection
 
       // Step 5: Generate Research Roundup (with web search)
       setAiStatus('Writing research roundup... (5/12)');
@@ -1310,6 +1258,7 @@ Return as JSON array of 4 strings (without the → symbol):
           }
         }));
       }
+      await delay(3000); // Rate limit protection
 
       // Step 6: Generate Secondary Stories (with web search)
       setAiStatus('Writing secondary stories... (6/12)');
@@ -1339,6 +1288,7 @@ Return as JSON array of 4 strings (without the → symbol):
           console.error('Error parsing secondary stories:', e);
         }
       }
+      await delay(3000); // Rate limit protection
 
       // Step 7: Generate Deep Dive (with web search)
       setAiStatus('Writing deep dive... (7/12)');
@@ -1353,6 +1303,7 @@ Return as JSON array of 4 strings (without the → symbol):
           }
         }));
       }
+      await delay(3000); // Rate limit protection
 
       // Step 8: Generate Stat Section (with web search)
       setAiStatus('Finding stat of the week... (8/12)');
@@ -1379,6 +1330,7 @@ Return as JSON array of 4 strings (without the → symbol):
           console.error('Error parsing stat section:', e);
         }
       }
+      await delay(3000); // Rate limit protection
 
       // Step 9: Generate The Pulse (with web search)
       setAiStatus('Gathering quick hits... (9/12)');
@@ -1407,32 +1359,15 @@ Return as JSON array of 4 strings (without the → symbol):
           console.error('Error parsing pulse section:', e);
         }
       }
+      await delay(3000); // Rate limit protection
 
       // Step 10: Generate Worth Knowing
       setAiStatus('Creating Worth Knowing... (10/12)');
-      const worthKnowingPrompt = `You are writing for Renewal Weekly, a newsletter about stem cells and regenerative medicine.
-
-Create 3 items for "Worth Knowing" section.
-
-ITEM 1 - Upcoming awareness/event:
-- Health awareness day or medical event in next 2 weeks
-- Real date and what readers can do (free screenings, etc.)
-
-ITEM 2 - Red flags or guide:
-- Practical protection for health consumers
-- Examples: "5 Questions to Ask Before..." or "Red Flags When Choosing..."
-- Specific, actionable tips
-
-ITEM 3 - Resource:
-- Helpful tool or resource with real link
-- ClinicalTrials.gov search tip, reliable information source, etc.
-
-Return as JSON:
-[
-  {"type": "awareness", "title": "...", "date": "December X", "description": "2-3 sentences", "link": null},
-  {"type": "guide", "title": "5 Red Flags When...", "date": "", "description": "the 5 items listed", "link": "real url if applicable"},
-  {"type": "resource", "title": "...", "date": "", "description": "what it is and why useful", "link": "real url"}
-]`;
+      const worthKnowingPrompt = `Create 3 "Worth Knowing" items for stem cells newsletter:
+1. awareness: upcoming health event (date + what readers can do)
+2. guide: "5 Red Flags When Choosing..." type tips
+3. resource: helpful tool with real URL
+Return JSON: [{"type": "awareness|guide|resource", "title": "", "date": "", "description": "", "link": "url or null"}]`;
 
       const worthContent = await generateWithAI('worthKnowing', worthKnowingPrompt, true);
       if (worthContent) {
@@ -1454,6 +1389,7 @@ Return as JSON:
           console.error('Error parsing worth knowing:', e);
         }
       }
+      await delay(3000); // Rate limit protection
 
       // Step 11: Generate Recommendations (with web search)
       setAiStatus('Curating recommendations... (11/12)');
@@ -1502,27 +1438,13 @@ Return as JSON:
           console.error('Error parsing recommendations:', e);
         }
       }
+      await delay(3000); // Rate limit protection
 
       // Step 12: Generate Word of the Day
       setAiStatus('Selecting word of the day... (12/12)');
-      const wordPrompt = `You are writing for Renewal Weekly, a newsletter about stem cells and regenerative medicine.
-
-Based on the theme of this week's lead story: "${newsletterData.leadStory.headline}"
-
-Select a Word of the Day - a medical/scientific term related to stem cells, regenerative medicine, or longevity.
-
-Requirements:
-- Impressive but explainable to general audience
-- Relevant to this week's content
-- Not too basic (not "stem cell") but not too obscure
-
-Return as JSON:
-{
-  "word": "Word",
-  "definition": "clear, accessible definition without jargon",
-  "suggestedBy": "a first name",
-  "location": "City, ST"
-}`;
+      const wordPrompt = `Pick a Word of the Day for stem cells newsletter. Theme: "${newsletterData.leadStory.headline}"
+Requirements: medical/scientific term, explainable to general audience, not too basic.
+Return JSON: {"word": "", "definition": "accessible definition", "suggestedBy": "first name", "location": "City, ST"}`;
 
       const wordContent = await generateWithAI('wordOfDay', wordPrompt, false);
       if (wordContent) {
@@ -2925,4 +2847,11 @@ ${currentGame.content}
   );
 };
 
-export default RenewalWeeklyCompiler;
+// Wrap the main component with ErrorBoundary
+const App = () => (
+  <ErrorBoundary>
+    <RenewalWeeklyCompiler />
+  </ErrorBoundary>
+);
+
+export default App;

@@ -1,0 +1,181 @@
+{
+  "description": "Preferred research sources by topic category. The AI will prioritize these domains when searching for articles.",
+
+  "stemCell": {
+    "label": "Stem Cell & Regenerative Medicine",
+    "priority": 1,
+    "domains": [
+      "cell.com",
+      "nature.com",
+      "science.org",
+      "nih.gov",
+      "stemcells.nih.gov",
+      "isscr.org",
+      "stemcellres.biomedcentral.com",
+      "sciencedirect.com",
+      "biorxiv.org",
+      "mdpi.com",
+      "biospace.com",
+      "endpoints.news",
+      "statnews.com",
+      "genengnews.com",
+      "the-scientist.com",
+      "newscientist.com",
+      "eurekalert.org",
+      "medicalxpress.com",
+      "sciencedaily.com",
+      "mayoclinic.org",
+      "cancer.gov",
+      "diabetes.org",
+      "parkinson.org",
+      "alzforum.org",
+      "who.int"
+    ]
+  },
+
+  "longevity": {
+    "label": "Longevity & Aging Research",
+    "priority": 2,
+    "domains": [
+      "cell.com",
+      "thelancet.com",
+      "nih.gov",
+      "nia.nih.gov",
+      "nature.com",
+      "sciencemag.org",
+      "aging-us.com",
+      "longevity.technology",
+      "lifespan.io",
+      "fightaging.org",
+      "longevityalliance.org",
+      "agingbiotech.org",
+      "newscientist.com",
+      "medicalxpress.com",
+      "technologyreview.com",
+      "sciencedirect.com",
+      "sciencealert.com",
+      "scitechdaily.com",
+      "bbc.com",
+      "nytimes.com",
+      "washingtonpost.com",
+      "newsweek.com"
+    ]
+  },
+
+  "antiAging": {
+    "label": "Anti-Aging & Skin Health",
+    "priority": 3,
+    "domains": [
+      "nih.gov",
+      "nia.nih.gov",
+      "nature.com",
+      "sciencemag.org",
+      "thelancet.com",
+      "cell.com",
+      "aging-us.com",
+      "newscientist.com",
+      "fightaging.org",
+      "technologyreview.com",
+      "medicalnewstoday.com",
+      "eurekalert.org",
+      "worldhealth.net",
+      "sciencedirect.com",
+      "news-medical.net",
+      "nutraingredients.com",
+      "cosmeticsandtoiletries.com",
+      "medicalxpress.com",
+      "mdpi.com",
+      "drugtargetreview.com"
+    ]
+  },
+
+  "wellness": {
+    "label": "Wellness & Self Care",
+    "priority": 4,
+    "domains": [
+      "mayoclinic.org",
+      "health.harvard.edu",
+      "nih.gov",
+      "nimh.nih.gov",
+      "cdc.gov",
+      "psychologytoday.com",
+      "healthline.com",
+      "webmd.com",
+      "verywellmind.com",
+      "everydayhealth.com",
+      "prevention.com",
+      "greatergood.berkeley.edu",
+      "helpguide.org",
+      "mhanational.org",
+      "mindbodygreen.com",
+      "wellandgood.com",
+      "nytimes.com",
+      "washingtonpost.com",
+      "npr.org"
+    ]
+  },
+
+  "supplements": {
+    "label": "Supplements & Vitamins",
+    "priority": 5,
+    "domains": [
+      "ods.od.nih.gov",
+      "nih.gov",
+      "mayoclinic.org",
+      "hsph.harvard.edu",
+      "fda.gov",
+      "nutrition.gov",
+      "consumerlab.com",
+      "eatright.org",
+      "pubmed.ncbi.nlm.nih.gov",
+      "healthline.com",
+      "webmd.com",
+      "sciencedaily.com",
+      "nutraingredients.com",
+      "nutritionfacts.org",
+      "frontiersin.org",
+      "bmj.com",
+      "nature.com",
+      "crnusa.org"
+    ]
+  },
+
+  "nutrition": {
+    "label": "Nutrition Research",
+    "priority": 6,
+    "domains": [
+      "nutrition.org",
+      "academic.oup.com",
+      "nature.com",
+      "sciencedirect.com",
+      "pubmed.ncbi.nlm.nih.gov",
+      "cambridge.org",
+      "mdpi.com",
+      "ift.org",
+      "eufic.org",
+      "who.int",
+      "cdc.gov",
+      "eatright.org",
+      "nutraingredients.com",
+      "frontiersin.org"
+    ]
+  },
+
+  "fitness": {
+    "label": "Daily Health & Fitness",
+    "priority": 7,
+    "domains": [
+      "health.harvard.edu",
+      "cdc.gov",
+      "who.int",
+      "nhs.uk",
+      "eatright.org",
+      "verywellfit.com",
+      "self.com",
+      "runnersworld.com",
+      "npr.org",
+      "nytimes.com",
+      "washingtonpost.com"
+    ]
+  }
+}

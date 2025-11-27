@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
+import { getStyleRules, getAudienceContext, getSourceGuidance, getWordLimits } from './config';
 
 // Error Boundary Component to catch rendering errors and prevent white screen
 class ErrorBoundary extends Component {
@@ -191,9 +192,11 @@ const RenewalWeeklyCompiler = () => {
       hookContext = `This month: ${monthEvents.month[0] || 'seasonal content'}. Focus on timely, relatable observations.`;
     }
 
-    // System message - processed once, incorporates style guide principles
+    // System message - built from config files (edit src/config/*.json to customize)
     const systemMessage = `You write for Renewal Weekly, a health newsletter about stem cells and regenerative medicine.
-Date: ${today}. Audience: Adults 40-80 with chronic conditions—smart, skeptical, tired of hype.
+Date: ${today}.
+
+${getAudienceContext()}
 
 ⚠️ CRITICAL OUTPUT RULES - FOLLOW EXACTLY:
 1. Output ONLY the final newsletter content. NOTHING ELSE.
@@ -202,22 +205,9 @@ Date: ${today}. Audience: Adults 40-80 with chronic conditions—smart, skeptica
 4. Start IMMEDIATELY with the headline or content requested.
 5. JSON requests return ONLY valid JSON - no explanation, no markdown blocks.
 
-VOICE: "A smart friend who reads medical journals—hopeful but never naive, accessible but never dumbed down."
+${getStyleRules()}
 
-TONE:
-- "Here's what that means:" NOT "You should really consider..."
-- "Patients got better" NOT "demonstrated statistically significant improvements"
-- "That changed this week" NOT "Revolutionary breakthrough!"
-
-FORMATTING:
-- Use {{LINK:display text|url}} for links embedded naturally in sentences
-- Use **bold** for section headers only: **Here's what happened:** **The catch:**
-- NEVER use standalone dashes or hyphens (-) except in hyphenated words like "first-ever"
-- NEVER use em dashes (—) mid-sentence. Use periods instead.
-- Separate paragraphs with blank lines
-- NO markdown headers (no # or ##)
-
-WORDS TO AVOID: "revolutionary", "miracle", "breakthrough", "you won't believe", any standalone "-"
+${getSourceGuidance()}
 
 CRITICAL: Only cite articles published within the PAST 7 DAYS. Never use older sources.`;
 
@@ -1534,6 +1524,53 @@ Return JSON array: ["point 1", "point 2", "point 3", "point 4"]`;
           }
         } catch (e) {
           console.error('Error parsing bottom line:', e);
+        }
+      }
+      await delay(2000); // Rate limit protection
+
+      // Step 4b: Generate Subject Line and Preview Text
+      setAiStatus('Writing subject line & preview... (4b/12)');
+      const subjectPrompt = `Based on the lead story headline, create an email subject line and preview text.
+
+Lead story: "${newsletterData.leadStory.headline || 'stem cell breakthrough'}"
+
+Return ONLY valid JSON:
+{
+  "subjectLine": "Compelling subject line under 60 chars. Use the lead story angle. No clickbait.",
+  "previewText": "Preview text under 90 chars teasing 2-3 topics. Format: Lead story hint + 'Plus: topic 2 and topic 3'"
+}
+
+Example:
+{
+  "subjectLine": "Stem Cells Just Restored Vision in Patients Told It Was Impossible",
+  "previewText": "Plus: 5 red flags when choosing a stem cell clinic and the anti-inflammatory foods worth adding"
+}`;
+
+      const headerContent = await generateWithAI('bottomLine', subjectPrompt, false);
+      if (headerContent) {
+        try {
+          const jsonMatch = headerContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            setNewsletterData(prev => ({
+              ...prev,
+              preHeader: {
+                ...prev.preHeader,
+                subjectLine: parsed.subjectLine || prev.preHeader.subjectLine,
+                previewText: parsed.previewText || prev.preHeader.previewText
+              }
+            }));
+          }
+        } catch (e) {
+          // Fallback: use lead story headline as subject
+          setNewsletterData(prev => ({
+            ...prev,
+            preHeader: {
+              ...prev.preHeader,
+              subjectLine: prev.leadStory.headline || 'This Week in Regenerative Medicine',
+              previewText: 'The latest stem cell research, clinical trials, and health insights'
+            }
+          }));
         }
       }
       await delay(2000); // Rate limit protection

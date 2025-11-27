@@ -49,6 +49,26 @@ class ErrorBoundary extends Component {
 // Rate limiting helper - delays between API calls to avoid hitting rate limits
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Retry helper with exponential backoff for rate limits
+const retryWithBackoff = async (fn, maxRetries = 3, initialDelay = 5000) => {
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (error.message?.includes('rate limit') || error.message?.includes('429')) {
+        const waitTime = initialDelay * Math.pow(2, i); // 5s, 10s, 20s
+        console.log(`Rate limit hit, waiting ${waitTime/1000}s before retry ${i + 1}/${maxRetries}`);
+        await delay(waitTime);
+      } else {
+        throw error; // Don't retry non-rate-limit errors
+      }
+    }
+  }
+  throw lastError;
+};
+
 // Local state input component to prevent focus loss on every keystroke
 const PromptInput = ({ value, onChange, placeholder, disabled }) => {
   const [localValue, setLocalValue] = useState(value || '');
@@ -221,35 +241,44 @@ CRITICAL:
 - Mix of accessible + scientific content`;
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': anthropicApiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-          'anthropic-beta': 'web-search-2025-03-05,prompt-caching-2024-07-31'
-        },
-        body: JSON.stringify({
-          model: testMode ? 'claude-3-5-haiku-20241022' : 'claude-sonnet-4-20250514',
-          max_tokens: 4000,
-          system: [{
-            type: 'text',
-            text: 'You are a research assistant finding articles for a health newsletter. Return ONLY valid JSON. No preamble.',
-            cache_control: { type: 'ephemeral' }
-          }],
-          tools: [{
-            type: 'web_search_20250305',
-            name: 'web_search',
-            max_uses: 12 // Allow more searches for thorough research
-            // Note: allowed_domains removed - some domains block Anthropic's crawler
-            // Instead, we guide source selection via the prompt
-          }],
-          messages: [{ role: 'user', content: researchPrompt }]
-        })
-      });
+      // Use retry logic for rate limits
+      const makeResearchRequest = async () => {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': anthropicApiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true',
+            'anthropic-beta': 'web-search-2025-03-05,prompt-caching-2024-07-31'
+          },
+          body: JSON.stringify({
+            model: testMode ? 'claude-3-5-haiku-20241022' : 'claude-sonnet-4-20250514',
+            max_tokens: 4000,
+            system: [{
+              type: 'text',
+              text: 'You are a research assistant finding articles for a health newsletter. Return ONLY valid JSON. No preamble.',
+              cache_control: { type: 'ephemeral' }
+            }],
+            tools: [{
+              type: 'web_search_20250305',
+              name: 'web_search',
+              max_uses: 12
+            }],
+            messages: [{ role: 'user', content: researchPrompt }]
+          })
+        });
 
-      const data = await response.json();
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error?.message || 'Research API request failed');
+        }
+
+        return response.json();
+      };
+
+      // Retry up to 3 times on rate limit
+      const data = await retryWithBackoff(makeResearchRequest, 3, 10000);
       let content = '';
       for (const block of data.content) {
         if (block.type === 'text') content += block.text;
@@ -885,31 +914,33 @@ NO preamble. Start directly with [`
         }];
       }
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': anthropicApiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-          'anthropic-beta': shouldUseWebSearch
-            ? 'web-search-2025-03-05,prompt-caching-2024-07-31'
-            : 'prompt-caching-2024-07-31'
-        },
-        body: JSON.stringify(requestBody)
-      });
+      // Use retry logic for rate limits
+      const makeRequest = async () => {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': anthropicApiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true',
+            'anthropic-beta': shouldUseWebSearch
+              ? 'web-search-2025-03-05,prompt-caching-2024-07-31'
+              : 'prompt-caching-2024-07-31'
+          },
+          body: JSON.stringify(requestBody)
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = errorData.error?.message || 'API request failed';
-
-        if (errorMessage.includes('rate limit')) {
-          throw new Error('Rate limit reached. Please wait 60 seconds before trying again.');
+        if (!response.ok) {
+          const errorData = await response.json();
+          const errorMessage = errorData.error?.message || 'API request failed';
+          throw new Error(errorMessage);
         }
-        throw new Error(errorMessage);
-      }
 
-      const data = await response.json();
+        return response.json();
+      };
+
+      // Retry up to 3 times on rate limit with exponential backoff
+      const data = await retryWithBackoff(makeRequest, 3, 10000);
 
       // Extract text content from the response
       let content = '';
@@ -2203,7 +2234,7 @@ Write the lead story based on this article. Include the URL as {{LINK:source|${a
           }
         }));
       }
-      await delay(2000);
+      await delay(3500);
 
       // Step 3: Generate Research Roundup (using pre-researched article if available)
       setAiStatus('📚 Writing research roundup... (3/15)');
@@ -2239,7 +2270,7 @@ Write the research roundup based on this article. Include the URL as {{LINK:sour
           }
         }));
       }
-      await delay(2000);
+      await delay(3500);
 
       // Step 4: Generate Secondary Stories / On Our Radar (using pre-researched articles if available)
       setAiStatus('📰 Writing secondary stories... (4/15)');
@@ -2280,7 +2311,7 @@ Write 3 secondary stories based on these articles. Include URLs as {{LINK:source
           console.error('Error parsing secondary stories:', e);
         }
       }
-      await delay(2000); // Rate limit protection
+      await delay(3500); // Rate limit protection
 
       // Step 5: Generate Deep Dive (using pre-researched article if available)
       setAiStatus('🔬 Writing deep dive... (5/15)');
@@ -2315,7 +2346,7 @@ Write the deep dive based on this wellness/nutrition article. Include the URL as
           }
         }));
       }
-      await delay(2000);
+      await delay(3500);
 
       // Step 6: Generate Stat Section (using pre-researched article if available)
       setAiStatus('📊 Writing stat of the week... (6/15)');
@@ -2358,7 +2389,7 @@ Find a compelling statistic from this article. Include the URL as {{LINK:source|
           console.error('Error parsing stat section:', e);
         }
       }
-      await delay(2000);
+      await delay(3500);
 
       // Step 7: Generate The Pulse / Quick Hits (using pre-researched articles if available)
       setAiStatus('⚡ Writing quick hits... (7/15)');
@@ -2403,7 +2434,7 @@ Write 7 quick hit news items based on these articles. Include URLs as {{LINK:tex
           console.error('Error parsing pulse section:', e);
         }
       }
-      await delay(2000); // Rate limit protection
+      await delay(3500); // Rate limit protection
 
       // Step 8: Generate Worth Knowing
       setAiStatus('💡 Creating Worth Knowing... (8/15)');
@@ -2433,7 +2464,7 @@ Write 7 quick hit news items based on these articles. Include URLs as {{LINK:tex
           console.error('Error parsing worth knowing:', e);
         }
       }
-      await delay(2000); // Rate limit protection
+      await delay(3500); // Rate limit protection
 
       // Step 9: Generate Recommendations (with web search)
       setAiStatus('📚 Curating recommendations... (9/15)');
@@ -2482,7 +2513,7 @@ Write 7 quick hit news items based on these articles. Include URLs as {{LINK:tex
           console.error('Error parsing recommendations:', e);
         }
       }
-      await delay(2000); // Rate limit protection
+      await delay(3500); // Rate limit protection
 
       // Step 10: Generate Word of the Day
       setAiStatus('📖 Selecting word of the day... (10/15)');
@@ -2516,7 +2547,7 @@ Return JSON: {"word": "", "definition": "accessible definition", "suggestedBy": 
           console.error('Error parsing word of day:', e);
         }
       }
-      await delay(2000);
+      await delay(3500);
 
       // Step 11: Generate Game/Trivia
       setAiStatus('🎮 Creating trivia game... (11/15)');
@@ -2569,7 +2600,7 @@ Return JSON: {"word": "", "definition": "accessible definition", "suggestedBy": 
           console.error('Error parsing game:', e);
         }
       }
-      await delay(2000);
+      await delay(3500);
 
       // Step 12: Generate Opening Hook (NOW has full context of what's in the issue)
       setAiStatus('✍️ Writing opening hook... (12/15)');
@@ -2580,7 +2611,7 @@ Return JSON: {"word": "", "definition": "accessible definition", "suggestedBy": 
           openingHook: { ...prev.openingHook, content: hookContent }
         }));
       }
-      await delay(2000);
+      await delay(3500);
 
       // Step 13: Generate "In today's edition" teaser bullets with emojis
       setAiStatus('📋 Creating issue teasers... (13/15)');
@@ -2626,7 +2657,7 @@ Return JSON array of 4 strings: ["🔬 teaser 1", "📊 teaser 2", "💊 teaser 
           console.error('Error parsing bottom line:', e);
         }
       }
-      await delay(2000);
+      await delay(3500);
 
       // Step 14: Generate Subject Line and Preview Text (LAST - has full newsletter context)
       setAiStatus('📧 Writing subject line & preview... (14/15)');

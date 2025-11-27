@@ -219,8 +219,9 @@ CRITICAL: Only cite articles published within the PAST 7 DAYS. Never use older s
     const sectionPrompts = {
       openingHook: `Write 50-75 word opening hook for ${today}.
 ${hookContext}
-PRIORITY ORDER: National holidays > Health awareness days > Seasonal/weather > General.
-LINKS: If referencing news/events, embed {{LINK:keyword|url}} INLINE within the text (e.g., "the {{LINK:stem cell breakthrough|url}} this week"). Links must be to articles from the PAST 7 DAYS only.
+PRIORITY ORDER: National holidays > Health awareness days > Seasonal/weather > General observations.
+IMPORTANT: This hook is STANDALONE - do NOT mention stem cells, regenerative medicine, or any newsletter content. Keep it relatable and human.
+LINKS: If referencing specific events, embed {{LINK:keyword|url}} INLINE within text. Articles must be from PAST 7 DAYS only.
 Warm, relatable tone. End with "—The Renewal Weekly Team"`,
 
       leadStory: `Search for LATEST stem cell/regenerative medicine news (past 7 days). Write 350-400 words:
@@ -413,10 +414,9 @@ Return JSON: ["item1","item2","item3","item4","item5","item6","item7"]`,
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              color: colors.text,  // Text stays charcoal - NOT purple
-              textDecoration: 'none',
-              borderBottom: `2px solid ${colors.link}`,  // Only underline is purple
-              paddingBottom: '1px'
+              textDecoration: 'underline',
+              color: 'inherit',
+              borderBottom: '1px solid #800080'  // Purple underline
             }}
           >
             {part.text}
@@ -1589,7 +1589,7 @@ Return JSON: {"word": "", "definition": "accessible definition", "suggestedBy": 
     const convertLinksToHTML = (content) => {
       if (!content) return '';
       return content
-        .replace(/\{\{LINK:([^|]+)\|([^}]+)\}\}/g, `<a href="$2" style="color: ${colors.text}; text-decoration: none; border-bottom: 2px solid ${colors.link}; padding-bottom: 1px;">$1</a>`)
+        .replace(/\{\{LINK:([^|]+)\|([^}]+)\}\}/g, '<a href="$2" style="text-decoration: underline; color: inherit; border-bottom: 1px solid #800080;">$1</a>')
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     };
     
@@ -1678,7 +1678,7 @@ ${d.openingHook.content}
   ${d.secondaryStories.stories.map(story => `
   <div style="border-left: 3px solid ${colors.primary}; padding-left: 16px; margin-bottom: 20px;">
     <p class="rw-body"><strong>${story.boldLead}</strong> ${convertLinksToHTML(story.content)}</p>
-    <p style="font-size: 12px; color: ${colors.muted};">Source: <a href="${story.sources[0].url}" class="rw-link">${story.sources[0].title}</a>, ${story.sources[0].date}</p>
+    ${story.sources && story.sources[0] ? `<p style="font-size: 12px; color: ${colors.muted};">Source: <a href="${story.sources[0].url}" class="rw-link">${story.sources[0].title}</a>, ${story.sources[0].date}</p>` : ''}
   </div>`).join('')}
 </div>
 
@@ -2313,7 +2313,9 @@ ${currentGame.content}
                 {newsletterData.secondaryStories.stories.map((story) => (
                   <div key={story.id} className="border-l-4 pl-4 py-2" style={{ borderColor: colors.primary }}>
                     <p className="text-sm text-gray-700"><strong>{story.boldLead}</strong> {renderContentWithLinks(story.content)}</p>
-                    <p className="text-xs text-gray-400 mt-1">Source: {story.sources[0].title}, {story.sources[0].date}</p>
+                    {story.sources && story.sources[0] && (
+                      <p className="text-xs text-gray-400 mt-1">Source: {story.sources[0].title}, {story.sources[0].date}</p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -2590,9 +2592,11 @@ ${currentGame.content}
                   <p style={{ fontSize: '16px', color: '#374151' }}>
                     <strong>{story.boldLead}</strong> {renderContentWithLinks(story.content)}
                   </p>
-                  <p style={{ fontSize: '12px', color: colors.muted, marginTop: '8px' }}>
-                    Source: <a href={story.sources[0].url} style={{ color: colors.primary, borderBottom: `2px solid ${colors.link}` }}>{story.sources[0].title}</a>, {story.sources[0].date}
-                  </p>
+                  {story.sources && story.sources[0] && (
+                    <p style={{ fontSize: '12px', color: colors.muted, marginTop: '8px' }}>
+                      Source: <a href={story.sources[0].url} style={{ color: colors.primary, borderBottom: `2px solid ${colors.link}` }}>{story.sources[0].title}</a>, {story.sources[0].date}
+                    </p>
+                  )}
                 </div>
               ))}
             </PreviewCard>

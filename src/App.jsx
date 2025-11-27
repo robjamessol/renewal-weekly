@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
-import { getStyleRules, getAudienceContext, getSourceGuidance, getWordLimits } from './config';
+import { getStyleRules, getAudienceContext, getSourceGuidance, getWordLimits, sources, audience } from './config';
 
 // Error Boundary Component to catch rendering errors and prevent white screen
 class ErrorBoundary extends Component {
@@ -124,6 +124,252 @@ const RenewalWeeklyCompiler = () => {
       localStorage.setItem('renewalWeekly_anthropicKey', anthropicApiKey);
     }
   }, [anthropicApiKey]);
+
+  // ===== NEW 3-PHASE ARCHITECTURE =====
+
+  // PHASE 1: Research - Find 15-20 articles that would excite our audience
+  const researchArticles = async () => {
+    if (!anthropicApiKey) return null;
+
+    setAiStatus('🔬 Phase 1: Researching articles for your audience...');
+
+    // Build preferred domains from sources.json
+    const allDomains = [
+      ...(sources.stemCell?.domains || []),
+      ...(sources.longevity?.domains || []),
+      ...(sources.wellness?.domains || []),
+      ...(sources.nutrition?.domains || [])
+    ];
+    const uniqueDomains = [...new Set(allDomains)].slice(0, 30);
+
+    // Build audience context from audience.json
+    const audienceInterests = audience.interests?.join(', ') || 'stem cells, regenerative medicine';
+    const audienceConditions = audience.conditions?.slice(0, 5).join(', ') || 'chronic conditions';
+    const highEngagement = audience.engagementTriggers?.highEngagement?.slice(0, 4).join(', ') || 'FDA approvals, clinical trials';
+
+    const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const twoWeeksAgo = new Date(Date.now() - 14*24*60*60*1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+    const researchPrompt = `You are a research assistant for a health newsletter. Find 15-20 articles that would EXCITE our specific audience.
+
+TODAY'S DATE: ${today}
+ONLY INCLUDE: Articles published between ${twoWeeksAgo} and ${today}
+
+=== OUR AUDIENCE ===
+Demographics: ${audience.demographics?.ageRange || '45-75'}, ${audience.demographics?.education || 'educated professionals'}
+Interests: ${audienceInterests}
+Conditions they care about: ${audienceConditions}
+HIGH ENGAGEMENT topics: ${highEngagement}
+
+=== WHAT THEY WANT ===
+${audience.contentPreferences?.want?.slice(0, 5).map(w => `• ${w}`).join('\n')}
+
+=== WHAT THEY DON'T WANT ===
+${audience.contentPreferences?.dontWant?.slice(0, 4).map(w => `• ${w}`).join('\n')}
+
+=== PREFERRED SOURCES (prioritize these) ===
+MAINSTREAM HEALTH: CNN Health, NPR Health, Men's Health, Healthline, WebMD, Prevention
+TRUSTED MEDICAL: Mayo Clinic, Cleveland Clinic, Harvard Health, Johns Hopkins
+BIOTECH NEWS: STAT News, Endpoints News, BioPharma Dive, Fierce Biotech
+SCIENTIFIC: ${uniqueDomains.slice(0, 10).join(', ')}
+
+=== ARTICLE MIX REQUIRED ===
+- 4-5 MAINSTREAM accessible health articles (Men's Health, Healthline style)
+- 3-4 REGENERATIVE MEDICINE / STEM CELL articles
+- 3-4 LONGEVITY / ANTI-AGING articles
+- 2-3 WELLNESS / NUTRITION articles
+- 2-3 BIOTECH INDUSTRY news
+
+Search the web thoroughly and return ONLY valid JSON array:
+[
+  {
+    "title": "Article headline",
+    "url": "https://actual-url.com",
+    "source": "Source Name",
+    "date": "Nov 25, 2025",
+    "category": "mainstream|stemcell|longevity|wellness|biotech",
+    "audienceScore": 8,
+    "summary": "2 sentence summary of why this matters to our audience",
+    "suggestedSection": "leadStory|researchRoundup|onOurRadar|deepDive|quickHits|statOfWeek"
+  }
+]
+
+CRITICAL:
+- audienceScore 1-10 (10 = highly relevant to our specific audience)
+- REJECT articles older than 14 days
+- REJECT articles from sources not in our preferred list
+- Include REAL, WORKING URLs only
+- Mix of accessible + scientific content`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicApiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+          'anthropic-beta': 'web-search-2025-03-05,prompt-caching-2024-07-31'
+        },
+        body: JSON.stringify({
+          model: testMode ? 'claude-3-5-haiku-20241022' : 'claude-sonnet-4-20250514',
+          max_tokens: 4000,
+          system: [{
+            type: 'text',
+            text: 'You are a research assistant finding articles for a health newsletter. Return ONLY valid JSON. No preamble.',
+            cache_control: { type: 'ephemeral' }
+          }],
+          tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 8 }],
+          messages: [{ role: 'user', content: researchPrompt }]
+        })
+      });
+
+      const data = await response.json();
+      let content = '';
+      for (const block of data.content) {
+        if (block.type === 'text') content += block.text;
+      }
+
+      // Parse JSON response
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const articles = JSON.parse(jsonMatch[0]);
+        setAiStatus(`✓ Found ${articles.length} articles for your audience`);
+        return articles;
+      }
+      return null;
+    } catch (error) {
+      setAiStatus(`Research error: ${error.message}`);
+      return null;
+    }
+  };
+
+  // PHASE 2: Distribute - Assign articles to newsletter sections
+  const distributeArticles = (articles) => {
+    if (!articles || articles.length === 0) return null;
+
+    setAiStatus('📋 Phase 2: Distributing articles to sections...');
+
+    // Sort by audience score
+    const sorted = [...articles].sort((a, b) => (b.audienceScore || 5) - (a.audienceScore || 5));
+
+    // Distribute to sections
+    const distribution = {
+      leadStory: null,
+      researchRoundup: null,
+      onOurRadar: [],
+      deepDive: null,
+      quickHits: [],
+      statOfWeek: null
+    };
+
+    // Lead Story: Highest scoring mainstream/accessible article
+    const leadCandidates = sorted.filter(a =>
+      a.category === 'mainstream' || a.category === 'stemcell' || a.audienceScore >= 8
+    );
+    distribution.leadStory = leadCandidates[0] || sorted[0];
+
+    // Research Roundup: Best scientific/stemcell article
+    const researchCandidates = sorted.filter(a =>
+      a.category === 'stemcell' || a.category === 'longevity'
+    ).filter(a => a !== distribution.leadStory);
+    distribution.researchRoundup = researchCandidates[0];
+
+    // On Our Radar: 3 diverse articles
+    const radarCandidates = sorted.filter(a =>
+      a !== distribution.leadStory && a !== distribution.researchRoundup
+    );
+    distribution.onOurRadar = radarCandidates.slice(0, 3);
+
+    // Deep Dive: Best wellness/nutrition article
+    const deepDiveCandidates = sorted.filter(a =>
+      a.category === 'wellness' || a.category === 'nutrition'
+    ).filter(a => !distribution.onOurRadar.includes(a));
+    distribution.deepDive = deepDiveCandidates[0];
+
+    // Quick Hits: 7 remaining diverse articles
+    const usedArticles = [
+      distribution.leadStory,
+      distribution.researchRoundup,
+      ...distribution.onOurRadar,
+      distribution.deepDive
+    ].filter(Boolean);
+    const quickHitCandidates = sorted.filter(a => !usedArticles.includes(a));
+    distribution.quickHits = quickHitCandidates.slice(0, 7);
+
+    // Stat of Week: Look for article with compelling number
+    const statCandidates = sorted.filter(a =>
+      a.category === 'biotech' || /\$|\%|billion|million|[0-9]{3,}/.test(a.summary || '')
+    ).filter(a => !usedArticles.includes(a));
+    distribution.statOfWeek = statCandidates[0] || quickHitCandidates[7];
+
+    setAiStatus('✓ Articles distributed to sections');
+    return distribution;
+  };
+
+  // PHASE 3: Write section content using pre-researched articles
+  const writeSection = async (sectionType, articleData, additionalContext = '') => {
+    if (!anthropicApiKey || !articleData) return null;
+
+    setAiStatus(`✍️ Phase 3: Writing ${sectionType}...`);
+
+    const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+    // Build article context
+    const articleContext = Array.isArray(articleData)
+      ? articleData.map(a => `- "${a.title}" (${a.source}, ${a.date}): ${a.summary} [${a.url}]`).join('\n')
+      : `"${articleData.title}" (${articleData.source}, ${articleData.date}): ${articleData.summary} [${articleData.url}]`;
+
+    const writePrompt = `Write the ${sectionType} section using this pre-researched article(s):
+
+=== ARTICLE(S) TO USE ===
+${articleContext}
+
+=== AUDIENCE REMINDER ===
+${getAudienceContext()}
+
+=== WRITING STYLE ===
+${getStyleRules()}
+
+${additionalContext}
+
+Write the section NOW. Start immediately with the content - no preamble.`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicApiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+          'anthropic-beta': 'prompt-caching-2024-07-31'
+        },
+        body: JSON.stringify({
+          model: testMode ? 'claude-3-5-haiku-20241022' : 'claude-sonnet-4-20250514',
+          max_tokens: 1500,
+          system: [{
+            type: 'text',
+            text: `You write for Renewal Weekly. Date: ${today}. Output ONLY the requested content. No preamble. No "Based on..." or "I found...". Start immediately with the headline or content.`,
+            cache_control: { type: 'ephemeral' }
+          }],
+          messages: [{ role: 'user', content: writePrompt }]
+        })
+      });
+
+      const data = await response.json();
+      let content = '';
+      for (const block of data.content) {
+        if (block.type === 'text') content += block.text;
+      }
+
+      return cleanAIOutput(content);
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // ===== END 3-PHASE ARCHITECTURE =====
 
   // AI Content Generation Function with Web Search - Optimized for rate limits and cost
   const generateWithAI = async (sectionType, customPrompt = '', useWebSearch = true) => {
@@ -1745,11 +1991,34 @@ Translation: The treatments we're writing about today may be routine options in 
       answer: ''
     });
 
-    setAiStatus('🚀 Creating your newsletter with deep web research...');
+    setAiStatus('🚀 Creating your newsletter with new 3-phase workflow...');
 
     try {
       const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
+
+      // ===== NEW 3-PHASE WORKFLOW =====
+
+      // PHASE 1: Research - Find articles for our audience
+      setAiStatus('🔬 PHASE 1: Researching articles for your audience...');
+      const researchedArticles = await researchArticles();
+
+      let articleDistribution = null;
+      if (researchedArticles && researchedArticles.length > 0) {
+        // PHASE 2: Distribute - Assign articles to sections
+        setAiStatus('📋 PHASE 2: Distributing articles to sections...');
+        articleDistribution = distributeArticles(researchedArticles);
+
+        // Store researched articles in state for reference
+        setAiStatus(`✓ Found ${researchedArticles.length} articles, distributed to sections`);
+        await delay(1000);
+      } else {
+        setAiStatus('⚠️ Research phase returned no articles, falling back to individual searches...');
+      }
+
+      // ===== END PHASE 1 & 2 =====
+
+      // Now continue with content generation, using article data when available
 
       // Step 1: Fetch PubMed data and update Metrics Dashboard
       setAiStatus('📊 Fetching research metrics... (1/15)');
@@ -1853,12 +2122,27 @@ Translation: The treatments we're writing about today may be routine options in 
       let generatedDeepDiveHeadline = '';
       let generatedStatHeadline = '';
 
-      // Step 2: Generate Lead Story (with web search)
-      setAiStatus('🔍 Researching lead story... (2/15)');
+      // Step 2: Generate Lead Story (using pre-researched article if available)
+      setAiStatus('🔍 Writing lead story... (2/15)');
+
+      // Build prompt with pre-researched article context
+      let leadPromptContext = '';
+      if (articleDistribution?.leadStory) {
+        const article = articleDistribution.leadStory;
+        leadPromptContext = `USE THIS PRE-RESEARCHED ARTICLE:
+Title: "${article.title}"
+Source: ${article.source} (${article.date})
+URL: ${article.url}
+Summary: ${article.summary}
+
+Write the lead story based on this article. Include the URL as {{LINK:source|${article.url}}}.`;
+      }
+
       // Pass used stories to avoid repeats
       const usedStoriesPrompt = usedStories.length > 0
-        ? `AVOID_TOPIC:${usedStories.slice(-10).join('|')}` // Last 10 used stories
-        : '';
+        ? `AVOID_TOPIC:${usedStories.slice(-10).join('|')}${leadPromptContext ? '|' + leadPromptContext : ''}`
+        : leadPromptContext;
+
       const leadContent = await generateWithAI('leadStory', usedStoriesPrompt);
       if (leadContent) {
         const lines = leadContent.split('\n').filter(l => l.trim());
@@ -1888,9 +2172,23 @@ Translation: The treatments we're writing about today may be routine options in 
       }
       await delay(2000);
 
-      // Step 3: Generate Research Roundup (with web search)
-      setAiStatus('📚 Researching scientific journals... (3/15)');
-      const roundupContent = await generateWithAI('researchRoundup');
+      // Step 3: Generate Research Roundup (using pre-researched article if available)
+      setAiStatus('📚 Writing research roundup... (3/15)');
+
+      // Build prompt with pre-researched article context
+      let researchPromptContext = '';
+      if (articleDistribution?.researchRoundup) {
+        const article = articleDistribution.researchRoundup;
+        researchPromptContext = `USE THIS PRE-RESEARCHED ARTICLE:
+Title: "${article.title}"
+Source: ${article.source} (${article.date})
+URL: ${article.url}
+Summary: ${article.summary}
+
+Write the research roundup based on this article. Include the URL as {{LINK:source|${article.url}}}.`;
+      }
+
+      const roundupContent = await generateWithAI('researchRoundup', researchPromptContext);
       if (roundupContent) {
         const lines = roundupContent.split('\n').filter(l => l.trim());
         const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
@@ -1910,9 +2208,20 @@ Translation: The treatments we're writing about today may be routine options in 
       }
       await delay(2000);
 
-      // Step 4: Generate Secondary Stories / On Our Radar (with web search)
-      setAiStatus('📰 Finding secondary stories... (4/15)');
-      const secondaryContent = await generateWithAI('secondaryStories');
+      // Step 4: Generate Secondary Stories / On Our Radar (using pre-researched articles if available)
+      setAiStatus('📰 Writing secondary stories... (4/15)');
+
+      // Build prompt with pre-researched articles context
+      let secondaryPromptContext = '';
+      if (articleDistribution?.onOurRadar && articleDistribution.onOurRadar.length > 0) {
+        const articles = articleDistribution.onOurRadar;
+        secondaryPromptContext = `USE THESE PRE-RESEARCHED ARTICLES:
+${articles.map((a, i) => `${i+1}. "${a.title}" (${a.source}, ${a.date}) - ${a.summary} [${a.url}]`).join('\n')}
+
+Write 3 secondary stories based on these articles. Include URLs as {{LINK:source|url}}.`;
+      }
+
+      const secondaryContent = await generateWithAI('secondaryStories', secondaryPromptContext);
       if (secondaryContent) {
         try {
           const jsonMatch = secondaryContent.match(/\[[\s\S]*\]/);
@@ -1940,9 +2249,23 @@ Translation: The treatments we're writing about today may be routine options in 
       }
       await delay(2000); // Rate limit protection
 
-      // Step 5: Generate Deep Dive (with web search)
+      // Step 5: Generate Deep Dive (using pre-researched article if available)
       setAiStatus('🔬 Writing deep dive... (5/15)');
-      const deepDiveContent = await generateWithAI('deepDive');
+
+      // Build prompt with pre-researched article context
+      let deepDivePromptContext = '';
+      if (articleDistribution?.deepDive) {
+        const article = articleDistribution.deepDive;
+        deepDivePromptContext = `USE THIS PRE-RESEARCHED ARTICLE:
+Title: "${article.title}"
+Source: ${article.source} (${article.date})
+URL: ${article.url}
+Summary: ${article.summary}
+
+Write the deep dive based on this wellness/nutrition article. Include the URL as {{LINK:source|${article.url}}}.`;
+      }
+
+      const deepDiveContent = await generateWithAI('deepDive', deepDivePromptContext);
       if (deepDiveContent) {
         const lines = deepDiveContent.split('\n').filter(l => l.trim());
         const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
@@ -1961,9 +2284,23 @@ Translation: The treatments we're writing about today may be routine options in 
       }
       await delay(2000);
 
-      // Step 6: Generate Stat Section (with web search)
-      setAiStatus('📊 Finding stat of the week... (6/15)');
-      const statContent = await generateWithAI('statSection');
+      // Step 6: Generate Stat Section (using pre-researched article if available)
+      setAiStatus('📊 Writing stat of the week... (6/15)');
+
+      // Build prompt with pre-researched article context
+      let statPromptContext = '';
+      if (articleDistribution?.statOfWeek) {
+        const article = articleDistribution.statOfWeek;
+        statPromptContext = `USE THIS PRE-RESEARCHED ARTICLE:
+Title: "${article.title}"
+Source: ${article.source} (${article.date})
+URL: ${article.url}
+Summary: ${article.summary}
+
+Find a compelling statistic from this article. Include the URL as {{LINK:source|${article.url}}}.`;
+      }
+
+      const statContent = await generateWithAI('statSection', statPromptContext);
       if (statContent) {
         try {
           const jsonMatch = statContent.match(/\{[\s\S]*\}/);
@@ -1990,9 +2327,20 @@ Translation: The treatments we're writing about today may be routine options in 
       }
       await delay(2000);
 
-      // Step 7: Generate The Pulse (with web search)
-      setAiStatus('⚡ Gathering quick hits... (7/15)');
-      const pulseContent = await generateWithAI('thePulse');
+      // Step 7: Generate The Pulse / Quick Hits (using pre-researched articles if available)
+      setAiStatus('⚡ Writing quick hits... (7/15)');
+
+      // Build prompt with pre-researched articles context
+      let pulsePromptContext = '';
+      if (articleDistribution?.quickHits && articleDistribution.quickHits.length > 0) {
+        const articles = articleDistribution.quickHits;
+        pulsePromptContext = `USE THESE PRE-RESEARCHED ARTICLES:
+${articles.map((a, i) => `${i+1}. "${a.title}" (${a.source}, ${a.date}) [${a.url}]`).join('\n')}
+
+Write 7 quick hit news items based on these articles. Include URLs as {{LINK:text|url}}.`;
+      }
+
+      const pulseContent = await generateWithAI('thePulse', pulsePromptContext);
       if (pulseContent) {
         try {
           const jsonMatch = pulseContent.match(/\[[\s\S]*\]/);

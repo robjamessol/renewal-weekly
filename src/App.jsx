@@ -130,8 +130,22 @@ const RenewalWeeklyCompiler = () => {
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
     const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
     const currentDay = new Date().getDate();
+    const currentYear = new Date().getFullYear();
 
-    // Health awareness calendar for opening hook - pick most widely recognized event
+    // Major holidays - HIGHEST PRIORITY (check these first)
+    const majorHolidays = {
+      January: { 1: "New Year's Day" },
+      February: { 14: "Valentine's Day" },
+      March: { 17: "St. Patrick's Day" },
+      May: { /* Memorial Day - last Monday */ },
+      July: { 4: "Independence Day" },
+      September: { /* Labor Day - first Monday */ },
+      October: { 31: "Halloween" },
+      November: { 11: "Veterans Day", 28: "Thanksgiving" }, // Thanksgiving varies - update yearly
+      December: { 25: "Christmas Day", 31: "New Year's Eve" }
+    };
+
+    // Health awareness calendar - SECOND PRIORITY
     const healthCalendar = {
       January: { month: ['Cervical Health Awareness', 'Glaucoma Awareness', 'Thyroid Awareness', 'Blood Donor Month'], days: {} },
       February: { month: ['American Heart Month', 'Cancer Prevention Month'], days: { 2: 'National Wear Red Day', 4: 'World Cancer Day', 14: 'National Donor Day', 28: 'Rare Disease Day' } },
@@ -147,26 +161,43 @@ const RenewalWeeklyCompiler = () => {
       December: { month: ['Impaired Driving Prevention Month'], days: { 1: 'World AIDS Day', 3: 'International Day of Persons with Disabilities' } }
     };
 
+    // Check for major holidays first (highest priority)
+    const holidayEvents = majorHolidays[currentMonth] || {};
+    const todayHoliday = holidayEvents[currentDay] || null;
+    const upcomingHolidays = Object.entries(holidayEvents)
+      .filter(([day]) => parseInt(day) > currentDay && parseInt(day) <= currentDay + 7)
+      .map(([day, event]) => `${event} (${currentMonth} ${day})`)
+      .slice(0, 1);
+
+    // Then check health events
     const monthEvents = healthCalendar[currentMonth] || { month: [], days: {} };
-    const todayEvent = monthEvents.days[currentDay] || null;
-    const upcomingEvents = Object.entries(monthEvents.days)
+    const todayHealthEvent = monthEvents.days[currentDay] || null;
+    const upcomingHealthEvents = Object.entries(monthEvents.days)
       .filter(([day]) => parseInt(day) > currentDay && parseInt(day) <= currentDay + 7)
       .map(([day, event]) => `${event} (${currentMonth} ${day})`)
       .slice(0, 2);
+
+    // Build context with correct priority: Holidays > Health Events > Seasonal
+    let hookContext;
+    if (todayHoliday) {
+      hookContext = `TODAY IS: ${todayHoliday}. This is the TOP PRIORITY for your hook.`;
+    } else if (upcomingHolidays.length > 0) {
+      hookContext = `UPCOMING HOLIDAY: ${upcomingHolidays[0]}. Prioritize this.`;
+    } else if (todayHealthEvent) {
+      hookContext = `TODAY IS: ${todayHealthEvent}. Feature this health awareness day.`;
+    } else if (upcomingHealthEvents.length > 0) {
+      hookContext = `UPCOMING: ${upcomingHealthEvents.join(', ')}. Consider mentioning.`;
+    } else {
+      hookContext = `This month: ${monthEvents.month[0] || 'seasonal content'}. Focus on timely, relatable observations.`;
+    }
 
     // System message - processed once, more efficient than repeating in user content
     const systemMessage = `You write for Renewal Weekly, a newsletter about stem cells and regenerative medicine.
 Date: ${today}. Audience: Adults 40-80 interested in health innovation.
 Rules: Output ONLY final content. No preamble or thinking. JSON requests return ONLY valid JSON.
 Style: Smart friend who reads journals—hopeful but honest. Include costs/limitations.
-Links: Use {{LINK:text|url}} format. Link to SPECIFIC articles, not homepages.`;
-
-    // Build health context for opening hook
-    const healthContext = todayEvent
-      ? `TODAY IS: ${todayEvent}. PRIORITIZE this in your hook.`
-      : upcomingEvents.length > 0
-        ? `UPCOMING: ${upcomingEvents.join(', ')}. Consider mentioning.`
-        : `This month: ${monthEvents.month[0] || 'general health awareness'}.`;
+Links: Use {{LINK:text|url}} format. Link to SPECIFIC articles, not homepages.
+CRITICAL: Only cite articles published within the PAST 7 DAYS. Never use older sources.`;
 
     // Section-specific configurations - use Haiku for simple creative tasks (3x cheaper)
     const sectionConfig = {
@@ -187,9 +218,9 @@ Links: Use {{LINK:text|url}} format. Link to SPECIFIC articles, not homepages.`;
     // Ultra-concise prompts - every token counts
     const sectionPrompts = {
       openingHook: `Write 50-75 word opening hook for ${today}.
-${healthContext}
-PRIORITY: Health awareness days/events > seasonal/weather > general observations.
-If referencing a specific news event or health day, include {{LINK:keyword|source-url}} to the article.
+${hookContext}
+PRIORITY ORDER: National holidays > Health awareness days > Seasonal/weather > General.
+LINKS: If referencing news/events, embed {{LINK:keyword|url}} INLINE within the text (e.g., "the {{LINK:stem cell breakthrough|url}} this week"). Links must be to articles from the PAST 7 DAYS only.
 Warm, relatable tone. End with "—The Renewal Weekly Team"`,
 
       leadStory: `Search for LATEST stem cell/regenerative medicine news (past 7 days). Write 350-400 words:

@@ -1,18 +1,10 @@
 /**
  * RSS Feed Service for Renewal Weekly
- * Fetches articles directly from RSS feeds defined in config
- * No external service needed - just add feeds to rss-sources.json
+ * Fetches articles from RSS.app bundle feed (aggregates multiple sources)
  */
 
-import rssSources from '../config/rss-sources.json';
-
-// CORS proxies to allow browser fetching from external RSS feeds
-// Using multiple proxies as fallback in case one is down
-const CORS_PROXIES = [
-  'https://api.allorigins.win/get?url=',
-  'https://corsproxy.io/?'
-];
-let currentProxyIndex = 0;
+// RSS.app bundle feed URL - aggregates all your curated sources
+const RSS_APP_BUNDLE_URL = 'https://rss.app/feeds/v1.1/_LuMwsuTISMoZcOMw.json';
 
 // Category metadata for AI matching (keywords are guidelines, not filters)
 export const FEED_CATEGORIES = {
@@ -61,191 +53,73 @@ export const CONTENT_TO_AVOID = [
 ];
 
 /**
- * Fetch articles from all RSS feeds in config
- * @param {number} daysBack - How many days of articles to include (default 14 for academic journals)
+ * Fetch articles from RSS.app bundle feed
+ * @param {number} daysBack - How many days of articles to include (default 14)
  * @returns {Promise<Array>} Array of normalized article objects
  */
 export const fetchArticlePool = async (daysBack = 14) => {
-  const feeds = rssSources.feeds || [];
+  try {
+    console.log('RSS: Fetching from RSS.app bundle feed...');
 
-  if (feeds.length === 0) {
-    console.warn('No RSS feeds configured in rss-sources.json');
+    const response = await fetch(RSS_APP_BUNDLE_URL);
+
+    if (!response.ok) {
+      throw new Error(`RSS.app fetch failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.items || !Array.isArray(data.items)) {
+      throw new Error('Invalid RSS.app feed structure');
+    }
+
+    console.log(`RSS: Received ${data.items.length} items from RSS.app`);
+
+    // Calculate cutoff date
+    const cutoffDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
+
+    // Normalize and filter articles
+    const articles = data.items
+      .map(item => normalizeRssAppArticle(item))
+      .filter(article => {
+        const articleDate = new Date(article.date);
+        return articleDate > cutoffDate;
+      })
+      .sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
+
+    console.log(`RSS: ${articles.length} articles from past ${daysBack} days`);
+
+    return articles;
+
+  } catch (error) {
+    console.error('RSS fetch error:', error);
     return [];
   }
-
-  console.log(`RSS: Fetching from ${feeds.length} configured feeds...`);
-
-  // Fetch all feeds in parallel
-  const feedPromises = feeds.map(feed => fetchSingleFeed(feed));
-  const results = await Promise.allSettled(feedPromises);
-
-  // Combine all successful results
-  let allArticles = [];
-  results.forEach((result, index) => {
-    if (result.status === 'fulfilled' && result.value.length > 0) {
-      console.log(`  ✓ ${feeds[index].name}: ${result.value.length} articles`);
-      allArticles = allArticles.concat(result.value);
-    } else if (result.status === 'rejected') {
-      console.warn(`  ✗ ${feeds[index].name}: ${result.reason}`);
-    }
-  });
-
-  // Calculate cutoff date
-  const cutoffDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
-
-  // Filter by date and sort
-  const filteredArticles = allArticles
-    .filter(article => {
-      const articleDate = new Date(article.date);
-      return articleDate > cutoffDate;
-    })
-    .sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
-
-  console.log(`RSS: Total ${filteredArticles.length} articles from past ${daysBack} days`);
-
-  return filteredArticles;
 };
 
 /**
- * Fetch and parse a single RSS feed
- * @param {Object} feedConfig - Feed config object with url, name, category
- * @returns {Promise<Array>} Array of articles from this feed
+ * Normalize article from RSS.app JSON format
  */
-const fetchSingleFeed = async (feedConfig) => {
-  // Try each CORS proxy until one works
-  for (let i = 0; i < CORS_PROXIES.length; i++) {
-    const proxyIndex = (currentProxyIndex + i) % CORS_PROXIES.length;
-    const proxy = CORS_PROXIES[proxyIndex];
-
-    try {
-      const proxyUrl = proxy + encodeURIComponent(feedConfig.url);
-      const response = await fetch(proxyUrl, { timeout: 10000 });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      // Handle different proxy response formats
-      const xmlText = data.contents || data;
-
-      if (!xmlText || typeof xmlText !== 'string') {
-        throw new Error('Empty or invalid response');
-      }
-
-      // Parse XML
-      const parser = new DOMParser();
-      const xml = parser.parseFromString(xmlText, 'text/xml');
-
-      // Check for parse errors
-      const parseError = xml.querySelector('parsererror');
-      if (parseError) {
-        throw new Error('Invalid XML');
-      }
-
-      // Extract articles (handle both RSS 2.0 and Atom formats)
-      const articles = [];
-
-      // RSS 2.0 format: <item> elements
-      const rssItems = xml.querySelectorAll('item');
-      rssItems.forEach(item => {
-        const article = parseRssItem(item, feedConfig);
-        if (article) articles.push(article);
-      });
-
-      // Atom format: <entry> elements
-      const atomEntries = xml.querySelectorAll('entry');
-      atomEntries.forEach(entry => {
-        const article = parseAtomEntry(entry, feedConfig);
-        if (article) articles.push(article);
-      });
-
-      // Success - remember which proxy worked
-      currentProxyIndex = proxyIndex;
-      return articles;
-
-    } catch (error) {
-      // If this is the last proxy, throw the error
-      if (i === CORS_PROXIES.length - 1) {
-        throw new Error(`${feedConfig.name}: ${error.message}`);
-      }
-      // Otherwise try next proxy
-      console.log(`Proxy ${proxy} failed for ${feedConfig.name}, trying next...`);
-    }
-  }
-
-  return [];
-};
-
-/**
- * Parse RSS 2.0 <item> element
- */
-const parseRssItem = (item, feedConfig) => {
-  const title = item.querySelector('title')?.textContent?.trim();
-  const link = item.querySelector('link')?.textContent?.trim();
-  const pubDate = item.querySelector('pubDate')?.textContent;
-  const description = item.querySelector('description')?.textContent;
-  const content = item.querySelector('content\\:encoded, encoded')?.textContent;
-
-  if (!title || !link) return null;
-
-  return normalizeArticle({
-    title,
-    url: link,
-    date: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
-    summary: description || content || '',
-    feedName: feedConfig.name,
-    feedCategory: feedConfig.category
-  });
-};
-
-/**
- * Parse Atom <entry> element
- */
-const parseAtomEntry = (entry, feedConfig) => {
-  const title = entry.querySelector('title')?.textContent?.trim();
-  const link = entry.querySelector('link[href]')?.getAttribute('href');
-  const published = entry.querySelector('published, updated')?.textContent;
-  const summary = entry.querySelector('summary, content')?.textContent;
-
-  if (!title || !link) return null;
-
-  return normalizeArticle({
-    title,
-    url: link,
-    date: published ? new Date(published).toISOString() : new Date().toISOString(),
-    summary: summary || '',
-    feedName: feedConfig.name,
-    feedCategory: feedConfig.category
-  });
-};
-
-/**
- * Normalize article data
- * @param {Object} item - Parsed RSS item
- * @returns {Object} Normalized article object
- */
-const normalizeArticle = (item) => {
-  // Extract source/publisher from URL
-  let source = item.feedName || 'Unknown';
+const normalizeRssAppArticle = (item) => {
+  // Extract source from URL
+  let source = 'Unknown';
   try {
     const url = new URL(item.url);
-    source = getSourceName(url.hostname) || item.feedName;
+    source = getSourceName(url.hostname);
   } catch (e) {
-    // Keep feedName as source
+    // Keep default
   }
 
   return {
-    id: generateId(item.url),
+    id: item.id || btoa(item.url).slice(0, 16),
     title: item.title || 'Untitled',
-    url: item.url,  // REAL URL - guaranteed from RSS!
-    date: item.date,
-    dateFormatted: formatDate(item.date),
+    url: item.url,  // REAL URL from RSS.app!
+    date: item.date_published || new Date().toISOString(),
+    dateFormatted: formatDate(item.date_published),
     source: source,
-    summary: cleanSummary(item.summary),
-    // Metadata for AI matching
-    category: item.feedCategory || detectCategory(item.title, item.summary),
-    audienceRelevance: null // AI will score this
+    summary: cleanSummary(item.content_text || item.content_html || ''),
+    category: detectCategory(item.title, item.content_text || ''),
+    audienceRelevance: null
   };
 };
 

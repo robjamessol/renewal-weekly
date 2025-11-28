@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { getStyleRules, getAudienceContext, getSourceGuidance, getWordLimits, sources, audience } from './config';
+import { fetchArticlePool, buildMatchingPrompt, CONTENT_TO_AVOID } from './services/rss';
 
 // Error Boundary Component to catch rendering errors and prevent white screen
 class ErrorBoundary extends Component {
@@ -150,198 +151,144 @@ const RenewalWeeklyCompiler = () => {
 
   // ===== NEW 3-PHASE ARCHITECTURE =====
 
-  // PHASE 1: Research - Find 15-20 articles that would excite our audience
+  // PHASE 1: Research - Fetch articles from curated RSS feeds (no web search!)
+  // This replaces unreliable web search with guaranteed real URLs from RSS.app
   const researchArticles = async () => {
     if (!anthropicApiKey) return null;
 
-    setAiStatus('🔬 Phase 1: Researching articles for your audience...');
-
-    // Build preferred domains from sources.json for domain allow list
-    const allDomains = [
-      ...(sources.stemCell?.domains || []),
-      ...(sources.longevity?.domains || []),
-      ...(sources.wellness?.domains || []),
-      ...(sources.supplements?.domains || []),
-      ...(sources.nutrition?.domains || []),
-      ...(sources.fitness?.domains || []),
-      ...(sources.antiAging?.domains || [])
-    ];
-    // Add mainstream health sources not in sources.json
-    const mainstreamSources = [
-      'menshealth.com', 'healthline.com', 'webmd.com', 'prevention.com',
-      'cnn.com', 'npr.org', 'mayoclinic.org', 'clevelandclinic.org',
-      'health.harvard.edu', 'statnews.com', 'endpoints.news',
-      'biospace.com', 'fiercebiotech.com', 'medicalxpress.com'
-    ];
-    // Domains that block Anthropic's crawler - exclude these
-    const blockedDomains = [
-      'nytimes.com', 'washingtonpost.com', 'verywellmind.com', 'verywellfit.com',
-      'verywellhealth.com', 'everydayhealth.com', 'bbc.com', 'newscientist.com',
-      'technologyreview.com', 'newsweek.com', 'theatlantic.com', 'wired.com',
-      'forbes.com', 'businessinsider.com', 'time.com', 'usatoday.com',
-      'wsj.com', 'bloomberg.com', 'theguardian.com'
-    ];
-    const uniqueDomains = [...new Set([...allDomains, ...mainstreamSources])]
-      .filter(d => !blockedDomains.includes(d));
-
-    // Build audience context from audience.json
-    const audienceInterests = audience.interests?.join(', ') || 'stem cells, regenerative medicine';
-    const audienceConditions = audience.conditions?.slice(0, 5).join(', ') || 'chronic conditions';
-    const highEngagement = audience.engagementTriggers?.highEngagement?.slice(0, 4).join(', ') || 'FDA approvals, clinical trials';
-
-    const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    const twoWeeksAgo = new Date(Date.now() - 14*24*60*60*1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-
-    // Randomize topic focus each time to get different results
-    const topicFocuses = [
-      'diabetes and blood sugar management',
-      'joint pain and arthritis treatments',
-      'heart disease and cardiovascular health',
-      'vision loss and eye treatments',
-      'neurological conditions (Parkinsons, MS, Alzheimers)',
-      'chronic pain management',
-      'skin aging and wound healing',
-      'immune system and autoimmune conditions',
-      'muscle and bone regeneration',
-      'organ repair and transplant alternatives'
-    ];
-    const randomFocus = topicFocuses[Math.floor(Math.random() * topicFocuses.length)];
-    const secondaryFocus = topicFocuses[Math.floor(Math.random() * topicFocuses.length)];
-
-    // Build exclusion list from previous newsletters
-    const excludeUrls = usedUrls.slice(-30).join(', ');
-    const excludeTopics = usedStories.slice(-15).join('; ');
-
-    const researchPrompt = `You are a research assistant for a health newsletter. Find 15-20 articles that would EXCITE our specific audience.
-
-TODAY'S DATE: ${today}
-ONLY INCLUDE: Articles published between ${twoWeeksAgo} and ${today}
-
-=== OUR AUDIENCE ===
-Demographics: ${audience.demographics?.ageRange || '45-75'}, ${audience.demographics?.education || 'educated professionals'}
-Interests: ${audienceInterests}
-Conditions they care about: ${audienceConditions}
-HIGH ENGAGEMENT topics: ${highEngagement}
-
-=== WHAT THEY WANT ===
-${audience.contentPreferences?.want?.slice(0, 5).map(w => `• ${w}`).join('\n')}
-
-=== WHAT THEY DON'T WANT ===
-${audience.contentPreferences?.dontWant?.slice(0, 4).map(w => `• ${w}`).join('\n')}
-
-=== CRITICAL RULES ===
-- NO ANIMAL STUDIES - Only human clinical trials, treatments, or research with direct human relevance
-- ALL URLs must link to SPECIFIC ARTICLES, never to a website's homepage
-- ONLY articles from the PAST 14 DAYS - reject anything older
-
-=== DO 3 SEPARATE WEB SEARCHES ===
-You MUST do 3 separate, focused web searches to ensure balanced coverage:
-
-**SEARCH 1 - STEM CELL & REGENERATIVE MEDICINE:**
-Search for: "stem cell therapy clinical trial human 2025" OR "regenerative medicine breakthrough"
-Target: 5-6 articles from Nature, Cell, STAT News, Endpoints, NIH, university medical centers
-Focus on: ${randomFocus}
-EXCLUDE: Animal studies, mouse models, pre-clinical research
-
-**SEARCH 2 - LONGEVITY & ANTI-AGING:**
-Search for: "longevity research human 2025" OR "anti-aging science breakthrough"
-Target: 4-5 articles from longevity.technology, lifespan.io, aging-us.com, Nature Aging
-Focus on: senolytics, NAD+, epigenetic clocks, healthspan research
-EXCLUDE: Animal studies, mouse models
-
-**SEARCH 3 - WELLNESS & LIFESTYLE:**
-Search for: "health wellness nutrition news 2025" OR "fitness science research"
-Target: 5-6 articles from Healthline, Men's Health, CNN Health, NPR, Mayo Clinic
-Focus on: ${secondaryFocus}, practical health tips, diet research
-
-=== PREFERRED SOURCES ===
-MAINSTREAM: CNN Health, NPR, Men's Health, Healthline, WebMD, Prevention
-MEDICAL: Mayo Clinic, Cleveland Clinic, Harvard Health, Johns Hopkins
-BIOTECH: STAT News, Endpoints News, BioPharma Dive, Fierce Biotech
-SCIENTIFIC: ${uniqueDomains.slice(0, 10).join(', ')}
-
-${excludeTopics ? `=== EXCLUDE THESE (already covered) ===
-${excludeTopics}
-Find DIFFERENT stories - different conditions, different institutions.` : ''}
-
-${excludeUrls ? `=== SKIP THESE URLs (already used) ===
-${excludeUrls}` : ''}
-
-After completing all 3 searches, combine results and return ONLY valid JSON array:
-[
-  {
-    "title": "Article headline",
-    "url": "https://actual-url.com",
-    "source": "Source Name",
-    "date": "Nov 25, 2025",
-    "category": "mainstream|stemcell|longevity|wellness|biotech",
-    "audienceScore": 8,
-    "summary": "2 sentence summary of why this matters to our audience",
-    "suggestedSection": "leadStory|researchRoundup|onOurRadar|deepDive|quickHits|statOfWeek"
-  }
-]
-
-CRITICAL:
-- audienceScore 1-10 (10 = highly relevant to our specific audience)
-- REJECT articles older than 14 days
-- REJECT articles from sources not in our preferred list
-- Include REAL, WORKING URLs only
-- Mix of accessible + scientific content`;
+    setAiStatus('📡 Phase 1: Fetching articles from RSS feeds...');
 
     try {
-      // Use retry logic for rate limits
-      const makeResearchRequest = async () => {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': anthropicApiKey,
-            'anthropic-version': '2023-06-01',
-            'anthropic-dangerous-direct-browser-access': 'true',
-            'anthropic-beta': 'web-search-2025-03-05,prompt-caching-2024-07-31'
-          },
-          body: JSON.stringify({
-            model: testMode ? 'claude-3-5-haiku-20241022' : 'claude-sonnet-4-20250514',
-            max_tokens: 4000,
-            system: [{
-              type: 'text',
-              text: 'You are a research assistant finding articles for a health newsletter. Return ONLY valid JSON. No preamble.',
-              cache_control: { type: 'ephemeral' }
-            }],
-            tools: [{
-              type: 'web_search_20250305',
-              name: 'web_search',
-              max_uses: 5  // Reduced to avoid rate limits
-            }],
-            messages: [{ role: 'user', content: researchPrompt }]
-          })
-        });
+      // Step 1: Fetch articles from RSS feed (real URLs guaranteed!)
+      const articlePool = await fetchArticlePool(7); // Last 7 days
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error?.message || 'Research API request failed');
-        }
+      if (!articlePool || articlePool.length === 0) {
+        setAiStatus('⚠️ No articles found in RSS feed');
+        return null;
+      }
 
-        return response.json();
-      };
+      setAiStatus(`📰 Found ${articlePool.length} articles, AI is selecting best matches...`);
 
-      // Retry up to 3 times on rate limit with status feedback
-      const data = await retryWithBackoff(makeResearchRequest, 3, 20000, setAiStatus);
+      // Filter out previously used URLs
+      const freshArticles = articlePool.filter(a => !usedUrls.includes(a.url));
+
+      if (freshArticles.length < 5) {
+        setAiStatus('⚠️ Not enough fresh articles (most already used)');
+        // Fall back to all articles if too few fresh ones
+      }
+
+      const articlesToUse = freshArticles.length >= 5 ? freshArticles : articlePool;
+
+      // Step 2: AI matches articles to newsletter sections (no web search needed)
+      const matchingPrompt = buildMatchingPrompt(articlesToUse, audience);
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicApiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+          'anthropic-beta': 'prompt-caching-2024-07-31'
+        },
+        body: JSON.stringify({
+          model: testMode ? 'claude-3-5-haiku-20241022' : 'claude-sonnet-4-20250514',
+          max_tokens: 2000,
+          system: [{
+            type: 'text',
+            text: 'You are selecting articles for a health newsletter. Match articles to sections based on audience relevance. Return ONLY valid JSON.',
+            cache_control: { type: 'ephemeral' }
+          }],
+          // NO web search tool - just reasoning!
+          messages: [{ role: 'user', content: matchingPrompt }]
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'AI matching failed');
+      }
+
+      const data = await response.json();
       let content = '';
       for (const block of data.content) {
         if (block.type === 'text') content += block.text;
       }
 
-      // Parse JSON response
-      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      // Parse the AI's selection
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const articles = JSON.parse(jsonMatch[0]);
-        setAiStatus(`✓ Found ${articles.length} articles for your audience`);
-        return articles;
+        const selections = JSON.parse(jsonMatch[0]);
+
+        // Convert selections to article objects with real data
+        const selectedArticles = [];
+
+        // Helper to get article by index
+        const getArticle = (sel) => {
+          if (!sel || !sel.index) return null;
+          const article = articlesToUse[sel.index - 1]; // 1-indexed in prompt
+          if (article) {
+            return {
+              ...article,
+              suggestedSection: sel.reason,
+              audienceScore: 9 // AI selected it, so high score
+            };
+          }
+          return null;
+        };
+
+        // Lead Story
+        if (selections.leadStory) {
+          const a = getArticle(selections.leadStory);
+          if (a) selectedArticles.push({ ...a, suggestedSection: 'leadStory' });
+        }
+
+        // Research Roundup
+        if (selections.researchRoundup) {
+          const a = getArticle(selections.researchRoundup);
+          if (a) selectedArticles.push({ ...a, suggestedSection: 'researchRoundup' });
+        }
+
+        // On Our Radar (3 articles)
+        if (selections.onOurRadar && Array.isArray(selections.onOurRadar)) {
+          selections.onOurRadar.forEach(sel => {
+            const a = getArticle(sel);
+            if (a) selectedArticles.push({ ...a, suggestedSection: 'onOurRadar' });
+          });
+        }
+
+        // Deep Dive
+        if (selections.deepDive) {
+          const a = getArticle(selections.deepDive);
+          if (a) selectedArticles.push({ ...a, suggestedSection: 'deepDive' });
+        }
+
+        // Stat of Week
+        if (selections.statOfWeek) {
+          const a = getArticle(selections.statOfWeek);
+          if (a) selectedArticles.push({ ...a, suggestedSection: 'statOfWeek' });
+        }
+
+        // Quick Hits (5-7 articles)
+        if (selections.quickHits && Array.isArray(selections.quickHits)) {
+          selections.quickHits.forEach(sel => {
+            const a = getArticle(sel);
+            if (a) selectedArticles.push({ ...a, suggestedSection: 'quickHits' });
+          });
+        }
+
+        setAiStatus(`✓ Selected ${selectedArticles.length} articles for newsletter`);
+
+        // Store the full article pool for reference
+        window.__rssArticlePool = articlesToUse;
+
+        return selectedArticles;
       }
+
       return null;
     } catch (error) {
-      setAiStatus(`Research error: ${error.message}`);
+      console.error('RSS research error:', error);
+      setAiStatus(`RSS error: ${error.message}`);
       return null;
     }
   };
@@ -615,33 +562,39 @@ DO NOT end with a sign-off - that comes later in the template.
 EXAMPLE (follow this exact length and tone):
 It's almost Thanksgiving, and perhaps unsurprisingly, we're feeling thankful today. Thankful for you, dear reader, as well as for having the opportunity each week to share the latest healthcare analyses with you. Thanks for being here, and we hope you continue to stay tuned for more.`,
 
-      leadStory: `Search for a BROADLY ACCESSIBLE health/wellness story related to stem cells or regenerative medicine from the past 7 days.
+      leadStory: `Search for a BROADLY ACCESSIBLE health/wellness story related to stem cells or regenerative medicine.
 
-⚠️ CRITICAL RULES:
-- NO ANIMAL STUDIES - Only human clinical trials, treatments, or research with direct human relevance
-- ALL URLs must link to the SPECIFIC ARTICLE, never to a website's homepage
-- ONLY articles from the PAST 7 DAYS - reject anything older
+⚠️ DATE REQUIREMENT - THIS IS CRITICAL:
+TODAY'S DATE: ${today}
+CUTOFF DATE: ${new Date(Date.now() - 7*24*60*60*1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+ONLY use articles published AFTER the cutoff date. If an article doesn't show a date within the last 7 days, DO NOT USE IT.
+If you cannot find any articles from the past 7 days, respond with "NO RECENT ARTICLES FOUND" instead of using old content.
 
-⚠️ IMPORTANT SOURCE GUIDANCE:
-- PRIORITIZE: Mainstream health publications (CNN Health, NYT Health, WebMD, Healthline, Medical News Today, NPR Health)
+⚠️ URL RULES - CRITICAL:
+- ONLY use URLs that appear in your web search results - NEVER fabricate or guess URLs
+- Every URL must link to the SPECIFIC ARTICLE page, never a homepage
+- If a search result doesn't have a working article URL, don't use that story
+
+⚠️ CONTENT RULES:
+- NO ANIMAL STUDIES - Only human clinical trials, treatments, or research
+- Stories must be from reputable health/medical sources
+
+⚠️ SOURCE GUIDANCE:
+- PRIORITIZE: Mainstream health publications (CNN Health, WebMD, Healthline, Medical News Today, NPR Health)
 - PRIORITIZE: Stories with wide appeal (affecting millions: diabetes, heart disease, joint pain, aging, vision loss)
 - AVOID: Highly technical scientific journal articles (save those for Research Roundup)
-- AVOID: Niche conditions affecting small populations
-- LOOK FOR: Stories that made headlines, trending health news, celebrity health connections
 
 ${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
 ⚠️ DO NOT write about: "${customPrompt.split('|')[0].replace('AVOID_TOPIC:', '')}"
-Find a COMPLETELY DIFFERENT story - different condition, different institution, different research.
+Find a COMPLETELY DIFFERENT story - different condition, different institution.
 ${customPrompt.split('|')[1] ? `Focus on: ${customPrompt.split('|')[1]}` : ''}` : (customPrompt ? `Focus on: ${customPrompt}` : '')}
 
-STRICT WORD LIMIT: 280-320 words total. No exceptions.
+STRICT WORD LIMIT: 280-320 words total.
 
 OUTPUT FORMAT:
 Line 1: TEASER HEADLINE (3-5 words max, no markdown)
-- Must be clever, punchy, and create curiosity
-- Hint at the story WITHOUT being a generic label
-- GOOD: "Ups and mostly downs", "Back in business", "Seeing clearly now", "The $400B bet"
-- BAD: "Stem Cell Research Update", "New Treatment Found", "Important Discovery"
+- GOOD: "Ups and mostly downs", "Back in business", "Seeing clearly now"
+- BAD: "Stem Cell Research Update", "New Treatment Found"
 
 Then write TIGHT, PUNCHY prose:
 
@@ -649,40 +602,43 @@ Para 1 (2 sentences max): "For [X million] Americans with [condition], the progn
 
 Para 2 (1 sentence): "That changed this week."
 
-Para 3: **Here's what happened:** Key findings in 2-3 sentences. One {{LINK:Publisher Name|specific-article-url}}.
+Para 3: **Here's what happened:** Key findings in 2-3 sentences. Embed link naturally: "Researchers at {{LINK:Johns Hopkins|url}} found..."
 
-Para 4: **Why this matters now:** 2 sentences. What's different about this approach?
+Para 4: **Why this matters now:** 2 sentences.
 
-Para 5: **What's next:** 1-2 sentences. Timeline, next steps.
+Para 5: **What's next:** 1-2 sentences.
 
-Para 6: One short quote from researcher (1 sentence).
+Para 6: One short quote from researcher.
 
-Para 7: **The zoom out:** 1-2 sentences. Bigger picture. One {{LINK:Publisher Name|specific-article-url}}.
+Para 7: **The zoom out:** 1-2 sentences. Embed link naturally in the text.
 
-WRITING RULES:
-- Every sentence must earn its place. Cut filler words.
-- NO redundant explanations (don't explain the condition twice)
-- NO flowery language ("watch your vision slowly vanish as cells die")
-- YES: "Patients got better" NOT: "demonstrated statistically significant improvements"
-- Keep paragraphs to 2-3 sentences MAX
-- {{LINK}} format: Use PUBLISHER NAME (e.g., "CNN Health", "Nature") as display text
-- Total: 280-320 words. Count them.`,
+LINK FORMAT: Embed links in natural reading flow on meaningful words:
+✅ GOOD: "A {{LINK:new clinical trial|url}} showed patients improved..."
+✅ GOOD: "Researchers at {{LINK:Mayo Clinic|url}} published..."
+❌ BAD: "Source: Mayo Clinic" or "{{LINK:Mayo Clinic|url}}" at end of paragraph
 
-      researchRoundup: `Find SCIENTIFIC RESEARCH from peer-reviewed journals published in the PAST 2 WEEKS.
+Total: 280-320 words.`,
 
-⚠️ CRITICAL RULES:
+      researchRoundup: `Find SCIENTIFIC RESEARCH from peer-reviewed journals.
+
+⚠️ DATE REQUIREMENT - THIS IS CRITICAL:
+TODAY'S DATE: ${today}
+CUTOFF DATE: ${new Date(Date.now() - 14*24*60*60*1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+ONLY use research published AFTER the cutoff date. CHECK THE PUBLICATION DATE.
+If you cannot find research from the past 14 days, respond with "NO RECENT RESEARCH FOUND" instead of using old content.
+
+⚠️ URL RULES - CRITICAL:
+- ONLY use URLs from your web search results - NEVER fabricate or guess URLs
+- Every URL must link to the SPECIFIC ARTICLE/PAPER, never a journal homepage
+- If you don't have a real URL from search, don't include that story
+
+⚠️ CONTENT RULES:
 - NO ANIMAL STUDIES - Only human clinical trials or research with direct human relevance
-- ALL URLs must link to the SPECIFIC ARTICLE, never to a journal's homepage
-- ONLY articles from the PAST 14 DAYS - reject anything older
-
-⚠️ SOURCES TO USE:
-- Nature, Cell, Science, NEJM, The Lancet, JAMA, Stem Cell Reports, PubMed
+- Must be from: Nature, Cell, Science, NEJM, The Lancet, JAMA, Stem Cell Reports
 
 ${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
 ⚠️ AVOID: "${customPrompt.split('|')[0].replace('AVOID_TOPIC:', '')}"
 ${customPrompt.split('|')[1] ? `Focus on: ${customPrompt.split('|')[1]}` : ''}` : (customPrompt ? `Focus on: ${customPrompt}` : '')}
-
-⚠️ OUTPUT MUST BE READER-READY (no preamble, no "I found", no meta-commentary)
 
 STRICT FORMAT (120-150 words total):
 
@@ -692,7 +648,7 @@ STRICT FORMAT (120-150 words total):
 
 If you or someone you love has [condition], this is worth reading twice.
 
-[KEY FINDINGS - 2 sentences with {{LINK:Publisher Name|specific-article-url}}]
+[KEY FINDINGS - 2 sentences. Embed link naturally: "A {{LINK:new study in Nature|url}} found..."]
 
 **What you should know:** [Practical info - cost, availability, access]
 
@@ -700,115 +656,135 @@ If you or someone you love has [condition], this is worth reading twice.
 
 **Bottom line:** [One actionable next step]
 
-{{LINK}} format: Use PUBLISHER NAME (e.g., "Nature", "NEJM") as display text, link to SPECIFIC article.
+LINK FORMAT: Embed links naturally in the text:
+✅ GOOD: "{{LINK:Researchers at Harvard|url}} discovered..."
+✅ GOOD: "A {{LINK:Phase 2 trial|url}} showed..."
+❌ BAD: Ending with "Source: Nature" or bare links
 
 START DIRECTLY WITH THE HEADLINE. No introduction.`,
 
-      secondaryStories: `Search for 3 different recent stem cell/regenerative medicine stories from the PAST 14 DAYS. Each story should be from a DIFFERENT topic area.
+      secondaryStories: `Search for 3 different recent stem cell/regenerative medicine stories. Each story MUST be from a DIFFERENT WEBSITE.
 
-⚠️ CRITICAL RULES:
-- NO ANIMAL STUDIES - Only human clinical trials, treatments, or research with direct human relevance
-- ALL URLs must link to the SPECIFIC ARTICLE, never to a website's homepage
-- ONLY articles from the PAST 14 DAYS - reject anything older
+⚠️ DATE REQUIREMENT - CRITICAL:
+TODAY'S DATE: ${today}
+CUTOFF DATE: ${new Date(Date.now() - 14*24*60*60*1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+ONLY use articles published AFTER the cutoff date. If no date visible or date is older, DO NOT USE.
+If you cannot find 3 recent articles, include fewer rather than using old content.
 
-⚠️ SOURCE GUIDANCE:
-- Use ANY credible sources: mainstream news, health publications, scientific journals, industry news
-- Mix source types: 1 from mainstream media (CNN, NYT, NPR), 1 from health/science news, 1 from journals/institutions
-- Do NOT limit to just scientific journals
+⚠️ URL RULES - CRITICAL:
+- ONLY use URLs that appear in your web search results - NEVER fabricate or guess URLs
+- Every URL must link to the SPECIFIC ARTICLE page (must have /article/ or /news/ or similar path)
+- URLs that end in just .com or .org are HOMEPAGES - do not use them
+- If you don't have a real article URL from search, don't include that story
 
-⚠️ OUTPUT ONLY THE JSON ARRAY. No preamble. No explanation. Start with [
+⚠️ SOURCE DIVERSITY - REQUIRED:
+- Each of the 3 stories MUST be from a DIFFERENT website/domain
+- Do NOT use the same source (e.g., sciencedaily.com) more than once
+- Mix: 1 mainstream (CNN, NPR), 1 health publication (Healthline, WebMD), 1 scientific/institution
+
+⚠️ CONTENT RULES:
+- NO ANIMAL STUDIES - Only human clinical trials, treatments, or research
+- Each story must be about a DIFFERENT topic/condition
+
+⚠️ OUTPUT ONLY THE JSON ARRAY. No preamble. Start with [
 
 [
   {
-    "boldLead": "TEASER-STYLE HEADLINE (3-5 words) that creates curiosity",
-    "content": "75-100 words. Include {{LINK:source|url}} inline. Be specific.",
-    "sources": [{"title": "Publisher Name (e.g., CNN, Nature, STAT News)", "url": "https://full-article-url.com/specific-article", "date": "Nov 20, 2025"}]
+    "boldLead": "TEASER HEADLINE (3-5 words)",
+    "content": "75-100 words. Embed link naturally: 'A {{LINK:new trial at Mayo|url}} showed...'",
+    "sources": [{"title": "Publisher Name", "url": "https://example.com/full-path/to-specific-article", "date": "Nov 20, 2025"}]
   },
   {
-    "boldLead": "Different teaser headline",
-    "content": "75-100 words with {{LINK:link|url}}.",
-    "sources": [{"title": "Publisher Name", "url": "https://full-article-url.com/specific-article", "date": "Nov 18, 2025"}]
+    "boldLead": "Different headline (DIFFERENT website)",
+    "content": "75-100 words with natural embedded link.",
+    "sources": [{"title": "Different Publisher", "url": "https://different-site.com/specific-article-path", "date": "Nov 18, 2025"}]
   },
   {
-    "boldLead": "Third teaser headline",
-    "content": "75-100 words with {{LINK:link|url}}.",
-    "sources": [{"title": "Publisher Name", "url": "https://full-article-url.com/specific-article", "date": "Nov 15, 2025"}]
+    "boldLead": "Third headline (THIRD different website)",
+    "content": "75-100 words with natural embedded link.",
+    "sources": [{"title": "Third Publisher", "url": "https://third-site.com/article-path", "date": "Nov 15, 2025"}]
   }
 ]
 
-TEASER HEADLINE RULES:
-- 3-5 words max, creates curiosity
-- GOOD: "Chemo's exit strategy", "Trial results are in", "The 37% surge"
-- BAD: "Stanford Research Update", "New Diabetes Treatment", "Study Shows Results", "Mice first, humans next"
-NO dashes or em dashes in boldLead. Just clever, punchy phrases.
-NO animal study references in headlines.`,
+LINK FORMAT in content:
+✅ GOOD: "{{LINK:Researchers at Stanford|url}} found that patients..."
+✅ GOOD: "A {{LINK:Phase 3 trial|url}} demonstrated..."
+❌ BAD: "Source: CNN" at end, or homepage URLs like "cnn.com"
 
-      deepDive: `Search for a practical nutrition/wellness topic from the PAST 14 DAYS.
+HEADLINES: 3-5 words, curiosity-inducing. NO animal references.`,
+
+      deepDive: `Search for a practical nutrition/wellness topic.
 ${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
 ⚠️ DO NOT write about: "${customPrompt.split('|')[0].replace('AVOID_TOPIC:', '')}"
 Find a DIFFERENT topic entirely.
 ${customPrompt.split('|')[1] ? `Topic: ${customPrompt.split('|')[1]}` : ''}` : (customPrompt ? `Topic: ${customPrompt}` : '')}
 
-⚠️ CRITICAL RULES:
-- NO ANIMAL STUDIES - Only human research, clinical trials, or directly applicable human health info
-- ALL URLs must link to SPECIFIC ARTICLES, never to a website's homepage
-- Sources MUST be from the PAST 14 DAYS - reject anything older than 2 weeks
+⚠️ DATE REQUIREMENT - CRITICAL:
+TODAY'S DATE: ${today}
+CUTOFF DATE: ${new Date(Date.now() - 14*24*60*60*1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+ONLY use articles published AFTER the cutoff date. CHECK THE DATE.
+If no recent articles found, respond with "NO RECENT ARTICLES FOUND" instead of using old content.
 
-⚠️ PLAIN ENGLISH REQUIRED:
-- Write like you're explaining to your mom or neighbor
-- If you use a technical term, immediately explain it in parentheses
-- Example: "autophagy (your body's cellular cleanup system)"
-- NO unexplained jargon: spermidine → "a compound found in aged cheese and soybeans"
+⚠️ URL RULES - CRITICAL:
+- ONLY use URLs from your web search results - NEVER fabricate or guess URLs
+- URL must be the SPECIFIC ARTICLE page (with /article/ or /health/ path), NOT a homepage
+- Example of VALID URL: healthline.com/nutrition/anti-inflammatory-foods
+- Example of INVALID URL: healthline.com (this is a homepage - NEVER use)
+- If you don't have a real article URL from search, don't include a link
 
-⚠️ PREFERRED SOURCES (recent articles only):
-- Harvard Health, Mayo Clinic, Cleveland Clinic
-- Healthline, WebMD, Men's Health, Prevention
-- NYT Well, NPR Health
+⚠️ CONTENT RULES:
+- NO ANIMAL STUDIES - Only human research
+- Plain English - explain like you're talking to your neighbor
 
-STRICT WORD LIMIT: 180-220 words. No exceptions.
+⚠️ PREFERRED SOURCES: Harvard Health, Mayo Clinic, Healthline, WebMD, Men's Health, Prevention
+
+STRICT WORD LIMIT: 180-220 words.
 
 OUTPUT FORMAT:
-Line 1: TEASER HEADLINE (3-5 words, creates curiosity)
-- GOOD: "The inflammation myth", "Your gut's secret weapon", "Pills vs. plates"
-- BAD: "Anti-Inflammatory Foods Guide", "Nutrition Tips for Health"
+Line 1: TEASER HEADLINE (3-5 words)
+- GOOD: "The inflammation myth", "Your gut's secret weapon"
+- BAD: "Anti-Inflammatory Foods Guide"
 
-Then write TIGHT prose (like Men's Health or Healthline style):
+Para 1: Contrarian hook (1-2 sentences).
 
-Para 1: Contrarian hook (1-2 sentences). Challenge a common belief.
-
-Para 2: What the research says with {{LINK:Publisher Name|specific-article-url}} (2 sentences). Recent study only. MUST link to the actual article.
+Para 2: What the research says. Embed link naturally: "A {{LINK:recent Harvard study|specific-url}} found..." (2 sentences)
 
 Para 3: **What to add:** (use • bullets)
-• Food/habit — specific amount (e.g., "2-3 servings/week")
+• Food/habit — specific amount
 • Food/habit — specific amount
 • Food/habit — specific amount
 
 Para 4: **What to skip:**
-• Item (and why in plain terms)
+• Item (and why)
 • Item
 
-Para 5: **Why it matters for healthy aging:** (1-2 sentences, no jargon)
+Para 5: **Why it matters for healthy aging:** (1-2 sentences)
 
-Para 6: One actionable takeaway with {{LINK:Publisher Name|specific-article-url}}.
+Para 6: Actionable takeaway with natural embedded link.
 
-IMPORTANT: Every {{LINK}} must use the PUBLISHER NAME (e.g., "Harvard Health", "Mayo Clinic") as the display text, and link to the SPECIFIC ARTICLE URL.
+LINK FORMAT:
+✅ GOOD: "According to {{LINK:new research from Cleveland Clinic|url}}, eating..."
+✅ GOOD: "{{LINK:Nutritionists recommend|url}} adding..."
+❌ BAD: "Source: Healthline" or links to homepage URLs
 
 Use • for bullets, — for em dashes. Total: 180-220 words.`,
 
-      statSection: `Search for a compelling statistic about health, wellness, longevity, OR regenerative medicine from the PAST 14 DAYS.
+      statSection: `Search for a compelling statistic about health, wellness, longevity, OR regenerative medicine.
 
-⚠️ CRITICAL RULES:
+⚠️ DATE REQUIREMENT - CRITICAL:
+TODAY'S DATE: ${today}
+CUTOFF DATE: ${new Date(Date.now() - 14*24*60*60*1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+ONLY use statistics from articles published AFTER the cutoff date.
+If no recent stats found, respond with "NO RECENT STATISTICS FOUND".
+
+⚠️ URL RULES - CRITICAL:
+- ONLY use URLs from your web search results - NEVER fabricate URLs
+- URL must be SPECIFIC ARTICLE (with path like /article/ or /news/), NOT homepage
+- If you don't have a real article URL, don't include a link
+
+⚠️ CONTENT RULES:
 - NO ANIMAL STUDIES - Only human-relevant statistics
-- ALL URLs must link to the SPECIFIC ARTICLE, never to a website's homepage
-- ONLY statistics from the PAST 14 DAYS - reject anything older
-
-⚠️ STAT TOPICS (mix it up - not always stem cells):
-- Health statistics that affect your audience (aging, heart health, diabetes, joint health)
-- Longevity/anti-aging research numbers
-- Regenerative medicine market/trends
-- Wellness statistics (sleep, exercise, nutrition impact)
-
-⚠️ MUST include {{LINK:Publisher Name|specific-article-url}} to the source article in the content.
+- Mix topics: health, longevity, regenerative medicine, wellness
 
 Return ONLY valid JSON with this EXACT structure:
 {
@@ -816,60 +792,65 @@ Return ONLY valid JSON with this EXACT structure:
   "headline": "where the regenerative medicine market is headed by 2032",
   "content": "That's not a typo. [Explain the statistic in plain English - 2 sentences max]
 
-**Why it matters for you:** [Personal relevance to readers - 2 sentences]
+**Why it matters for you:** [Personal relevance - 2 sentences]
 
 For context: [Supporting data that makes it relatable - 2 sentences]
 
-**The backstory:** [Background info with {{LINK:Publisher Name|specific-article-url}} - 2 sentences]
+**The backstory:** [Embed link naturally: 'According to {{LINK:a new report from Grand View Research|specific-article-url}}, the market...' - 2 sentences]
 
-Translation: [What this means practically for readers] {{LINK:Publisher Name|specific-article-url}}."
+Translation: [What this means practically] Learn more from {{LINK:the full analysis|url}}."
 }
 
 CRITICAL:
 - primeNumber format: $403B, 67%, 2,400, 47 days (visually impactful)
-- headline: lowercase, descriptive, creates curiosity
-- content: MUST include at least one {{LINK:Publisher Name|url}} - use publisher name as display text
+- headline: lowercase, creates curiosity
+- content: Embed links naturally in sentences, NOT as citations at the end
 - Plain English - explain like talking to a friend
-- Source MUST be from past 14 days`,
 
-      thePulse: `Search for 7 FRESH health/wellness/biotech news items from the PAST 14 DAYS ONLY.
+LINK FORMAT:
+✅ GOOD: "According to {{LINK:a recent JAMA study|url}}, patients who..."
+❌ BAD: "Source: JAMA" or homepage URLs`,
 
-⚠️ CRITICAL RULES:
-- NO ANIMAL STUDIES - Only human clinical trials, treatments, or news with direct human relevance
-- ALL URLs must link to SPECIFIC ARTICLES, never to a website's homepage
-- ONLY content from the PAST 14 DAYS - reject anything older
-- Each refresh MUST return COMPLETELY DIFFERENT items. Never repeat topics.
+      thePulse: `Search for 7 FRESH health/wellness/biotech news items.
+
+⚠️ DATE REQUIREMENT - CRITICAL:
+TODAY'S DATE: ${today}
+CUTOFF DATE: ${new Date(Date.now() - 14*24*60*60*1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+ONLY use news from AFTER the cutoff date. CHECK EACH ARTICLE'S DATE.
+If you can't find 7 recent items, include fewer rather than using old content.
+
+⚠️ URL RULES - CRITICAL:
+- ONLY use URLs from your web search results - NEVER fabricate or guess URLs
+- URLs must be SPECIFIC ARTICLES (with /article/ or /news/ path), NOT homepages
+- Example VALID: cnn.com/health/article/stem-cell-treatment-2025
+- Example INVALID: cnn.com or cnn.com/health (these are homepages)
+- If no real article URL exists, don't include that item
+
+⚠️ SOURCE DIVERSITY - REQUIRED:
+- Each item from a DIFFERENT website - do NOT repeat sciencedaily.com or any source
+- Mix: 2-3 mainstream (CNN, NPR, Healthline), 2-3 biotech (STAT, Endpoints), 1-2 scientific
 
 ${customPrompt ? `⚠️ ${customPrompt}` : ''}
 
-⚠️ SOURCE MIX (use variety - not just scientific journals):
-- 2-3 from mainstream health news (CNN Health, NPR, NYT, Men's Health, Healthline)
-- 2-3 from biotech/industry news (STAT News, Endpoints, BioPharma Dive)
-- 1-2 from scientific sources (Nature, Science, university press releases)
+⚠️ CONTENT RULES:
+- NO ANIMAL STUDIES
+- Each item must be a DIFFERENT topic
 
-CONTENT MIX - Balance of:
-- Regenerative medicine / stem cells
-- Longevity / anti-aging research
-- General health news your readers care about
-- Wellness trends backed by research
-
-Return ONLY valid JSON array. Each item should be ONE string with this format:
-- Company/institution name linked: {{LINK:Name|specific-article-url}}
-- Brief news (under 25 words total)
-- Source and date in brackets at end: [Source Name, Month Year]
+Return ONLY valid JSON array. Each item ONE string:
+- Link embedded naturally: {{LINK:meaningful text|specific-article-url}}
+- Brief news (under 25 words)
+- Source in [brackets]: [Source Name, Month Year]
 
 EXAMPLE:
 [
-  "{{LINK:Mayo Clinic|https://example.com/specific-article}} launched new stem cell treatment for knee arthritis [CNN Health, Nov 2025]",
-  "Adults over 50 who {{LINK:walk 7,000 steps daily|https://example.com/specific-article}} show 50% lower mortality risk [Healthline, Nov 2025]",
-  "{{LINK:CRISPR Therapeutics|https://example.com/specific-article}} received FDA approval for sickle cell gene therapy [STAT News, Nov 2025]"
+  "{{LINK:Mayo Clinic researchers|https://cnn.com/health/mayo-stem-cell-trial}} launched a new stem cell treatment for knee arthritis [CNN Health, Nov 2025]",
+  "Adults over 50 who {{LINK:walk 7,000 steps daily|https://healthline.com/health-news/walking-longevity}} show 50% lower mortality risk [Healthline, Nov 2025]"
 ]
 
-Return exactly 7 items. Each must have:
-- At least one {{LINK:text|specific-article-url}} - NEVER link to homepage
-- Source attribution in [brackets] at end
-- Be under 25 words (excluding the bracketed source)
-- MUST be from past 14 days - verify the date`,
+CRITICAL:
+- 7 items from 7 DIFFERENT websites
+- Every URL must be a real search result, never fabricated
+- Every URL must be a specific article path, never a homepage`,
 
       recommendations: `Search for FRESH, NEW content to recommend. Find REAL, WORKING URLs.
 
@@ -925,59 +906,61 @@ REQUIREMENTS:
 
       worthKnowing: `Create 4 "Worth Knowing" items for a health/wellness newsletter.
 
-⚠️ CRITICAL: Each refresh MUST return COMPLETELY DIFFERENT items.
+⚠️ URL RULES - CRITICAL:
+- ONLY use URLs from your web search results - NEVER fabricate URLs
+- URLs must be SPECIFIC pages (with /article/ or /guide/ path), NOT homepages
+- If you don't have a real URL from search, set link to null
+
+⚠️ TITLES: 3-5 words, creates curiosity
+- GOOD: "The clinic checklist", "Mark your calendar"
+- BAD: "Health Awareness Event", "Important Tips"
+
+⚠️ FORMATTING: Use proper bulleted lists with line breaks
 
 ${customPrompt ? `⚠️ ${customPrompt}` : ''}
 
-⚠️ TITLES MUST BE TEASER-STYLE (3-5 words, creates curiosity):
-- GOOD: "The clinic checklist", "Mark your calendar", "Trial finder 101"
-- BAD: "Health Awareness Event", "Important Tips", "Useful Resource"
-
-⚠️ FORMATTING RULES:
-- For ANY list of tips/items, format as a proper bulleted list with line breaks
-- Use "• " for bullets, each on its own line
-- Include source links INLINE using {{LINK:Publisher Name|url}} format
-- ALL URLs must link to SPECIFIC ARTICLES, never to a website's homepage
-
-Return ONLY valid JSON array with this EXACT structure:
+Return ONLY valid JSON array:
 [
   {
     "type": "awareness",
-    "title": "TEASER HEADLINE (3-5 words)",
-    "date": "Specific date or date range",
-    "description": "What readers can do - be specific and actionable. Plain English.",
+    "title": "TEASER HEADLINE",
+    "date": "Specific date range",
+    "description": "What readers can do - specific and actionable.",
     "link": null
   },
   {
     "type": "guide",
-    "title": "TEASER HEADLINE (3-5 words)",
+    "title": "TEASER HEADLINE",
     "date": "",
-    "description": "Format as bulleted list:\\n• First tip — explanation\\n• Second tip — explanation\\n• Third tip — explanation\\n\\nSource: {{LINK:Publisher Name|specific-article-url}}",
-    "link": "https://specific-article-url.com"
+    "description": "Format as bulleted list:\\n• First tip — explanation\\n• Second tip — explanation\\n• Third tip — explanation\\n\\nLearn more from {{LINK:this Mayo Clinic guide|specific-article-url}}",
+    "link": "https://mayoclinic.org/healthy-lifestyle/specific-article"
   },
   {
     "type": "resource",
-    "title": "TEASER HEADLINE (3-5 words)",
+    "title": "TEASER HEADLINE",
     "date": "",
-    "description": "What it is and why it's useful. Include {{LINK:Publisher Name|url}} inline.",
-    "link": "https://specific-article-url.com"
+    "description": "What it is and why useful. Check out {{LINK:this helpful tool|url}} for more.",
+    "link": "https://site.com/specific-resource-page"
   },
   {
     "type": "tip",
-    "title": "TEASER HEADLINE (3-5 words)",
+    "title": "TEASER HEADLINE",
     "date": "",
-    "description": "A practical health tip with source. Format lists with bullets:\\n• Item one\\n• Item two\\n\\nLearn more: {{LINK:Publisher Name|url}}",
-    "link": "https://specific-article-url.com"
+    "description": "Practical health tip:\\n• Item one\\n• Item two\\n\\nBased on {{LINK:recent research|url}}",
+    "link": "https://site.com/specific-article"
   }
 ]
 
+LINK FORMAT in descriptions:
+✅ GOOD: "Learn more from {{LINK:this Harvard guide|url}}"
+✅ GOOD: "Based on {{LINK:recent Cleveland Clinic research|url}}"
+❌ BAD: "Source: Harvard Health" or homepage URLs
+
 REQUIREMENTS:
-- awareness: Upcoming health event (within 2 weeks) - think beyond stem cells (heart health, mental health, etc.)
-- guide: Practical tips formatted as BULLETED LIST - your mom would understand - no jargon
-- resource: Real, working URL to helpful tool - link to SPECIFIC article
-- tip: Actionable health tip with source citation
-- ALL descriptions in plain English - explain like talking to a friend
-- ALL links to SPECIFIC ARTICLES, not homepages
+- 4 items from 4 DIFFERENT websites
+- awareness: Upcoming health event
+- guide/resource/tip: Practical, plain English
+- ALL links to SPECIFIC pages, never homepages
 
 NO preamble. Start directly with [`
     };
@@ -2319,18 +2302,22 @@ Translation: The treatments we're writing about today may be routine options in 
       // Step 2: Generate Lead Story (using pre-researched article if available)
       setAiStatus('🔍 Writing lead story... (2/15)');
 
-      // Build prompt with pre-researched article context
+      // Build prompt with pre-researched article context from RSS
       let leadPromptContext = '';
       if (articleDistribution?.leadStory) {
         const article = articleDistribution.leadStory;
         leadPromptContext = `
-USE THIS PRE-RESEARCHED ARTICLE (already verified for audience and recency):
+USE THIS ARTICLE FROM OUR CURATED RSS FEED:
 Title: "${article.title}"
-Source: ${article.source} (${article.date})
+Source: ${article.source} (${article.dateFormatted || article.date})
 URL: ${article.url}
 Summary: ${article.summary}
 
-Write the lead story based on this article. Include the URL as {{LINK:source|${article.url}}}.`;
+CRITICAL: This URL is VERIFIED and REAL from our RSS feed. Use it exactly as provided.
+Embed the link naturally in your text: "{{LINK:meaningful text|${article.url}}}"
+Example: "Researchers at {{LINK:${article.source}|${article.url}}} found that..."
+
+Write the lead story based on this article.`;
       }
 
       // Combine avoid topics and article context
@@ -2379,13 +2366,16 @@ Write the lead story based on this article. Include the URL as {{LINK:source|${a
       let researchPromptContext = '';
       if (articleDistribution?.researchRoundup) {
         const article = articleDistribution.researchRoundup;
-        researchPromptContext = `USE THIS PRE-RESEARCHED ARTICLE:
+        researchPromptContext = `USE THIS ARTICLE FROM OUR CURATED RSS FEED:
 Title: "${article.title}"
-Source: ${article.source} (${article.date})
+Source: ${article.source} (${article.dateFormatted || article.date})
 URL: ${article.url}
 Summary: ${article.summary}
 
-Write the research roundup based on this article. Include the URL as {{LINK:source|${article.url}}}.`;
+CRITICAL: This URL is VERIFIED and REAL. Use it exactly as provided.
+Embed naturally: "A {{LINK:new study from ${article.source}|${article.url}}} found..."
+
+Write the research roundup based on this article.`;
       }
 
       // Skip web search if we have pre-researched article
@@ -2413,14 +2403,28 @@ Write the research roundup based on this article. Include the URL as {{LINK:sour
       // Step 4: Generate Secondary Stories / On Our Radar (using pre-researched articles if available)
       setAiStatus('📰 Writing secondary stories... (4/15)');
 
-      // Build prompt with pre-researched articles context
+      // Build prompt with pre-researched articles context (from RSS feed)
       let secondaryPromptContext = '';
       if (articleDistribution?.onOurRadar && articleDistribution.onOurRadar.length > 0) {
         const articles = articleDistribution.onOurRadar;
-        secondaryPromptContext = `USE THESE PRE-RESEARCHED ARTICLES:
-${articles.map((a, i) => `${i+1}. "${a.title}" (${a.source}, ${a.date}) - ${a.summary} [${a.url}]`).join('\n')}
+        secondaryPromptContext = `
+USE THESE ARTICLES FROM OUR CURATED RSS FEED:
 
-Write 3 secondary stories based on these articles. Include URLs as {{LINK:source|url}}.`;
+${articles.map((a, i) => `ARTICLE ${i+1}:
+Title: "${a.title}"
+Source: ${a.source} (${a.dateFormatted || a.date})
+URL: ${a.url}
+Summary: ${a.summary}
+`).join('\n')}
+
+CRITICAL RULES:
+1. These URLs are VERIFIED and REAL from our RSS feed - use them exactly as provided
+2. Each story MUST be from a DIFFERENT source (diversity requirement already met by selection)
+3. Embed links naturally in your text using {{LINK:meaningful text|url}}
+   Example: "A new {{LINK:study from Mayo Clinic|${articles[0]?.url}}} found that..."
+4. Do NOT use "Source: Publisher" format - links should flow naturally in sentences
+
+Write 3 "On Our Radar" stories based on these articles.`;
       }
 
       // Skip web search if we have pre-researched articles
@@ -2456,17 +2460,27 @@ Write 3 secondary stories based on these articles. Include URLs as {{LINK:source
       // Step 5: Generate Deep Dive (using pre-researched article if available)
       setAiStatus('🔬 Writing deep dive... (5/15)');
 
-      // Build prompt with pre-researched article context
+      // Build prompt with pre-researched article context (from RSS feed)
       let deepDivePromptContext = '';
       if (articleDistribution?.deepDive) {
         const article = articleDistribution.deepDive;
-        deepDivePromptContext = `USE THIS PRE-RESEARCHED ARTICLE:
+        deepDivePromptContext = `
+USE THIS ARTICLE FROM OUR CURATED RSS FEED:
+
 Title: "${article.title}"
-Source: ${article.source} (${article.date})
+Source: ${article.source} (${article.dateFormatted || article.date})
 URL: ${article.url}
 Summary: ${article.summary}
 
-Write the deep dive based on this wellness/nutrition article. Include the URL as {{LINK:source|${article.url}}}.`;
+CRITICAL RULES:
+1. This URL is VERIFIED and REAL from our RSS feed - use it exactly as provided
+2. This is a deep-dive on wellness, nutrition, or lifestyle content
+3. Embed the link naturally in your text using {{LINK:meaningful text|${article.url}}}
+   Example: "According to {{LINK:new research from ${article.source}|${article.url}}}, the benefits include..."
+4. Do NOT use "Source: Publisher" format - the link should flow naturally within sentences
+5. Extract actionable tips and practical takeaways for readers
+
+Write the deep dive based on this article.`;
       }
 
       // Skip web search if we have pre-researched article
@@ -2493,17 +2507,27 @@ Write the deep dive based on this wellness/nutrition article. Include the URL as
       // Step 6: Generate Stat Section (using pre-researched article if available)
       setAiStatus('📊 Writing stat of the week... (6/15)');
 
-      // Build prompt with pre-researched article context
+      // Build prompt with pre-researched article context (from RSS feed)
       let statPromptContext = '';
       if (articleDistribution?.statOfWeek) {
         const article = articleDistribution.statOfWeek;
-        statPromptContext = `USE THIS PRE-RESEARCHED ARTICLE:
+        statPromptContext = `
+USE THIS ARTICLE FROM OUR CURATED RSS FEED:
+
 Title: "${article.title}"
-Source: ${article.source} (${article.date})
+Source: ${article.source} (${article.dateFormatted || article.date})
 URL: ${article.url}
 Summary: ${article.summary}
 
-Find a compelling statistic from this article. Include the URL as {{LINK:source|${article.url}}}.`;
+CRITICAL RULES:
+1. This URL is VERIFIED and REAL from our RSS feed - use it exactly as provided
+2. Find a compelling statistic from this article (percentage, number, comparison)
+3. The statistic should be attention-grabbing and relevant to our 45-75 year old audience
+4. Embed the link naturally: {{LINK:meaningful text|${article.url}}}
+   Example: "A {{LINK:recent study|${article.url}}} found that 73% of patients..."
+5. Do NOT use "Source: Publisher" format - the link should flow naturally
+
+Extract the stat of the week from this article.`;
       }
 
       // Skip web search if we have pre-researched article
@@ -2538,14 +2562,28 @@ Find a compelling statistic from this article. Include the URL as {{LINK:source|
       // Step 7: Generate The Pulse / Quick Hits (using pre-researched articles if available)
       setAiStatus('⚡ Writing quick hits... (7/15)');
 
-      // Build prompt with pre-researched articles context
+      // Build prompt with pre-researched articles context (from RSS feed)
       let pulsePromptContext = '';
       if (articleDistribution?.quickHits && articleDistribution.quickHits.length > 0) {
         const articles = articleDistribution.quickHits;
-        pulsePromptContext = `USE THESE PRE-RESEARCHED ARTICLES:
-${articles.map((a, i) => `${i+1}. "${a.title}" (${a.source}, ${a.date}) [${a.url}]`).join('\n')}
+        pulsePromptContext = `
+USE THESE ARTICLES FROM OUR CURATED RSS FEED:
 
-Write 7 quick hit news items based on these articles. Include URLs as {{LINK:text|url}}.`;
+${articles.map((a, i) => `ARTICLE ${i+1}:
+Title: "${a.title}"
+Source: ${a.source} (${a.dateFormatted || a.date})
+URL: ${a.url}
+`).join('\n')}
+
+CRITICAL RULES:
+1. These URLs are VERIFIED and REAL from our RSS feed - use them exactly as provided
+2. Each quick hit should be ONE concise sentence (max 25 words)
+3. Embed the link naturally: {{LINK:meaningful text|url}}
+   Example: "{{LINK:New research|url}} shows omega-3s may reduce inflammation by 40%."
+4. Do NOT use "Source: Publisher" format - the link should be part of the sentence
+5. Variety of topics across the articles provided
+
+Write 5-7 quick hit news items based on these articles.`;
       }
 
       // Skip web search if we have pre-researched articles

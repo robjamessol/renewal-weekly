@@ -306,8 +306,10 @@ const RenewalWeeklyCompiler = () => {
     const distribution = {
       leadStory: null,
       researchRoundup: null,
+      livingWell: null,
       onOurRadar: [],
       deepDive: null,
+      worthKnowing: [],
       quickHits: [],
       statOfWeek: null
     };
@@ -324,25 +326,37 @@ const RenewalWeeklyCompiler = () => {
     ).filter(a => a !== distribution.leadStory);
     distribution.researchRoundup = researchCandidates[0] || sorted.filter(a => a !== distribution.leadStory)[0];
 
+    // Living Well: Lifestyle/nutrition article (lighthearted)
+    const livingWellCandidates = sorted.filter(a =>
+      ['nutrition', 'longevity', 'supplements'].includes(a.category)
+    ).filter(a => a !== distribution.leadStory && a !== distribution.researchRoundup);
+    distribution.livingWell = livingWellCandidates[0];
+
     // On Our Radar: 3 diverse articles
     const radarCandidates = sorted.filter(a =>
-      a !== distribution.leadStory && a !== distribution.researchRoundup
+      a !== distribution.leadStory && a !== distribution.researchRoundup && a !== distribution.livingWell
     );
     distribution.onOurRadar = radarCandidates.slice(0, 3);
 
-    // Deep Dive: Best wellness/nutrition/supplements article
+    // Deep Dive: Best wellness/nutrition/supplements article (different from Living Well)
     const deepDiveCandidates = sorted.filter(a =>
-      ['nutrition', 'supplements', 'longevity'].includes(a.category)
-    ).filter(a => !distribution.onOurRadar.includes(a) && a !== distribution.leadStory && a !== distribution.researchRoundup);
+      ['nutrition', 'supplements', 'longevity', 'chronicDisease'].includes(a.category)
+    ).filter(a => !distribution.onOurRadar.includes(a) && a !== distribution.leadStory && a !== distribution.researchRoundup && a !== distribution.livingWell);
     distribution.deepDive = deepDiveCandidates[0] || radarCandidates[3];
 
-    // Quick Hits: 7 remaining diverse articles
-    const usedArticles = [
+    // Worth Knowing: 4 diverse articles for brief mentions
+    const usedSoFar = [
       distribution.leadStory,
       distribution.researchRoundup,
+      distribution.livingWell,
       ...distribution.onOurRadar,
       distribution.deepDive
     ].filter(Boolean);
+    const worthKnowingCandidates = sorted.filter(a => !usedSoFar.includes(a));
+    distribution.worthKnowing = worthKnowingCandidates.slice(0, 4);
+
+    // Quick Hits / The Pulse: 7 remaining diverse articles
+    const usedArticles = [...usedSoFar, ...distribution.worthKnowing].filter(Boolean);
     const quickHitCandidates = sorted.filter(a => !usedArticles.includes(a));
     distribution.quickHits = quickHitCandidates.slice(0, 7);
 
@@ -355,8 +369,10 @@ const RenewalWeeklyCompiler = () => {
     console.log('Article distribution:', {
       leadStory: distribution.leadStory?.title,
       researchRoundup: distribution.researchRoundup?.title,
+      livingWell: distribution.livingWell?.title,
       onOurRadar: distribution.onOurRadar.map(a => a?.title),
       deepDive: distribution.deepDive?.title,
+      worthKnowing: distribution.worthKnowing.map(a => a?.title),
       statOfWeek: distribution.statOfWeek?.title,
       quickHits: distribution.quickHits.length
     });
@@ -1476,21 +1492,19 @@ D) Collagen synthesis and immune function`,
 
 
 
-    // ===== V5.2 UPDATE: METRICS DASHBOARD - 3x2 GRID =====
+    // ===== METRICS DASHBOARD - 2x2 GRID (RSS-derived stats) =====
     metricsDashboard: {
-      title: 'REGENERATIVE MEDICINE: THIS WEEK',
+      title: 'THIS WEEK IN REGENERATIVE MEDICINE',
       metrics: [
-        // Row 1 - Dynamic (change weekly)
-        { label: 'New Clinical Publications', value: '47', change: '↑12 vs last week', source: 'PubMed', dynamic: true },
-        { label: 'Stock Spotlight: VRTX', value: '$487', change: '↑4.2%', source: 'Yahoo Finance', dynamic: true },
-        { label: 'Active Clinical Trials', value: '1,847', change: '↑3.2% MTD', source: 'ClinicalTrials.gov', dynamic: false },
-        // Row 2 - Stable (monthly/quarterly)
-        { label: 'FDA RMAT Designations YTD', value: '13', change: '+4 vs 2024', source: 'FDA', dynamic: false },
-        { label: 'MSC Trials Efficacy Rate', value: '67%', change: '', source: 'Cell Stem Cell', dynamic: false },
-        { label: 'Avg Trial Enrollment Time', value: '47 days', change: '↓8 days', source: 'Industry Data', dynamic: false }
+        // Row 1
+        { label: 'Articles This Week', value: '—', change: 'Loading...', source: 'RSS Feed', dynamic: true },
+        { label: 'Top Topic', value: '—', change: '', source: 'This Issue', dynamic: true },
+        // Row 2
+        { label: 'Sources Featured', value: '—', change: '', source: 'Curated Feed', dynamic: true },
+        { label: 'Research Categories', value: '—', change: '', source: 'This Issue', dynamic: true }
       ],
-      asOfDate: 'November 25, 2025',
-      explainerLink: 'renewalweekly.com/metrics-explained'
+      asOfDate: '',
+      explainerLink: ''
     },
 
     // ===== V5.2 UPDATE: LEAD STORY WITH EMBEDDED LINKS =====
@@ -2304,126 +2318,63 @@ Translation: The treatments we're writing about today may be routine options in 
         await delay(3000);
       }
 
-      // Step 1: Fetch PubMed data and update Metrics Dashboard
-      setAiStatus('📊 Fetching research metrics... (1/15)');
+      // Step 1: Build metrics from RSS feed data (2x2 grid)
+      setAiStatus('📊 Building metrics from RSS feed... (1/15)');
 
-      // Fetch PubMed publication count
-      let publicationCount = '47';
-      try {
-        const pubmedUrl = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=stem+cell&rettype=count&retmode=json&datetype=pdat&reldate=7';
-        const pubmedResponse = await fetch(pubmedUrl);
-        const pubmedData = await pubmedResponse.json();
-        publicationCount = pubmedData?.esearchresult?.count || '47';
-        console.log('✓ PubMed count fetched:', publicationCount);
-      } catch (e) {
-        console.log('✗ PubMed fetch failed:', e.message);
-      }
+      // Derive fun stats from the RSS articles
+      const articleCount = researchedArticles?.length || 0;
+      const uniqueSources = [...new Set(researchedArticles?.map(a => a.source) || [])];
+      const categoryCounts = (researchedArticles || []).reduce((acc, a) => {
+        acc[a.category] = (acc[a.category] || 0) + 1;
+        return acc;
+      }, {});
+      const topCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0];
+      const categoryLabels = {
+        stemCells: 'Stem Cells',
+        regenerativeMedicine: 'Regen Medicine',
+        longevity: 'Longevity',
+        chronicDisease: 'Chronic Disease',
+        nutrition: 'Nutrition',
+        supplements: 'Supplements',
+        clinicalTrials: 'Clinical Trials',
+        general: 'General Health'
+      };
 
-      // Fetch ACTIVE clinical trials count (Recruiting + Active, not recruiting)
-      let trialsCount = '847';
-      try {
-        // Filter for active stem cell/regenerative medicine trials only
-        const trialsUrl = 'https://clinicaltrials.gov/api/v2/studies?query.term=(stem+cell+OR+regenerative+medicine)&filter.overallStatus=RECRUITING,ACTIVE_NOT_RECRUITING&countTotal=true&pageSize=1';
-        const trialsResponse = await fetch(trialsUrl);
-        const trialsData = await trialsResponse.json();
-        if (trialsData.totalCount) {
-          trialsCount = trialsData.totalCount.toLocaleString();
-        }
-        console.log('✓ Active ClinicalTrials count fetched:', trialsCount);
-        console.log('✓ ClinicalTrials count fetched:', trialsCount);
-      } catch (e) {
-        console.log('✗ ClinicalTrials fetch failed:', e.message);
-      }
+      console.log('📊 RSS metrics:', { articleCount, sources: uniqueSources.length, topCategory });
 
-      console.log('📊 Updating metrics dashboard with:', { publicationCount, trialsCount });
-
-      // Fetch real stock data for biotech spotlight
-      const biotechStocks = [
-        { symbol: 'VRTX', name: 'Vertex', fallbackPrice: 485 },
-        { symbol: 'REGN', name: 'Regeneron', fallbackPrice: 920 },
-        { symbol: 'MRNA', name: 'Moderna', fallbackPrice: 45 },
-        { symbol: 'CRSP', name: 'CRISPR', fallbackPrice: 48 },
-        { symbol: 'FATE', name: 'Fate Therapeutics', fallbackPrice: 5 }
-      ];
-      const randomStock = biotechStocks[Math.floor(Math.random() * biotechStocks.length)];
-
-      let stockPrice = randomStock.fallbackPrice;
-      let stockChange = 0;
-      let stockSource = 'Market Data';
-
-      try {
-        // Try fetching real stock data via Yahoo Finance API
-        const stockUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${randomStock.symbol}?interval=1d&range=5d`;
-        const stockResponse = await fetch(stockUrl);
-        if (stockResponse.ok) {
-          const stockData = await stockResponse.json();
-          const quote = stockData?.chart?.result?.[0]?.meta;
-          const prices = stockData?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
-
-          if (quote?.regularMarketPrice) {
-            stockPrice = quote.regularMarketPrice;
-            const previousClose = quote.previousClose || prices?.[prices.length - 2];
-            if (previousClose) {
-              stockChange = ((stockPrice - previousClose) / previousClose * 100).toFixed(1);
-            }
-            stockSource = 'Yahoo Finance';
-            console.log(`✓ Stock data fetched: ${randomStock.symbol} = $${stockPrice.toFixed(0)} (${stockChange}%)`);
-          }
-        }
-      } catch (e) {
-        console.log(`✗ Stock fetch failed for ${randomStock.symbol}, using fallback:`, e.message);
-        // Add small random variation to fallback price to make it look dynamic
-        stockPrice = randomStock.fallbackPrice * (1 + (Math.random() * 0.04 - 0.02));
-        stockChange = (Math.random() * 4 - 2).toFixed(1);
-      }
-
-      // Update all metrics dashboard values
+      // Update metrics dashboard with RSS-derived stats (2x2 grid)
       setNewsletterData(prev => ({
         ...prev,
         metricsDashboard: {
           ...prev.metricsDashboard,
           metrics: [
             {
-              label: 'New Clinical Publications',
-              value: publicationCount,
-              change: `↑ ${Math.floor(Math.random() * 20) + 5} vs last week`,
-              source: 'PubMed',
+              label: 'Articles This Week',
+              value: articleCount.toString(),
+              change: `from ${uniqueSources.length} sources`,
+              source: 'RSS Feed',
               dynamic: true
             },
             {
-              label: `Stock Spotlight: ${randomStock.symbol}`,
-              value: `$${typeof stockPrice === 'number' ? stockPrice.toFixed(0) : stockPrice}`,
-              change: `${parseFloat(stockChange) >= 0 ? '↑' : '↓'}${Math.abs(parseFloat(stockChange))}%`,
-              source: stockSource,
+              label: 'Top Topic',
+              value: topCategory ? categoryLabels[topCategory[0]] || topCategory[0] : 'Stem Cells',
+              change: topCategory ? `${topCategory[1]} articles` : '',
+              source: 'This Issue',
               dynamic: true
             },
             {
-              label: 'Active Clinical Trials',
-              value: trialsCount,
-              change: `↑${(Math.random() * 3 + 1).toFixed(1)}% MTD`,
-              source: 'ClinicalTrials.gov',
+              label: 'Sources Featured',
+              value: uniqueSources.length.toString(),
+              change: uniqueSources.slice(0, 2).join(', '),
+              source: 'Curated Feed',
               dynamic: true
             },
             {
-              label: 'FDA RMAT Designations YTD',
-              value: (Math.floor(Math.random() * 5) + 12).toString(),
-              change: `+${Math.floor(Math.random() * 3) + 2} vs 2024`,
-              source: 'FDA',
-              dynamic: false
-            },
-            {
-              label: 'MSC Trials Efficacy Rate',
-              value: `${Math.floor(Math.random() * 10) + 62}%`,
-              change: '',
-              source: 'Cell Stem Cell',
-              dynamic: false
-            },
-            {
-              label: 'Avg Trial Enrollment Time',
-              value: `${Math.floor(Math.random() * 15) + 40} days`,
-              change: `↓${Math.floor(Math.random() * 5) + 3} days`,
-              source: 'Industry Data',
-              dynamic: false
+              label: 'Research Categories',
+              value: Object.keys(categoryCounts).length.toString(),
+              change: 'topics covered',
+              source: 'This Issue',
+              dynamic: true
             }
           ],
           asOfDate: today
@@ -2541,46 +2492,51 @@ Write the research roundup based on this article.`;
       }
       await delay(5000);
 
-      // Step 3.5: Generate Living Well (lifestyle section)
+      // Step 3.5: Generate Living Well (lifestyle section) - MUST use RSS article
       setAiStatus('🌿 Writing Living Well section... (3.5/15)');
 
-      // Use nutrition/longevity articles from RSS if available
-      const lifestyleArticle = (researchedArticles || []).find(a =>
-        ['nutrition', 'longevity', 'supplements'].includes(a.category) &&
-        a.url !== articleDistribution?.leadStory?.url &&
-        a.url !== articleDistribution?.researchRoundup?.url
-      );
+      // Use the pre-distributed lifestyle article from RSS
+      const lifestyleArticle = articleDistribution?.livingWell;
 
-      let livingWellPromptContext = '';
       if (lifestyleArticle) {
-        livingWellPromptContext = `USE THIS ARTICLE FOR INSPIRATION:
+        const livingWellPromptContext = `REWRITE this article as a friendly lifestyle tip. You MUST use ONLY the URL provided below.
+
+ARTICLE FROM RSS FEED:
 Title: "${lifestyleArticle.title}"
 Source: ${lifestyleArticle.source} (${lifestyleArticle.dateFormatted || lifestyleArticle.date})
 URL: ${lifestyleArticle.url}
 Summary: ${lifestyleArticle.summary}
 
-Transform this into a friendly, lighthearted lifestyle tip. Make it feel accessible and actionable.
-Embed the link naturally: "{{LINK:recent research|${lifestyleArticle.url}}}"`;
-      }
+CRITICAL RULES:
+1. The ONLY URL you may use is: ${lifestyleArticle.url}
+2. Do NOT invent, guess, or make up any URLs
+3. Embed this exact link naturally in your text using: {{LINK:descriptive text|${lifestyleArticle.url}}}
+4. Keep the tone warm, encouraging, and accessible
+5. Focus on ONE actionable tip from this article`;
 
-      const livingWellContent = await generateWithAI('livingWell', livingWellPromptContext, !lifestyleArticle);
-      if (livingWellContent) {
-        const lines = livingWellContent.split('\n').filter(l => l.trim());
-        const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
-        const content = lines.slice(1).join('\n\n');
-        const sources = lifestyleArticle
-          ? [{ title: lifestyleArticle.source, url: lifestyleArticle.url, date: lifestyleArticle.dateFormatted || lifestyleArticle.date }]
-          : extractSourcesFromContent(livingWellContent);
-        setNewsletterData(prev => ({
-          ...prev,
-          livingWell: {
-            ...prev.livingWell,
-            headline: headline || prev.livingWell.headline,
-            content: content || livingWellContent,
-            publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-            sources: sources
-          }
-        }));
+        // Never use web search for Living Well - RSS only
+        const livingWellContent = await generateWithAI('livingWell', livingWellPromptContext, false);
+        if (livingWellContent) {
+          const lines = livingWellContent.split('\n').filter(l => l.trim());
+          const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
+          let content = lines.slice(1).join('\n\n');
+
+          // SAFETY: Replace any rogue URLs in content with the real RSS URL
+          content = content.replace(/\{\{LINK:([^|]+)\|https?:\/\/[^}]+\}\}/g, `{{LINK:$1|${lifestyleArticle.url}}}`);
+
+          setNewsletterData(prev => ({
+            ...prev,
+            livingWell: {
+              ...prev.livingWell,
+              headline: headline || prev.livingWell.headline,
+              content: content || livingWellContent,
+              publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+              sources: [{ title: lifestyleArticle.source, url: lifestyleArticle.url, date: lifestyleArticle.dateFormatted || lifestyleArticle.date }]
+            }
+          }));
+        }
+      } else {
+        console.log('⚠️ No lifestyle article found for Living Well section');
       }
       await delay(3000);
 
@@ -2815,28 +2771,15 @@ Write 5-7 quick hit news items based on these articles.`;
       }
       await delay(5000); // Rate limit protection
 
-      // Step 8: Generate Worth Knowing (using RSS articles for real links)
+      // Step 8: Generate Worth Knowing (using pre-distributed RSS articles)
       setAiStatus('💡 Creating Worth Knowing... (8/15)');
 
-      // Get unused RSS articles for Worth Knowing
-      let worthKnowingPromptContext = '';
-      const usedArticleUrls = [
-        articleDistribution?.leadStory?.url,
-        articleDistribution?.researchRoundup?.url,
-        articleDistribution?.deepDive?.url,
-        articleDistribution?.statOfWeek?.url,
-        ...(articleDistribution?.onOurRadar || []).map(a => a.url),
-        ...(articleDistribution?.quickHits || []).map(a => a.url)
-      ].filter(Boolean);
-
-      // Get 4 unused articles for Worth Knowing
-      const worthKnowingArticles = (researchedArticles || [])
-        .filter(a => !usedArticleUrls.includes(a.url))
-        .slice(0, 4);
+      // Use pre-distributed articles from RSS feed
+      const worthKnowingArticles = articleDistribution?.worthKnowing || [];
 
       if (worthKnowingArticles.length > 0) {
-        worthKnowingPromptContext = `
-USE THESE ARTICLES FROM OUR RSS FEED for Worth Knowing items:
+        const worthKnowingPromptContext = `
+REWRITE these RSS articles as "Worth Knowing" items. You MUST use ONLY the URLs provided.
 
 ${worthKnowingArticles.map((a, i) => `ARTICLE ${i+1}:
 Title: "${a.title}"
@@ -2845,42 +2788,46 @@ URL: ${a.url}
 Summary: ${a.summary}
 `).join('\n')}
 
-Create 4 "Worth Knowing" items based on these articles. Each item should be:
-- A fascinating fact, tip, or resource from the article
-- Include the REAL URL from above
+CRITICAL RULES:
+1. ONLY use the URLs listed above - do NOT invent or guess URLs
+2. Each item must reference its corresponding article URL
+3. Keep descriptions to 1-2 sentences
 
-Return JSON array: [{"type": "tip/resource/fact/event", "title": "Short title", "description": "1-2 sentence description", "link": "the real URL from above", "date": ""}]`;
-      }
+Return JSON array: [{"type": "tip/resource/fact/event", "title": "Short title", "description": "1-2 sentence description", "link": "EXACT URL from above", "date": ""}]`;
 
-      const worthContent = await generateWithAI('worthKnowing', worthKnowingPromptContext, worthKnowingArticles.length === 0);
-      if (worthContent) {
-        try {
-          const jsonMatch = worthContent.match(/\[[\s\S]*\]/);
-          if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            if (Array.isArray(parsed) && parsed.length >= 1) {
-              setNewsletterData(prev => ({
-                ...prev,
-                worthKnowing: {
-                  ...prev.worthKnowing,
-                  items: parsed.slice(0, 4).map((item, idx) => {
-                    // Use RSS article URL if available
-                    const rssArticle = worthKnowingArticles[idx];
-                    return {
-                      type: item.type || 'resource',
-                      title: item.title || rssArticle?.title || '',
-                      date: item.date || '',
-                      description: item.description || '',
-                      link: rssArticle?.url || item.link || null
-                    };
-                  })
-                }
-              }));
+        // Never use web search for Worth Knowing - RSS only
+        const worthContent = await generateWithAI('worthKnowing', worthKnowingPromptContext, false);
+        if (worthContent) {
+          try {
+            const jsonMatch = worthContent.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              if (Array.isArray(parsed) && parsed.length >= 1) {
+                setNewsletterData(prev => ({
+                  ...prev,
+                  worthKnowing: {
+                    ...prev.worthKnowing,
+                    items: parsed.slice(0, 4).map((item, idx) => {
+                      // ALWAYS use RSS article URL - ignore any AI-generated URLs
+                      const rssArticle = worthKnowingArticles[idx];
+                      return {
+                        type: item.type || 'resource',
+                        title: item.title || rssArticle?.title || '',
+                        date: rssArticle?.dateFormatted || item.date || '',
+                        description: item.description || '',
+                        link: rssArticle?.url // ONLY use RSS URL
+                      };
+                    })
+                  }
+                }));
+              }
             }
+          } catch (e) {
+            console.error('Error parsing worth knowing:', e);
           }
-        } catch (e) {
-          console.error('Error parsing worth knowing:', e);
         }
+      } else {
+        console.log('⚠️ No articles available for Worth Knowing section');
       }
       await delay(5000); // Rate limit protection
 
@@ -3221,7 +3168,7 @@ ${d.openingHook.content}
 <!-- METRICS DASHBOARD -->
 <div class="rw-section" style="background: linear-gradient(135deg, ${colors.dark} 0%, #0F172A 100%); color: white;">
   <p class="rw-label" style="color: ${colors.accent};">${d.metricsDashboard.title}</p>
-  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px;">
+  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 16px;">
     ${d.metricsDashboard.metrics.map(m => `
     <div style="text-align: center; padding: 12px;">
       <p style="font-size: 24px; font-weight: 700; margin: 0;">${m.value}</p>
@@ -3845,7 +3792,7 @@ ${currentGame.content}
             <SectionCard number="2" title="Metrics Dashboard" sectionKey="section2" showRefresh={false}>
               <div className="rounded-lg p-5 text-white" style={{ background: `linear-gradient(135deg, ${colors.dark} 0%, #0F172A 100%)` }}>
                 <h3 className="font-bold mb-4 text-sm uppercase" style={{ color: colors.accent }}>{newsletterData.metricsDashboard.title}</h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   {newsletterData.metricsDashboard.metrics.map((m, i) => (
                     <div key={i} className="text-center p-3 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
                       <p className="text-2xl font-bold">{m.value}</p>

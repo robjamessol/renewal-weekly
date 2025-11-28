@@ -2137,8 +2137,19 @@ Translation: The treatments we're writing about today may be routine options in 
       const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
 
-      // Skip 3-phase research to reduce API calls - each section does its own search
+      // PHASE 1: Research articles upfront (reduces total web searches)
+      setAiStatus('🔬 Researching articles for your audience...');
+      const researchedArticles = await researchArticles();
+
       let articleDistribution = null;
+      if (researchedArticles && researchedArticles.length > 0) {
+        setAiStatus(`✓ Found ${researchedArticles.length} articles, distributing...`);
+        articleDistribution = distributeArticles(researchedArticles);
+        await delay(3000);
+      } else {
+        setAiStatus('⚠️ Research returned no articles, sections will search individually...');
+        await delay(3000);
+      }
 
       // Step 1: Fetch PubMed data and update Metrics Dashboard
       setAiStatus('📊 Fetching research metrics... (1/15)');
@@ -2266,7 +2277,9 @@ Write the lead story based on this article. Include the URL as {{LINK:source|${a
         combinedPrompt = `AVOID_TOPIC:${usedStories.slice(-10).join('|')}`;
       }
 
-      const leadContent = await generateWithAI('leadStory', combinedPrompt);
+      // Skip web search if we have pre-researched article (saves API calls)
+      const skipLeadWebSearch = !!articleDistribution?.leadStory;
+      const leadContent = await generateWithAI('leadStory', combinedPrompt, !skipLeadWebSearch);
       if (leadContent) {
         const lines = leadContent.split('\n').filter(l => l.trim());
         const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
@@ -2312,7 +2325,9 @@ Summary: ${article.summary}
 Write the research roundup based on this article. Include the URL as {{LINK:source|${article.url}}}.`;
       }
 
-      const roundupContent = await generateWithAI('researchRoundup', researchPromptContext);
+      // Skip web search if we have pre-researched article
+      const skipResearchWebSearch = !!articleDistribution?.researchRoundup;
+      const roundupContent = await generateWithAI('researchRoundup', researchPromptContext, !skipResearchWebSearch);
       if (roundupContent) {
         const lines = roundupContent.split('\n').filter(l => l.trim());
         const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
@@ -2345,7 +2360,9 @@ ${articles.map((a, i) => `${i+1}. "${a.title}" (${a.source}, ${a.date}) - ${a.su
 Write 3 secondary stories based on these articles. Include URLs as {{LINK:source|url}}.`;
       }
 
-      const secondaryContent = await generateWithAI('secondaryStories', secondaryPromptContext);
+      // Skip web search if we have pre-researched articles
+      const skipSecondaryWebSearch = articleDistribution?.onOurRadar?.length > 0;
+      const secondaryContent = await generateWithAI('secondaryStories', secondaryPromptContext, !skipSecondaryWebSearch);
       if (secondaryContent) {
         try {
           const jsonMatch = secondaryContent.match(/\[[\s\S]*\]/);
@@ -2389,7 +2406,9 @@ Summary: ${article.summary}
 Write the deep dive based on this wellness/nutrition article. Include the URL as {{LINK:source|${article.url}}}.`;
       }
 
-      const deepDiveContent = await generateWithAI('deepDive', deepDivePromptContext);
+      // Skip web search if we have pre-researched article
+      const skipDeepDiveWebSearch = !!articleDistribution?.deepDive;
+      const deepDiveContent = await generateWithAI('deepDive', deepDivePromptContext, !skipDeepDiveWebSearch);
       if (deepDiveContent) {
         const lines = deepDiveContent.split('\n').filter(l => l.trim());
         const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
@@ -2424,7 +2443,9 @@ Summary: ${article.summary}
 Find a compelling statistic from this article. Include the URL as {{LINK:source|${article.url}}}.`;
       }
 
-      const statContent = await generateWithAI('statSection', statPromptContext);
+      // Skip web search if we have pre-researched article
+      const skipStatWebSearch = !!articleDistribution?.statOfWeek;
+      const statContent = await generateWithAI('statSection', statPromptContext, !skipStatWebSearch);
       if (statContent) {
         try {
           const jsonMatch = statContent.match(/\{[\s\S]*\}/);
@@ -2464,7 +2485,9 @@ ${articles.map((a, i) => `${i+1}. "${a.title}" (${a.source}, ${a.date}) [${a.url
 Write 7 quick hit news items based on these articles. Include URLs as {{LINK:text|url}}.`;
       }
 
-      const pulseContent = await generateWithAI('thePulse', pulsePromptContext);
+      // Skip web search if we have pre-researched articles
+      const skipPulseWebSearch = articleDistribution?.quickHits?.length > 0;
+      const pulseContent = await generateWithAI('thePulse', pulsePromptContext, !skipPulseWebSearch);
       if (pulseContent) {
         try {
           const jsonMatch = pulseContent.match(/\[[\s\S]*\]/);

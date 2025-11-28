@@ -1,11 +1,13 @@
 /**
  * RSS Feed Service for Renewal Weekly
- * Fetches curated articles from RSS.app bundle feed
- * Replaces unreliable web search with guaranteed real URLs
+ * Fetches articles directly from RSS feeds defined in config
+ * No external service needed - just add feeds to rss-sources.json
  */
 
-// RSS.app bundle feed URL (combines all curated sources)
-const RSS_FEED_URL = 'https://rss.app/feeds/v1.1/cRDeGfxwf6t2nR8S.json';
+import rssSources from '../config/rss-sources.json';
+
+// CORS proxy to allow browser fetching from external RSS feeds
+const CORS_PROXY = 'https://api.allorigins.win/get?url=';
 
 // Category metadata for AI matching (keywords are guidelines, not filters)
 export const FEED_CATEGORIES = {
@@ -39,74 +41,175 @@ export const CONTENT_TO_AVOID = [
 ];
 
 /**
- * Fetch articles from RSS feed
+ * Fetch articles from all RSS feeds in config
  * @param {number} daysBack - How many days of articles to include (default 7)
  * @returns {Promise<Array>} Array of normalized article objects
  */
 export const fetchArticlePool = async (daysBack = 7) => {
+  const feeds = rssSources.feeds || [];
+
+  if (feeds.length === 0) {
+    console.warn('No RSS feeds configured in rss-sources.json');
+    return [];
+  }
+
+  console.log(`RSS: Fetching from ${feeds.length} configured feeds...`);
+
+  // Fetch all feeds in parallel
+  const feedPromises = feeds.map(feed => fetchSingleFeed(feed));
+  const results = await Promise.allSettled(feedPromises);
+
+  // Combine all successful results
+  let allArticles = [];
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled' && result.value.length > 0) {
+      console.log(`  ✓ ${feeds[index].name}: ${result.value.length} articles`);
+      allArticles = allArticles.concat(result.value);
+    } else if (result.status === 'rejected') {
+      console.warn(`  ✗ ${feeds[index].name}: ${result.reason}`);
+    }
+  });
+
+  // Calculate cutoff date
+  const cutoffDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
+
+  // Filter by date and sort
+  const filteredArticles = allArticles
+    .filter(article => {
+      const articleDate = new Date(article.date);
+      return articleDate > cutoffDate;
+    })
+    .sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
+
+  console.log(`RSS: Total ${filteredArticles.length} articles from past ${daysBack} days`);
+
+  return filteredArticles;
+};
+
+/**
+ * Fetch and parse a single RSS feed
+ * @param {Object} feedConfig - Feed config object with url, name, category
+ * @returns {Promise<Array>} Array of articles from this feed
+ */
+const fetchSingleFeed = async (feedConfig) => {
   try {
-    const response = await fetch(RSS_FEED_URL);
+    // Use CORS proxy for browser compatibility
+    const proxyUrl = CORS_PROXY + encodeURIComponent(feedConfig.url);
+    const response = await fetch(proxyUrl);
 
     if (!response.ok) {
-      throw new Error(`RSS fetch failed: ${response.status}`);
+      throw new Error(`HTTP ${response.status}`);
     }
 
     const data = await response.json();
+    const xmlText = data.contents;
 
-    if (!data.items || !Array.isArray(data.items)) {
-      throw new Error('Invalid RSS feed structure');
+    if (!xmlText) {
+      throw new Error('Empty response');
     }
 
-    // Calculate cutoff date
-    const cutoffDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
+    // Parse XML
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(xmlText, 'text/xml');
 
-    // Normalize and filter articles
-    const articles = data.items
-      .map(item => normalizeArticle(item))
-      .filter(article => {
-        // Filter by date
-        const articleDate = new Date(article.date);
-        return articleDate > cutoffDate;
-      })
-      .sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
+    // Check for parse errors
+    const parseError = xml.querySelector('parsererror');
+    if (parseError) {
+      throw new Error('Invalid XML');
+    }
 
-    console.log(`RSS: Fetched ${articles.length} articles from past ${daysBack} days`);
+    // Extract articles (handle both RSS 2.0 and Atom formats)
+    const articles = [];
+
+    // RSS 2.0 format: <item> elements
+    const rssItems = xml.querySelectorAll('item');
+    rssItems.forEach(item => {
+      const article = parseRssItem(item, feedConfig);
+      if (article) articles.push(article);
+    });
+
+    // Atom format: <entry> elements
+    const atomEntries = xml.querySelectorAll('entry');
+    atomEntries.forEach(entry => {
+      const article = parseAtomEntry(entry, feedConfig);
+      if (article) articles.push(article);
+    });
 
     return articles;
 
   } catch (error) {
-    console.error('RSS fetch error:', error);
-    throw error;
+    throw new Error(`${feedConfig.name}: ${error.message}`);
   }
 };
 
 /**
- * Normalize article data from RSS feed format
- * @param {Object} item - Raw RSS item
+ * Parse RSS 2.0 <item> element
+ */
+const parseRssItem = (item, feedConfig) => {
+  const title = item.querySelector('title')?.textContent?.trim();
+  const link = item.querySelector('link')?.textContent?.trim();
+  const pubDate = item.querySelector('pubDate')?.textContent;
+  const description = item.querySelector('description')?.textContent;
+  const content = item.querySelector('content\\:encoded, encoded')?.textContent;
+
+  if (!title || !link) return null;
+
+  return normalizeArticle({
+    title,
+    url: link,
+    date: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+    summary: description || content || '',
+    feedName: feedConfig.name,
+    feedCategory: feedConfig.category
+  });
+};
+
+/**
+ * Parse Atom <entry> element
+ */
+const parseAtomEntry = (entry, feedConfig) => {
+  const title = entry.querySelector('title')?.textContent?.trim();
+  const link = entry.querySelector('link[href]')?.getAttribute('href');
+  const published = entry.querySelector('published, updated')?.textContent;
+  const summary = entry.querySelector('summary, content')?.textContent;
+
+  if (!title || !link) return null;
+
+  return normalizeArticle({
+    title,
+    url: link,
+    date: published ? new Date(published).toISOString() : new Date().toISOString(),
+    summary: summary || '',
+    feedName: feedConfig.name,
+    feedCategory: feedConfig.category
+  });
+};
+
+/**
+ * Normalize article data
+ * @param {Object} item - Parsed RSS item
  * @returns {Object} Normalized article object
  */
 const normalizeArticle = (item) => {
   // Extract source/publisher from URL
-  let source = 'Unknown';
+  let source = item.feedName || 'Unknown';
   try {
     const url = new URL(item.url);
-    source = getSourceName(url.hostname);
+    source = getSourceName(url.hostname) || item.feedName;
   } catch (e) {
-    // Keep default
+    // Keep feedName as source
   }
 
   return {
-    id: item.id || generateId(item.url),
+    id: generateId(item.url),
     title: item.title || 'Untitled',
     url: item.url,  // REAL URL - guaranteed from RSS!
-    date: item.date_published || new Date().toISOString(),
-    dateFormatted: formatDate(item.date_published),
+    date: item.date,
+    dateFormatted: formatDate(item.date),
     source: source,
-    author: item.authors?.[0]?.name || source,
-    summary: cleanSummary(item.content_text || ''),
-    image: item.image || item.attachments?.[0]?.url || null,
+    summary: cleanSummary(item.summary),
     // Metadata for AI matching
-    category: detectCategory(item.title, item.content_text),
+    category: item.feedCategory || detectCategory(item.title, item.summary),
     audienceRelevance: null // AI will score this
   };
 };

@@ -1,18 +1,21 @@
 {
-  "description": "Curated RSS feed sources for Renewal Weekly",
-  "note": "Add your RSS feed URLs here. The app can fetch directly from these.",
+  "description": "Curated RSS feed sources for Renewal Weekly. Just paste feed URLs below!",
 
-  "sources": {
-    "stemCells": [
-      {
-        "name": "Example Source",
-        "url": "https://example.com/rss",
-        "notes": "Replace with your actual feeds"
-      }
-    ],
-    "longevity": [],
-    "chronicDisease": [],
-    "nutrition": [],
-    "general": []
-  }
+  "feeds": [
+    {
+      "url": "https://www.sciencedaily.com/rss/health_medicine/stem_cells.xml",
+      "category": "stemCells",
+      "name": "ScienceDaily - Stem Cells"
+    },
+    {
+      "url": "https://www.fightaging.org/feed/",
+      "category": "longevity",
+      "name": "Fight Aging"
+    },
+    {
+      "url": "https://newsinhealth.nih.gov/rss/full-stories.xml",
+      "category": "general",
+      "name": "NIH News in Health"
+    }
+  ]
 }

@@ -2344,13 +2344,6 @@ Translation: The treatments we're writing about today may be routine options in 
         { symbol: 'MRNA', name: 'Moderna', fallbackPrice: 45 },
         { symbol: 'CRSP', name: 'CRISPR', fallbackPrice: 48 },
         { symbol: 'FATE', name: 'Fate Therapeutics', fallbackPrice: 5 }
-      // Generate varied stock spotlight (rotate between biotech stocks)
-      const stocks = [
-        { symbol: 'VRTX', name: 'Vertex' },
-        { symbol: 'REGN', name: 'Regeneron' },
-        { symbol: 'MRNA', name: 'Moderna' },
-        { symbol: 'BLUE', name: 'Bluebird Bio' },
-        { symbol: 'CRSP', name: 'CRISPR' }
       ];
       const randomStock = biotechStocks[Math.floor(Math.random() * biotechStocks.length)];
 

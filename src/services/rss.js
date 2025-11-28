@@ -12,8 +12,13 @@ const CORS_PROXY = 'https://api.allorigins.win/get?url=';
 // Category metadata for AI matching (keywords are guidelines, not filters)
 export const FEED_CATEGORIES = {
   stemCells: {
-    name: 'Stem Cells & Regenerative Medicine',
+    name: 'Stem Cells',
     guidelines: ['human trial', 'patient outcome', 'clinical results', 'treatment access'],
+    sectionFit: ['leadStory', 'researchRoundup', 'onOurRadar']
+  },
+  regenerativeMedicine: {
+    name: 'Regenerative Medicine',
+    guidelines: ['tissue engineering', 'cell therapy', 'organ repair', 'clinical application'],
     sectionFit: ['leadStory', 'researchRoundup', 'onOurRadar']
   },
   longevity: {
@@ -27,9 +32,19 @@ export const FEED_CATEGORIES = {
     sectionFit: ['leadStory', 'onOurRadar', 'quickHits']
   },
   nutrition: {
-    name: 'Nutrition & Supplements',
-    guidelines: ['daily dose', 'supplement for joints', 'heart health easy', 'food for energy'],
+    name: 'Nutrition',
+    guidelines: ['daily diet', 'food for health', 'eating habits', 'meal planning'],
     sectionFit: ['deepDive', 'worthKnowing', 'quickHits']
+  },
+  supplements: {
+    name: 'Supplements & Vitamins',
+    guidelines: ['daily dose', 'supplement for joints', 'vitamin benefits', 'evidence-based'],
+    sectionFit: ['deepDive', 'worthKnowing', 'quickHits']
+  },
+  clinicalTrials: {
+    name: 'Clinical Trials & Research',
+    guidelines: ['trial results', 'FDA approval', 'patient recruitment', 'breakthrough'],
+    sectionFit: ['leadStory', 'researchRoundup', 'statOfWeek']
   }
 };
 
@@ -265,22 +280,38 @@ const getSourceName = (hostname) => {
 };
 
 /**
- * Auto-detect category from content
+ * Auto-detect category from content (fallback if not set in config)
  */
 const detectCategory = (title, content) => {
   const text = `${title} ${content}`.toLowerCase();
 
-  if (text.includes('stem cell') || text.includes('regenerat') || text.includes('tissue engineer')) {
+  // Stem cells specific
+  if (text.includes('stem cell')) {
     return 'stemCells';
   }
-  if (text.includes('longevity') || text.includes('anti-aging') || text.includes('lifespan') || text.includes('senolytic')) {
+  // Regenerative medicine (broader)
+  if (text.includes('regenerat') || text.includes('tissue engineer') || text.includes('cell therapy')) {
+    return 'regenerativeMedicine';
+  }
+  // Clinical trials
+  if (text.includes('clinical trial') || text.includes('phase 1') || text.includes('phase 2') || text.includes('phase 3') || text.includes('fda approv')) {
+    return 'clinicalTrials';
+  }
+  // Longevity/anti-aging
+  if (text.includes('longevity') || text.includes('anti-aging') || text.includes('lifespan') || text.includes('senolytic') || text.includes('aging')) {
     return 'longevity';
   }
-  if (text.includes('diabetes') || text.includes('parkinson') || text.includes('alzheimer') || text.includes('chronic')) {
-    return 'chronicDisease';
+  // Supplements
+  if (text.includes('supplement') || text.includes('vitamin') || text.includes('omega-3') || text.includes('probiotic')) {
+    return 'supplements';
   }
-  if (text.includes('nutrition') || text.includes('supplement') || text.includes('vitamin') || text.includes('diet')) {
+  // Nutrition
+  if (text.includes('nutrition') || text.includes('diet') || text.includes('eating') || text.includes('food')) {
     return 'nutrition';
+  }
+  // Chronic disease
+  if (text.includes('diabetes') || text.includes('parkinson') || text.includes('alzheimer') || text.includes('chronic') || text.includes('arthritis') || text.includes('heart disease')) {
+    return 'chronicDisease';
   }
 
   return 'general';

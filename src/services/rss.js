@@ -6,8 +6,13 @@
 
 import rssSources from '../config/rss-sources.json';
 
-// CORS proxy to allow browser fetching from external RSS feeds
-const CORS_PROXY = 'https://api.allorigins.win/get?url=';
+// CORS proxies to allow browser fetching from external RSS feeds
+// Using multiple proxies as fallback in case one is down
+const CORS_PROXIES = [
+  'https://api.allorigins.win/get?url=',
+  'https://corsproxy.io/?'
+];
+let currentProxyIndex = 0;
 
 // Category metadata for AI matching (keywords are guidelines, not filters)
 export const FEED_CATEGORIES = {
@@ -57,10 +62,10 @@ export const CONTENT_TO_AVOID = [
 
 /**
  * Fetch articles from all RSS feeds in config
- * @param {number} daysBack - How many days of articles to include (default 7)
+ * @param {number} daysBack - How many days of articles to include (default 14 for academic journals)
  * @returns {Promise<Array>} Array of normalized article objects
  */
-export const fetchArticlePool = async (daysBack = 7) => {
+export const fetchArticlePool = async (daysBack = 14) => {
   const feeds = rssSources.feeds || [];
 
   if (feeds.length === 0) {
@@ -107,54 +112,69 @@ export const fetchArticlePool = async (daysBack = 7) => {
  * @returns {Promise<Array>} Array of articles from this feed
  */
 const fetchSingleFeed = async (feedConfig) => {
-  try {
-    // Use CORS proxy for browser compatibility
-    const proxyUrl = CORS_PROXY + encodeURIComponent(feedConfig.url);
-    const response = await fetch(proxyUrl);
+  // Try each CORS proxy until one works
+  for (let i = 0; i < CORS_PROXIES.length; i++) {
+    const proxyIndex = (currentProxyIndex + i) % CORS_PROXIES.length;
+    const proxy = CORS_PROXIES[proxyIndex];
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+    try {
+      const proxyUrl = proxy + encodeURIComponent(feedConfig.url);
+      const response = await fetch(proxyUrl, { timeout: 10000 });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      // Handle different proxy response formats
+      const xmlText = data.contents || data;
+
+      if (!xmlText || typeof xmlText !== 'string') {
+        throw new Error('Empty or invalid response');
+      }
+
+      // Parse XML
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(xmlText, 'text/xml');
+
+      // Check for parse errors
+      const parseError = xml.querySelector('parsererror');
+      if (parseError) {
+        throw new Error('Invalid XML');
+      }
+
+      // Extract articles (handle both RSS 2.0 and Atom formats)
+      const articles = [];
+
+      // RSS 2.0 format: <item> elements
+      const rssItems = xml.querySelectorAll('item');
+      rssItems.forEach(item => {
+        const article = parseRssItem(item, feedConfig);
+        if (article) articles.push(article);
+      });
+
+      // Atom format: <entry> elements
+      const atomEntries = xml.querySelectorAll('entry');
+      atomEntries.forEach(entry => {
+        const article = parseAtomEntry(entry, feedConfig);
+        if (article) articles.push(article);
+      });
+
+      // Success - remember which proxy worked
+      currentProxyIndex = proxyIndex;
+      return articles;
+
+    } catch (error) {
+      // If this is the last proxy, throw the error
+      if (i === CORS_PROXIES.length - 1) {
+        throw new Error(`${feedConfig.name}: ${error.message}`);
+      }
+      // Otherwise try next proxy
+      console.log(`Proxy ${proxy} failed for ${feedConfig.name}, trying next...`);
     }
-
-    const data = await response.json();
-    const xmlText = data.contents;
-
-    if (!xmlText) {
-      throw new Error('Empty response');
-    }
-
-    // Parse XML
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(xmlText, 'text/xml');
-
-    // Check for parse errors
-    const parseError = xml.querySelector('parsererror');
-    if (parseError) {
-      throw new Error('Invalid XML');
-    }
-
-    // Extract articles (handle both RSS 2.0 and Atom formats)
-    const articles = [];
-
-    // RSS 2.0 format: <item> elements
-    const rssItems = xml.querySelectorAll('item');
-    rssItems.forEach(item => {
-      const article = parseRssItem(item, feedConfig);
-      if (article) articles.push(article);
-    });
-
-    // Atom format: <entry> elements
-    const atomEntries = xml.querySelectorAll('entry');
-    atomEntries.forEach(entry => {
-      const article = parseAtomEntry(entry, feedConfig);
-      if (article) articles.push(article);
-    });
-
-    return articles;
-
-  } catch (error) {
-    throw new Error(`${feedConfig.name}: ${error.message}`);
   }
+
+  return [];
 };
 
 /**

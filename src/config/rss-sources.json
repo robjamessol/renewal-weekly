@@ -88,104 +88,55 @@
       "name": "ClinicalTrials.gov Regenerative Medicine"
     },
     {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567890/?term=stem+cell+therapy%5Bmh%5D&limit=20",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1XigQ8Atc1EL7v4y5N7BnywymiYn6Mh79CMzmB9za_lbXcn1xr/?limit=20&utm_campaign=pubmed-2&fc=20251128130949",
       "category": "stemCells",
       "name": "PubMed Stem Cell Therapy"
     },
     {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567891/?term=regenerative+medicine%5Bmh%5D&limit=20",
-      "category": "regenerativeMedicine",
-      "name": "PubMed Regenerative Medicine"
-    },
-    {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567892/?term=longevity%5Bmh%5D&limit=20",
-      "category": "longevity",
-      "name": "PubMed Longevity"
-    },
-    {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567893/?term=anti-aging%5Bmh%5D&limit=20",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1H77a1bY6296rOKq2SOEKPC3RsP94Y35oE0uAQ8cmkOyjAmgg8/?limit=15&utm_campaign=pubmed-2&fc=20251128131039",
       "category": "longevity",
       "name": "PubMed Anti-Aging"
     },
     {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567894/?term=multiple+sclerosis%5Bmh%5D&limit=20",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1rUyv9-0xUinl5i8Zi4vtU_Rq7h9llm2cE2pVkT4d-UmDVdomZ/?limit=15&utm_campaign=pubmed-2&fc=20251128131122",
+      "category": "nutrition",
+      "name": "PubMed Human Nutrition Research"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1DeUIcPgNLDLQQ46NHOgORdhmCTMlhxA7L6rpr9PGVzoWOW9US/?limit=15&utm_campaign=pubmed-2&fc=20251128131251",
       "category": "chronicDisease",
-      "name": "PubMed Multiple Sclerosis"
+      "name": "PubMed Heart Disease Clinical"
     },
     {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567895/?term=parkinson+disease%5Bmh%5D&limit=20",
-      "category": "chronicDisease",
-      "name": "PubMed Parkinson's Disease"
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1XGMw2eR5NxJwwu3pE-Dccjw3duTqnVKsykp0n54sg1Nzs-UfT/?limit=20&utm_campaign=pubmed-2&fc=20251128131431",
+      "category": "clinicalTrials",
+      "name": "PubMed Stem Cell Clinical Trials Phase 2/3/4"
     },
     {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567896/?term=alzheimer+disease%5Bmh%5D&limit=20",
-      "category": "chronicDisease",
-      "name": "PubMed Alzheimer's Disease"
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/14MpKbWO9zvEebs3RZ_MPW6-m8YgDPYKKde4jz2qcLT4OwUs_4/?limit=15&utm_campaign=pubmed-2&fc=20251128131544",
+      "category": "regenerativeMedicine",
+      "name": "PubMed Regenerative Medicine"
     },
     {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567897/?term=diabetes+mellitus%5Bmh%5D&limit=20",
-      "category": "chronicDisease",
-      "name": "PubMed Diabetes Mellitus"
-    },
-    {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567898/?term=osteoarthritis%5Bmh%5D&limit=20",
-      "category": "chronicDisease",
-      "name": "PubMed Osteoarthritis"
-    },
-    {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567899/?term=chronic+pain%5Bmh%5D&limit=20",
-      "category": "chronicDisease",
-      "name": "PubMed Chronic Pain"
-    },
-    {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567900/?term=dietary+supplements%5Bmh%5D&limit=20",
-      "category": "supplements",
-      "name": "PubMed Dietary Supplements"
-    },
-    {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567901/?term=vitamins%5Bmh%5D&limit=20",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/18ervbTh5APQvfhRqjltg7csRGgQIAT7Oulq-KZv7iHqMw7cqd/?limit=15&utm_campaign=pubmed-2&fc=20251128131609",
       "category": "supplements",
       "name": "PubMed Vitamins"
     },
     {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567902/?term=inflammation%5Bmh%5D&limit=20",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1tUjNYI-_9Jm-9D-1hLyBzY-BHIoCZ2wWMF6XbPZR2LHKBgYWl/?limit=15&utm_campaign=pubmed-2&fc=20251128131631",
       "category": "chronicDisease",
       "name": "PubMed Inflammation"
     },
     {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567903/?term=clinical+trial%5Bpt%5D+AND+regenerative+medicine%5Bmh%5D&limit=20",
-      "category": "clinicalTrials",
-      "name": "PubMed Clinical Trials Regenerative Medicine"
-    },
-    {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567904/?term=autoimmune+diseases%5Bmh%5D&limit=20",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1671MaA5CeAI2o7Om5-8rpgFOXvDr2xCkSKtDQGDhriNOUTo2l/?limit=15&utm_campaign=pubmed-2&fc=20251128131713",
       "category": "chronicDisease",
-      "name": "PubMed Autoimmune Diseases"
+      "name": "PubMed Chronic Pain"
     },
     {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567905/?term=heart+diseases%5Bmh%5D+AND+regenerative%5Btiab%5D&limit=20",
-      "category": "chronicDisease",
-      "name": "PubMed Heart Diseases Regenerative"
-    },
-    {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567906/?term=nutrition%5Bmh%5D+AND+aging%5Bmh%5D&limit=20",
-      "category": "nutrition",
-      "name": "PubMed Nutrition and Aging"
-    },
-    {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567907/?term=neoplasms%5Bmh%5D+AND+remission%5Btiab%5D&limit=20",
-      "category": "chronicDisease",
-      "name": "PubMed Cancer Remission"
-    },
-    {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567908/?term=macular+degeneration%5Bmh%5D&limit=20",
-      "category": "chronicDisease",
-      "name": "PubMed Macular Degeneration"
-    },
-    {
-      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1234567909/?term=athletic+injuries%5Bmh%5D+AND+stem+cells%5Bmh%5D&limit=20",
-      "category": "stemCells",
-      "name": "PubMed Sports Injuries Stem Cells"
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/18qVEVbjJjor2lBglGU9aAW-4fdjG_x2SE-dsMdEOX3dco1w3I/?limit=20&utm_campaign=pubmed-2&fc=20251128131812",
+      "category": "longevity",
+      "name": "PubMed Healthy Aging",
+      "ignoreFreshness": true
     },
     {
       "url": "https://www.science.org/rss/news_and_articles.xml",

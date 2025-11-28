@@ -229,23 +229,29 @@ ${audience.contentPreferences?.want?.slice(0, 5).map(w => `• ${w}`).join('\n')
 === WHAT THEY DON'T WANT ===
 ${audience.contentPreferences?.dontWant?.slice(0, 4).map(w => `• ${w}`).join('\n')}
 
-=== PREFERRED SOURCES (prioritize these) ===
-MAINSTREAM HEALTH: CNN Health, NPR Health, Men's Health, Healthline, WebMD, Prevention
-TRUSTED MEDICAL: Mayo Clinic, Cleveland Clinic, Harvard Health, Johns Hopkins
-BIOTECH NEWS: STAT News, Endpoints News, BioPharma Dive, Fierce Biotech
+=== CRITICAL: DO 3 SEPARATE WEB SEARCHES ===
+You MUST do 3 separate, focused web searches to ensure balanced coverage:
+
+**SEARCH 1 - STEM CELL & REGENERATIVE MEDICINE:**
+Search for: "stem cell therapy clinical trial 2025" OR "regenerative medicine breakthrough"
+Target: 5-6 articles from Nature, Cell, STAT News, Endpoints, NIH, university medical centers
+Focus on: ${randomFocus}
+
+**SEARCH 2 - LONGEVITY & ANTI-AGING:**
+Search for: "longevity research 2025" OR "anti-aging science breakthrough"
+Target: 4-5 articles from longevity.technology, lifespan.io, aging-us.com, Nature Aging
+Focus on: senolytics, NAD+, epigenetic clocks, healthspan research
+
+**SEARCH 3 - WELLNESS & LIFESTYLE:**
+Search for: "health wellness nutrition news 2025" OR "fitness science research"
+Target: 5-6 articles from Healthline, Men's Health, CNN Health, NPR, Mayo Clinic
+Focus on: ${secondaryFocus}, practical health tips, diet research
+
+=== PREFERRED SOURCES ===
+MAINSTREAM: CNN Health, NPR, Men's Health, Healthline, WebMD, Prevention
+MEDICAL: Mayo Clinic, Cleveland Clinic, Harvard Health, Johns Hopkins
+BIOTECH: STAT News, Endpoints News, BioPharma Dive, Fierce Biotech
 SCIENTIFIC: ${uniqueDomains.slice(0, 10).join(', ')}
-
-=== ARTICLE MIX REQUIRED ===
-- 4-5 MAINSTREAM accessible health articles (Men's Health, Healthline style)
-- 3-4 REGENERATIVE MEDICINE / STEM CELL articles
-- 3-4 LONGEVITY / ANTI-AGING articles
-- 2-3 WELLNESS / NUTRITION articles
-- 2-3 BIOTECH INDUSTRY news
-
-=== THIS WEEK'S FOCUS (prioritize these topics) ===
-PRIMARY: ${randomFocus}
-SECONDARY: ${secondaryFocus}
-Look for recent breakthroughs, clinical trials, or news in these areas.
 
 ${excludeTopics ? `=== EXCLUDE THESE (already covered) ===
 ${excludeTopics}
@@ -254,7 +260,7 @@ Find DIFFERENT stories - different conditions, different institutions.` : ''}
 ${excludeUrls ? `=== SKIP THESE URLs (already used) ===
 ${excludeUrls}` : ''}
 
-Search the web thoroughly and return ONLY valid JSON array:
+After completing all 3 searches, combine results and return ONLY valid JSON array:
 [
   {
     "title": "Article headline",
@@ -298,7 +304,7 @@ CRITICAL:
             tools: [{
               type: 'web_search_20250305',
               name: 'web_search',
-              max_uses: 12
+              max_uses: 5  // Reduced to avoid rate limits
             }],
             messages: [{ role: 'user', content: researchPrompt }]
           })
@@ -943,9 +949,7 @@ NO preamble. Start directly with [`
         requestBody.tools = [{
           type: 'web_search_20250305',
           name: 'web_search',
-          max_uses: 6
-          // Note: allowed_domains removed - some domains block Anthropic's crawler
-          // Source selection is guided via the prompt instead
+          max_uses: 5  // Good balance of quality vs rate limits
         }];
       }
 
@@ -990,8 +994,11 @@ NO preamble. Start directly with [`
       // Clean the output before returning
       return cleanAIOutput(content);
     } catch (error) {
-      setAiStatus(`Error: ${error.message}`);
+      console.error(`Error generating ${sectionType}:`, error);
+      setAiStatus(`⚠️ ${sectionType} failed: ${error.message}. Waiting 30s before continuing...`);
       setIsLoading(prev => ({ ...prev, [sectionType]: false }));
+      // Wait before continuing to next section to avoid cascading rate limits
+      await delay(30000);
       return null;
     }
   };
@@ -2130,34 +2137,25 @@ Translation: The treatments we're writing about today may be routine options in 
       answer: ''
     });
 
-    setAiStatus('🚀 Creating your newsletter with new 3-phase workflow...');
+    setAiStatus('🚀 Creating your newsletter...');
 
     try {
       const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
 
-      // ===== NEW 3-PHASE WORKFLOW =====
-
-      // PHASE 1: Research - Find articles for our audience
-      setAiStatus('🔬 PHASE 1: Researching articles for your audience...');
+      // PHASE 1: Research articles upfront (reduces total web searches)
+      setAiStatus('🔬 Researching articles for your audience...');
       const researchedArticles = await researchArticles();
 
       let articleDistribution = null;
       if (researchedArticles && researchedArticles.length > 0) {
-        // PHASE 2: Distribute - Assign articles to sections
-        setAiStatus('📋 PHASE 2: Distributing articles to sections...');
+        setAiStatus(`✓ Found ${researchedArticles.length} articles, distributing...`);
         articleDistribution = distributeArticles(researchedArticles);
-
-        // Store researched articles in state for reference
-        setAiStatus(`✓ Found ${researchedArticles.length} articles, distributed to sections`);
-        await delay(1000);
+        await delay(3000);
       } else {
-        setAiStatus('⚠️ Research phase returned no articles, falling back to individual searches...');
+        setAiStatus('⚠️ Research returned no articles, sections will search individually...');
+        await delay(3000);
       }
-
-      // ===== END PHASE 1 & 2 =====
-
-      // Now continue with content generation, using article data when available
 
       // Step 1: Fetch PubMed data and update Metrics Dashboard
       setAiStatus('📊 Fetching research metrics... (1/15)');
@@ -2285,7 +2283,9 @@ Write the lead story based on this article. Include the URL as {{LINK:source|${a
         combinedPrompt = `AVOID_TOPIC:${usedStories.slice(-10).join('|')}`;
       }
 
-      const leadContent = await generateWithAI('leadStory', combinedPrompt);
+      // Skip web search if we have pre-researched article (saves API calls)
+      const skipLeadWebSearch = !!articleDistribution?.leadStory;
+      const leadContent = await generateWithAI('leadStory', combinedPrompt, !skipLeadWebSearch);
       if (leadContent) {
         const lines = leadContent.split('\n').filter(l => l.trim());
         const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
@@ -2331,7 +2331,9 @@ Summary: ${article.summary}
 Write the research roundup based on this article. Include the URL as {{LINK:source|${article.url}}}.`;
       }
 
-      const roundupContent = await generateWithAI('researchRoundup', researchPromptContext);
+      // Skip web search if we have pre-researched article
+      const skipResearchWebSearch = !!articleDistribution?.researchRoundup;
+      const roundupContent = await generateWithAI('researchRoundup', researchPromptContext, !skipResearchWebSearch);
       if (roundupContent) {
         const lines = roundupContent.split('\n').filter(l => l.trim());
         const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
@@ -2364,7 +2366,9 @@ ${articles.map((a, i) => `${i+1}. "${a.title}" (${a.source}, ${a.date}) - ${a.su
 Write 3 secondary stories based on these articles. Include URLs as {{LINK:source|url}}.`;
       }
 
-      const secondaryContent = await generateWithAI('secondaryStories', secondaryPromptContext);
+      // Skip web search if we have pre-researched articles
+      const skipSecondaryWebSearch = articleDistribution?.onOurRadar?.length > 0;
+      const secondaryContent = await generateWithAI('secondaryStories', secondaryPromptContext, !skipSecondaryWebSearch);
       if (secondaryContent) {
         try {
           const jsonMatch = secondaryContent.match(/\[[\s\S]*\]/);
@@ -2408,7 +2412,9 @@ Summary: ${article.summary}
 Write the deep dive based on this wellness/nutrition article. Include the URL as {{LINK:source|${article.url}}}.`;
       }
 
-      const deepDiveContent = await generateWithAI('deepDive', deepDivePromptContext);
+      // Skip web search if we have pre-researched article
+      const skipDeepDiveWebSearch = !!articleDistribution?.deepDive;
+      const deepDiveContent = await generateWithAI('deepDive', deepDivePromptContext, !skipDeepDiveWebSearch);
       if (deepDiveContent) {
         const lines = deepDiveContent.split('\n').filter(l => l.trim());
         const headline = lines[0].replace(/^#+\s*/, '').replace(/^\*\*/, '').replace(/\*\*$/, '');
@@ -2443,7 +2449,9 @@ Summary: ${article.summary}
 Find a compelling statistic from this article. Include the URL as {{LINK:source|${article.url}}}.`;
       }
 
-      const statContent = await generateWithAI('statSection', statPromptContext);
+      // Skip web search if we have pre-researched article
+      const skipStatWebSearch = !!articleDistribution?.statOfWeek;
+      const statContent = await generateWithAI('statSection', statPromptContext, !skipStatWebSearch);
       if (statContent) {
         try {
           const jsonMatch = statContent.match(/\{[\s\S]*\}/);
@@ -2483,7 +2491,9 @@ ${articles.map((a, i) => `${i+1}. "${a.title}" (${a.source}, ${a.date}) [${a.url
 Write 7 quick hit news items based on these articles. Include URLs as {{LINK:text|url}}.`;
       }
 
-      const pulseContent = await generateWithAI('thePulse', pulsePromptContext);
+      // Skip web search if we have pre-researched articles
+      const skipPulseWebSearch = articleDistribution?.quickHits?.length > 0;
+      const pulseContent = await generateWithAI('thePulse', pulsePromptContext, !skipPulseWebSearch);
       if (pulseContent) {
         try {
           const jsonMatch = pulseContent.match(/\[[\s\S]*\]/);

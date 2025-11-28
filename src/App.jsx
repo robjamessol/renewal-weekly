@@ -2252,8 +2252,9 @@ Translation: The treatments we're writing about today may be routine options in 
         const pubmedResponse = await fetch(pubmedUrl);
         const pubmedData = await pubmedResponse.json();
         publicationCount = pubmedData?.esearchresult?.count || '47';
+        console.log('✓ PubMed count fetched:', publicationCount);
       } catch (e) {
-        console.log('PubMed fetch failed, using default');
+        console.log('✗ PubMed fetch failed:', e.message);
       }
 
       // Fetch clinical trials count
@@ -2265,9 +2266,12 @@ Translation: The treatments we're writing about today may be routine options in 
         if (trialsData.totalCount) {
           trialsCount = trialsData.totalCount.toLocaleString();
         }
+        console.log('✓ ClinicalTrials count fetched:', trialsCount);
       } catch (e) {
-        console.log('ClinicalTrials fetch failed, using default');
+        console.log('✗ ClinicalTrials fetch failed:', e.message);
       }
+
+      console.log('📊 Updating metrics dashboard with:', { publicationCount, trialsCount });
 
       // Generate varied stock spotlight (rotate between biotech stocks)
       const stocks = [

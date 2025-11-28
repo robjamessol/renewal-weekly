@@ -229,23 +229,29 @@ ${audience.contentPreferences?.want?.slice(0, 5).map(w => `• ${w}`).join('\n')
 === WHAT THEY DON'T WANT ===
 ${audience.contentPreferences?.dontWant?.slice(0, 4).map(w => `• ${w}`).join('\n')}
 
-=== PREFERRED SOURCES (prioritize these) ===
-MAINSTREAM HEALTH: CNN Health, NPR Health, Men's Health, Healthline, WebMD, Prevention
-TRUSTED MEDICAL: Mayo Clinic, Cleveland Clinic, Harvard Health, Johns Hopkins
-BIOTECH NEWS: STAT News, Endpoints News, BioPharma Dive, Fierce Biotech
+=== CRITICAL: DO 3 SEPARATE WEB SEARCHES ===
+You MUST do 3 separate, focused web searches to ensure balanced coverage:
+
+**SEARCH 1 - STEM CELL & REGENERATIVE MEDICINE:**
+Search for: "stem cell therapy clinical trial 2025" OR "regenerative medicine breakthrough"
+Target: 5-6 articles from Nature, Cell, STAT News, Endpoints, NIH, university medical centers
+Focus on: ${randomFocus}
+
+**SEARCH 2 - LONGEVITY & ANTI-AGING:**
+Search for: "longevity research 2025" OR "anti-aging science breakthrough"
+Target: 4-5 articles from longevity.technology, lifespan.io, aging-us.com, Nature Aging
+Focus on: senolytics, NAD+, epigenetic clocks, healthspan research
+
+**SEARCH 3 - WELLNESS & LIFESTYLE:**
+Search for: "health wellness nutrition news 2025" OR "fitness science research"
+Target: 5-6 articles from Healthline, Men's Health, CNN Health, NPR, Mayo Clinic
+Focus on: ${secondaryFocus}, practical health tips, diet research
+
+=== PREFERRED SOURCES ===
+MAINSTREAM: CNN Health, NPR, Men's Health, Healthline, WebMD, Prevention
+MEDICAL: Mayo Clinic, Cleveland Clinic, Harvard Health, Johns Hopkins
+BIOTECH: STAT News, Endpoints News, BioPharma Dive, Fierce Biotech
 SCIENTIFIC: ${uniqueDomains.slice(0, 10).join(', ')}
-
-=== ARTICLE MIX REQUIRED ===
-- 4-5 MAINSTREAM accessible health articles (Men's Health, Healthline style)
-- 3-4 REGENERATIVE MEDICINE / STEM CELL articles
-- 3-4 LONGEVITY / ANTI-AGING articles
-- 2-3 WELLNESS / NUTRITION articles
-- 2-3 BIOTECH INDUSTRY news
-
-=== THIS WEEK'S FOCUS (prioritize these topics) ===
-PRIMARY: ${randomFocus}
-SECONDARY: ${secondaryFocus}
-Look for recent breakthroughs, clinical trials, or news in these areas.
 
 ${excludeTopics ? `=== EXCLUDE THESE (already covered) ===
 ${excludeTopics}
@@ -254,7 +260,7 @@ Find DIFFERENT stories - different conditions, different institutions.` : ''}
 ${excludeUrls ? `=== SKIP THESE URLs (already used) ===
 ${excludeUrls}` : ''}
 
-Search the web thoroughly and return ONLY valid JSON array:
+After completing all 3 searches, combine results and return ONLY valid JSON array:
 [
   {
     "title": "Article headline",

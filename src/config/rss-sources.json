@@ -1,0 +1,18 @@
+{
+  "description": "Curated RSS feed sources for Renewal Weekly",
+  "note": "Add your RSS feed URLs here. The app can fetch directly from these.",
+
+  "sources": {
+    "stemCells": [
+      {
+        "name": "Example Source",
+        "url": "https://example.com/rss",
+        "notes": "Replace with your actual feeds"
+      }
+    ],
+    "longevity": [],
+    "chronicDisease": [],
+    "nutrition": [],
+    "general": []
+  }
+}

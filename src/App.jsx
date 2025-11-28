@@ -298,7 +298,7 @@ CRITICAL:
             tools: [{
               type: 'web_search_20250305',
               name: 'web_search',
-              max_uses: 12
+              max_uses: 5  // Reduced to avoid rate limits
             }],
             messages: [{ role: 'user', content: researchPrompt }]
           })
@@ -943,9 +943,7 @@ NO preamble. Start directly with [`
         requestBody.tools = [{
           type: 'web_search_20250305',
           name: 'web_search',
-          max_uses: 6
-          // Note: allowed_domains removed - some domains block Anthropic's crawler
-          // Source selection is guided via the prompt instead
+          max_uses: 3  // Reduced to avoid rate limits
         }];
       }
 
@@ -990,8 +988,11 @@ NO preamble. Start directly with [`
       // Clean the output before returning
       return cleanAIOutput(content);
     } catch (error) {
-      setAiStatus(`Error: ${error.message}`);
+      console.error(`Error generating ${sectionType}:`, error);
+      setAiStatus(`⚠️ ${sectionType} failed: ${error.message}. Waiting 30s before continuing...`);
       setIsLoading(prev => ({ ...prev, [sectionType]: false }));
+      // Wait before continuing to next section to avoid cascading rate limits
+      await delay(30000);
       return null;
     }
   };

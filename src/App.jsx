@@ -229,18 +229,25 @@ ${audience.contentPreferences?.want?.slice(0, 5).map(w => `• ${w}`).join('\n')
 === WHAT THEY DON'T WANT ===
 ${audience.contentPreferences?.dontWant?.slice(0, 4).map(w => `• ${w}`).join('\n')}
 
-=== CRITICAL: DO 3 SEPARATE WEB SEARCHES ===
+=== CRITICAL RULES ===
+- NO ANIMAL STUDIES - Only human clinical trials, treatments, or research with direct human relevance
+- ALL URLs must link to SPECIFIC ARTICLES, never to a website's homepage
+- ONLY articles from the PAST 14 DAYS - reject anything older
+
+=== DO 3 SEPARATE WEB SEARCHES ===
 You MUST do 3 separate, focused web searches to ensure balanced coverage:
 
 **SEARCH 1 - STEM CELL & REGENERATIVE MEDICINE:**
-Search for: "stem cell therapy clinical trial 2025" OR "regenerative medicine breakthrough"
+Search for: "stem cell therapy clinical trial human 2025" OR "regenerative medicine breakthrough"
 Target: 5-6 articles from Nature, Cell, STAT News, Endpoints, NIH, university medical centers
 Focus on: ${randomFocus}
+EXCLUDE: Animal studies, mouse models, pre-clinical research
 
 **SEARCH 2 - LONGEVITY & ANTI-AGING:**
-Search for: "longevity research 2025" OR "anti-aging science breakthrough"
+Search for: "longevity research human 2025" OR "anti-aging science breakthrough"
 Target: 4-5 articles from longevity.technology, lifespan.io, aging-us.com, Nature Aging
 Focus on: senolytics, NAD+, epigenetic clocks, healthspan research
+EXCLUDE: Animal studies, mouse models
 
 **SEARCH 3 - WELLNESS & LIFESTYLE:**
 Search for: "health wellness nutrition news 2025" OR "fitness science research"
@@ -610,6 +617,11 @@ It's almost Thanksgiving, and perhaps unsurprisingly, we're feeling thankful tod
 
       leadStory: `Search for a BROADLY ACCESSIBLE health/wellness story related to stem cells or regenerative medicine from the past 7 days.
 
+⚠️ CRITICAL RULES:
+- NO ANIMAL STUDIES - Only human clinical trials, treatments, or research with direct human relevance
+- ALL URLs must link to the SPECIFIC ARTICLE, never to a website's homepage
+- ONLY articles from the PAST 7 DAYS - reject anything older
+
 ⚠️ IMPORTANT SOURCE GUIDANCE:
 - PRIORITIZE: Mainstream health publications (CNN Health, NYT Health, WebMD, Healthline, Medical News Today, NPR Health)
 - PRIORITIZE: Stories with wide appeal (affecting millions: diabetes, heart disease, joint pain, aging, vision loss)
@@ -637,7 +649,7 @@ Para 1 (2 sentences max): "For [X million] Americans with [condition], the progn
 
 Para 2 (1 sentence): "That changed this week."
 
-Para 3: **Here's what happened:** Key findings in 2-3 sentences. One {{LINK:source|url}}.
+Para 3: **Here's what happened:** Key findings in 2-3 sentences. One {{LINK:Publisher Name|specific-article-url}}.
 
 Para 4: **Why this matters now:** 2 sentences. What's different about this approach?
 
@@ -645,7 +657,7 @@ Para 5: **What's next:** 1-2 sentences. Timeline, next steps.
 
 Para 6: One short quote from researcher (1 sentence).
 
-Para 7: **The zoom out:** 1-2 sentences. Bigger picture. One {{LINK:source|url}}.
+Para 7: **The zoom out:** 1-2 sentences. Bigger picture. One {{LINK:Publisher Name|specific-article-url}}.
 
 WRITING RULES:
 - Every sentence must earn its place. Cut filler words.
@@ -653,9 +665,15 @@ WRITING RULES:
 - NO flowery language ("watch your vision slowly vanish as cells die")
 - YES: "Patients got better" NOT: "demonstrated statistically significant improvements"
 - Keep paragraphs to 2-3 sentences MAX
+- {{LINK}} format: Use PUBLISHER NAME (e.g., "CNN Health", "Nature") as display text
 - Total: 280-320 words. Count them.`,
 
       researchRoundup: `Find SCIENTIFIC RESEARCH from peer-reviewed journals published in the PAST 2 WEEKS.
+
+⚠️ CRITICAL RULES:
+- NO ANIMAL STUDIES - Only human clinical trials or research with direct human relevance
+- ALL URLs must link to the SPECIFIC ARTICLE, never to a journal's homepage
+- ONLY articles from the PAST 14 DAYS - reject anything older
 
 ⚠️ SOURCES TO USE:
 - Nature, Cell, Science, NEJM, The Lancet, JAMA, Stem Cell Reports, PubMed
@@ -674,7 +692,7 @@ STRICT FORMAT (120-150 words total):
 
 If you or someone you love has [condition], this is worth reading twice.
 
-[KEY FINDINGS - 2 sentences with {{LINK:source|url}}]
+[KEY FINDINGS - 2 sentences with {{LINK:Publisher Name|specific-article-url}}]
 
 **What you should know:** [Practical info - cost, availability, access]
 
@@ -682,9 +700,16 @@ If you or someone you love has [condition], this is worth reading twice.
 
 **Bottom line:** [One actionable next step]
 
+{{LINK}} format: Use PUBLISHER NAME (e.g., "Nature", "NEJM") as display text, link to SPECIFIC article.
+
 START DIRECTLY WITH THE HEADLINE. No introduction.`,
 
       secondaryStories: `Search for 3 different recent stem cell/regenerative medicine stories from the PAST 14 DAYS. Each story should be from a DIFFERENT topic area.
+
+⚠️ CRITICAL RULES:
+- NO ANIMAL STUDIES - Only human clinical trials, treatments, or research with direct human relevance
+- ALL URLs must link to the SPECIFIC ARTICLE, never to a website's homepage
+- ONLY articles from the PAST 14 DAYS - reject anything older
 
 ⚠️ SOURCE GUIDANCE:
 - Use ANY credible sources: mainstream news, health publications, scientific journals, industry news
@@ -697,25 +722,26 @@ START DIRECTLY WITH THE HEADLINE. No introduction.`,
   {
     "boldLead": "TEASER-STYLE HEADLINE (3-5 words) that creates curiosity",
     "content": "75-100 words. Include {{LINK:source|url}} inline. Be specific.",
-    "sources": [{"title": "Source Name", "url": "https://url.com", "date": "Nov 20, 2025"}]
+    "sources": [{"title": "Publisher Name (e.g., CNN, Nature, STAT News)", "url": "https://full-article-url.com/specific-article", "date": "Nov 20, 2025"}]
   },
   {
     "boldLead": "Different teaser headline",
     "content": "75-100 words with {{LINK:link|url}}.",
-    "sources": [{"title": "Source", "url": "https://url.com", "date": "Nov 18, 2025"}]
+    "sources": [{"title": "Publisher Name", "url": "https://full-article-url.com/specific-article", "date": "Nov 18, 2025"}]
   },
   {
     "boldLead": "Third teaser headline",
     "content": "75-100 words with {{LINK:link|url}}.",
-    "sources": [{"title": "Source", "url": "https://url.com", "date": "Nov 15, 2025"}]
+    "sources": [{"title": "Publisher Name", "url": "https://full-article-url.com/specific-article", "date": "Nov 15, 2025"}]
   }
 ]
 
 TEASER HEADLINE RULES:
 - 3-5 words max, creates curiosity
-- GOOD: "Chemo's exit strategy", "Mice first, humans next", "The 37% surge"
-- BAD: "Stanford Research Update", "New Diabetes Treatment", "Study Shows Results"
-NO dashes or em dashes in boldLead. Just clever, punchy phrases.`,
+- GOOD: "Chemo's exit strategy", "Trial results are in", "The 37% surge"
+- BAD: "Stanford Research Update", "New Diabetes Treatment", "Study Shows Results", "Mice first, humans next"
+NO dashes or em dashes in boldLead. Just clever, punchy phrases.
+NO animal study references in headlines.`,
 
       deepDive: `Search for a practical nutrition/wellness topic from the PAST 14 DAYS.
 ${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
@@ -723,7 +749,10 @@ ${customPrompt && customPrompt.startsWith('AVOID_TOPIC:') ? `
 Find a DIFFERENT topic entirely.
 ${customPrompt.split('|')[1] ? `Topic: ${customPrompt.split('|')[1]}` : ''}` : (customPrompt ? `Topic: ${customPrompt}` : '')}
 
-⚠️ DATE REQUIREMENT: Sources MUST be from the PAST 14 DAYS. Reject anything older than 2 weeks.
+⚠️ CRITICAL RULES:
+- NO ANIMAL STUDIES - Only human research, clinical trials, or directly applicable human health info
+- ALL URLs must link to SPECIFIC ARTICLES, never to a website's homepage
+- Sources MUST be from the PAST 14 DAYS - reject anything older than 2 weeks
 
 ⚠️ PLAIN ENGLISH REQUIRED:
 - Write like you're explaining to your mom or neighbor
@@ -747,7 +776,7 @@ Then write TIGHT prose (like Men's Health or Healthline style):
 
 Para 1: Contrarian hook (1-2 sentences). Challenge a common belief.
 
-Para 2: What the research says with {{LINK:source|url}} (2 sentences). Recent study only.
+Para 2: What the research says with {{LINK:Publisher Name|specific-article-url}} (2 sentences). Recent study only. MUST link to the actual article.
 
 Para 3: **What to add:** (use • bullets)
 • Food/habit — specific amount (e.g., "2-3 servings/week")
@@ -760,11 +789,18 @@ Para 4: **What to skip:**
 
 Para 5: **Why it matters for healthy aging:** (1-2 sentences, no jargon)
 
-Para 6: One actionable takeaway. {{LINK:resource|url}}.
+Para 6: One actionable takeaway with {{LINK:Publisher Name|specific-article-url}}.
+
+IMPORTANT: Every {{LINK}} must use the PUBLISHER NAME (e.g., "Harvard Health", "Mayo Clinic") as the display text, and link to the SPECIFIC ARTICLE URL.
 
 Use • for bullets, — for em dashes. Total: 180-220 words.`,
 
       statSection: `Search for a compelling statistic about health, wellness, longevity, OR regenerative medicine from the PAST 14 DAYS.
+
+⚠️ CRITICAL RULES:
+- NO ANIMAL STUDIES - Only human-relevant statistics
+- ALL URLs must link to the SPECIFIC ARTICLE, never to a website's homepage
+- ONLY statistics from the PAST 14 DAYS - reject anything older
 
 ⚠️ STAT TOPICS (mix it up - not always stem cells):
 - Health statistics that affect your audience (aging, heart health, diabetes, joint health)
@@ -772,7 +808,7 @@ Use • for bullets, — for em dashes. Total: 180-220 words.`,
 - Regenerative medicine market/trends
 - Wellness statistics (sleep, exercise, nutrition impact)
 
-⚠️ MUST include {{LINK:source|url}} to the source article in the content.
+⚠️ MUST include {{LINK:Publisher Name|specific-article-url}} to the source article in the content.
 
 Return ONLY valid JSON with this EXACT structure:
 {
@@ -784,25 +820,27 @@ Return ONLY valid JSON with this EXACT structure:
 
 For context: [Supporting data that makes it relatable - 2 sentences]
 
-**The backstory:** [Background info with {{LINK:source title|url}} - 2 sentences]
+**The backstory:** [Background info with {{LINK:Publisher Name|specific-article-url}} - 2 sentences]
 
-Translation: [What this means practically for readers] {{LINK:Read more|source-url}}."
+Translation: [What this means practically for readers] {{LINK:Publisher Name|specific-article-url}}."
 }
 
 CRITICAL:
 - primeNumber format: $403B, 67%, 2,400, 47 days (visually impactful)
 - headline: lowercase, descriptive, creates curiosity
-- content: MUST include at least one {{LINK:source|url}}
+- content: MUST include at least one {{LINK:Publisher Name|url}} - use publisher name as display text
 - Plain English - explain like talking to a friend
 - Source MUST be from past 14 days`,
 
       thePulse: `Search for 7 FRESH health/wellness/biotech news items from the PAST 14 DAYS ONLY.
 
-⚠️ CRITICAL: Each refresh MUST return COMPLETELY DIFFERENT items. Never repeat topics.
+⚠️ CRITICAL RULES:
+- NO ANIMAL STUDIES - Only human clinical trials, treatments, or news with direct human relevance
+- ALL URLs must link to SPECIFIC ARTICLES, never to a website's homepage
+- ONLY content from the PAST 14 DAYS - reject anything older
+- Each refresh MUST return COMPLETELY DIFFERENT items. Never repeat topics.
 
 ${customPrompt ? `⚠️ ${customPrompt}` : ''}
-
-⚠️ DATE REQUIREMENT: ONLY content from the past 14 days. Reject anything older.
 
 ⚠️ SOURCE MIX (use variety - not just scientific journals):
 - 2-3 from mainstream health news (CNN Health, NPR, NYT, Men's Health, Healthline)
@@ -816,26 +854,28 @@ CONTENT MIX - Balance of:
 - Wellness trends backed by research
 
 Return ONLY valid JSON array. Each item should be ONE string with this format:
-- Company/institution name linked: {{LINK:Name|url}}
+- Company/institution name linked: {{LINK:Name|specific-article-url}}
 - Brief news (under 25 words total)
 - Source and date in brackets at end: [Source Name, Month Year]
 
 EXAMPLE:
 [
-  "{{LINK:Mayo Clinic|https://example.com}} launched new stem cell treatment for knee arthritis [CNN Health, Nov 2025]",
-  "Adults over 50 who {{LINK:walk 7,000 steps daily|https://example.com}} show 50% lower mortality risk [Healthline, Nov 2025]",
-  "{{LINK:CRISPR Therapeutics|https://example.com}} received FDA approval for sickle cell gene therapy [STAT News, Nov 2025]"
+  "{{LINK:Mayo Clinic|https://example.com/specific-article}} launched new stem cell treatment for knee arthritis [CNN Health, Nov 2025]",
+  "Adults over 50 who {{LINK:walk 7,000 steps daily|https://example.com/specific-article}} show 50% lower mortality risk [Healthline, Nov 2025]",
+  "{{LINK:CRISPR Therapeutics|https://example.com/specific-article}} received FDA approval for sickle cell gene therapy [STAT News, Nov 2025]"
 ]
 
 Return exactly 7 items. Each must have:
-- At least one {{LINK:text|url}}
+- At least one {{LINK:text|specific-article-url}} - NEVER link to homepage
 - Source attribution in [brackets] at end
 - Be under 25 words (excluding the bracketed source)
 - MUST be from past 14 days - verify the date`,
 
-      recommendations: `Search for FRESH, NEW content to recommend. Find REAL, WORKING URLs from the PAST 30 DAYS.
+      recommendations: `Search for FRESH, NEW content to recommend. Find REAL, WORKING URLs.
 
-⚠️ CRITICAL: Each refresh MUST return COMPLETELY DIFFERENT recommendations. Never repeat the same links.
+⚠️ CRITICAL RULES:
+- ALL URLs must link to SPECIFIC content (articles, videos, podcasts, tools), never to homepages
+- Each refresh MUST return COMPLETELY DIFFERENT recommendations. Never repeat the same links.
 
 ${customPrompt ? `⚠️ AVOID THESE (already used): ${customPrompt}` : ''}
 
@@ -850,30 +890,32 @@ Return ONLY valid JSON:
     "prefix": "Short intro text ",
     "linkText": "the linked part",
     "suffix": " context or source",
-    "url": "https://REAL-working-url.com"
+    "url": "https://REAL-working-url.com/specific-article"
   },
   "watch": {
     "prefix": "",
     "linkText": "Descriptive video title",
     "suffix": " (Source/Channel)",
-    "url": "https://REAL-youtube-or-video-url.com"
+    "url": "https://youtube.com/watch?v=specific-video"
   },
   "try": {
     "prefix": "The ",
     "linkText": "tool or resource name",
     "suffix": " (credible source)",
-    "url": "https://REAL-resource-url.com"
+    "url": "https://REAL-resource-url.com/specific-tool"
   },
   "listen": {
     "prefix": "",
     "linkText": "Podcast name or episode",
     "suffix": " podcast",
-    "url": "https://REAL-podcast-url.com"
+    "url": "https://specific-podcast-episode-url.com"
   }
 }
 
 REQUIREMENTS:
-- ALL URLs must be real, working, and recent (within past 30 days for articles)
+- READ: Must be from PAST 14 DAYS (freshness required)
+- WATCH, TRY, LISTEN: Can be evergreen/older content (no freshness requirement)
+- ALL URLs must be real, working, and link to SPECIFIC content (not homepages)
 - Content must be accessible to general audience (not just scientists)
 - Mix health, longevity, wellness, and lifestyle topics
 - Genuinely useful for adults 40-80 interested in living healthier`,
@@ -881,7 +923,7 @@ REQUIREMENTS:
       gameTrivia: `Create fun health trivia game. Return JSON:
 {"title":"","intro":"1-2 sentences","content":"questions","answer":"answers"}`,
 
-      worthKnowing: `Create 3 "Worth Knowing" items for a health/wellness newsletter.
+      worthKnowing: `Create 4 "Worth Knowing" items for a health/wellness newsletter.
 
 ⚠️ CRITICAL: Each refresh MUST return COMPLETELY DIFFERENT items.
 
@@ -890,6 +932,12 @@ ${customPrompt ? `⚠️ ${customPrompt}` : ''}
 ⚠️ TITLES MUST BE TEASER-STYLE (3-5 words, creates curiosity):
 - GOOD: "The clinic checklist", "Mark your calendar", "Trial finder 101"
 - BAD: "Health Awareness Event", "Important Tips", "Useful Resource"
+
+⚠️ FORMATTING RULES:
+- For ANY list of tips/items, format as a proper bulleted list with line breaks
+- Use "• " for bullets, each on its own line
+- Include source links INLINE using {{LINK:Publisher Name|url}} format
+- ALL URLs must link to SPECIFIC ARTICLES, never to a website's homepage
 
 Return ONLY valid JSON array with this EXACT structure:
 [
@@ -904,23 +952,32 @@ Return ONLY valid JSON array with this EXACT structure:
     "type": "guide",
     "title": "TEASER HEADLINE (3-5 words)",
     "date": "",
-    "description": "(1) First tip. (2) Second tip. (3) Third tip. Use everyday language.",
-    "link": "https://credible-source.com"
+    "description": "Format as bulleted list:\\n• First tip — explanation\\n• Second tip — explanation\\n• Third tip — explanation\\n\\nSource: {{LINK:Publisher Name|specific-article-url}}",
+    "link": "https://specific-article-url.com"
   },
   {
     "type": "resource",
     "title": "TEASER HEADLINE (3-5 words)",
     "date": "",
-    "description": "What it is and why it's useful. Plain English explanation.",
-    "link": "https://real-url.com"
+    "description": "What it is and why it's useful. Include {{LINK:Publisher Name|url}} inline.",
+    "link": "https://specific-article-url.com"
+  },
+  {
+    "type": "tip",
+    "title": "TEASER HEADLINE (3-5 words)",
+    "date": "",
+    "description": "A practical health tip with source. Format lists with bullets:\\n• Item one\\n• Item two\\n\\nLearn more: {{LINK:Publisher Name|url}}",
+    "link": "https://specific-article-url.com"
   }
 ]
 
 REQUIREMENTS:
 - awareness: Upcoming health event (within 2 weeks) - think beyond stem cells (heart health, mental health, etc.)
-- guide: Practical tips your mom would understand - no jargon
-- resource: Real, working URL to helpful tool
+- guide: Practical tips formatted as BULLETED LIST - your mom would understand - no jargon
+- resource: Real, working URL to helpful tool - link to SPECIFIC article
+- tip: Actionable health tip with source citation
 - ALL descriptions in plain English - explain like talking to a friend
+- ALL links to SPECIFIC ARTICLES, not homepages
 
 NO preamble. Start directly with [`
     };
@@ -2013,7 +2070,7 @@ Translation: The treatments we're writing about today may be routine options in 
                 if (Array.isArray(parsed) && parsed.length >= 1) {
                   updated.worthKnowing = {
                     ...prev.worthKnowing,
-                    items: parsed.slice(0, 3).map(item => ({
+                    items: parsed.slice(0, 4).map(item => ({
                       type: item.type || 'resource',
                       title: item.title || '',
                       date: item.date || '',
@@ -2538,7 +2595,7 @@ Write 7 quick hit news items based on these articles. Include URLs as {{LINK:tex
                 ...prev,
                 worthKnowing: {
                   ...prev.worthKnowing,
-                  items: parsed.slice(0, 3).map(item => ({
+                  items: parsed.slice(0, 4).map(item => ({
                     type: item.type || 'resource',
                     title: item.title || '',
                     date: item.date || '',

@@ -1,0 +1,332 @@
+{
+  "description": "Curated RSS feed sources for Renewal Weekly. Just paste feed URLs below!",
+
+  "feeds": [
+    {
+      "url": "https://www.nature.com/subjects/stem-cells.rss",
+      "category": "stemCells",
+      "name": "Nature Stem Cells"
+    },
+    {
+      "url": "https://www.nature.com/subjects/regenerative-medicine.rss",
+      "category": "regenerativeMedicine",
+      "name": "Nature Regenerative Medicine"
+    },
+    {
+      "url": "https://www.nature.com/subjects/ageing.rss",
+      "category": "longevity",
+      "name": "Nature Ageing"
+    },
+    {
+      "url": "https://www.nature.com/nm/rss_current.xml",
+      "category": "regenerativeMedicine",
+      "name": "Nature Medicine"
+    },
+    {
+      "url": "https://www.nature.com/subjects/stem-cells/ncomms.rss",
+      "category": "stemCells",
+      "name": "Nature Communications Stem Cells"
+    },
+    {
+      "url": "https://www.nature.com/subjects/stem-cells/srep.rss",
+      "category": "stemCells",
+      "name": "Scientific Reports Stem Cells"
+    },
+    {
+      "url": "https://www.nature.com/npjregenmed.rss",
+      "category": "regenerativeMedicine",
+      "name": "npj Regenerative Medicine"
+    },
+    {
+      "url": "https://www.cell.com/cell-stem-cell/rss",
+      "category": "stemCells",
+      "name": "Cell Stem Cell"
+    },
+    {
+      "url": "https://stemcellres.biomedcentral.com/rss",
+      "category": "regenerativeMedicine",
+      "name": "Stem Cell Research & Therapy"
+    },
+    {
+      "url": "https://www.nia.nih.gov/newsroom/rss",
+      "category": "longevity",
+      "name": "NIA Newsroom"
+    },
+    {
+      "url": "https://stemcells.nih.gov/rss.xml",
+      "category": "stemCells",
+      "name": "NIH Stem Cell Information"
+    },
+    {
+      "url": "https://medlineplus.gov/rss/healthdaynews.xml",
+      "category": "chronicDisease",
+      "name": "MedlinePlus Health Day News"
+    },
+    {
+      "url": "https://medlineplus.gov/chronicpain/rss.xml",
+      "category": "chronicDisease",
+      "name": "MedlinePlus Chronic Pain"
+    },
+    {
+      "url": "https://medlineplus.gov/nutrition/rss.xml",
+      "category": "nutrition",
+      "name": "MedlinePlus Nutrition"
+    },
+    {
+      "url": "https://medlineplus.gov/dietarysupplements/rss.xml",
+      "category": "supplements",
+      "name": "MedlinePlus Dietary Supplements"
+    },
+    {
+      "url": "https://clinicaltrials.gov/search/rss?cond=stem%20cells",
+      "category": "clinicalTrials",
+      "name": "ClinicalTrials.gov Stem Cells"
+    },
+    {
+      "url": "https://clinicaltrials.gov/search/rss?cond=regenerative%20medicine",
+      "category": "clinicalTrials",
+      "name": "ClinicalTrials.gov Regenerative Medicine"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1XigQ8Atc1EL7v4y5N7BnywymiYn6Mh79CMzmB9za_lbXcn1xr/?limit=20&utm_campaign=pubmed-2&fc=20251128130949",
+      "category": "stemCells",
+      "name": "PubMed Stem Cell Therapy"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1H77a1bY6296rOKq2SOEKPC3RsP94Y35oE0uAQ8cmkOyjAmgg8/?limit=15&utm_campaign=pubmed-2&fc=20251128131039",
+      "category": "longevity",
+      "name": "PubMed Anti-Aging"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1rUyv9-0xUinl5i8Zi4vtU_Rq7h9llm2cE2pVkT4d-UmDVdomZ/?limit=15&utm_campaign=pubmed-2&fc=20251128131122",
+      "category": "nutrition",
+      "name": "PubMed Human Nutrition Research"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1DeUIcPgNLDLQQ46NHOgORdhmCTMlhxA7L6rpr9PGVzoWOW9US/?limit=15&utm_campaign=pubmed-2&fc=20251128131251",
+      "category": "chronicDisease",
+      "name": "PubMed Heart Disease Clinical"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1XGMw2eR5NxJwwu3pE-Dccjw3duTqnVKsykp0n54sg1Nzs-UfT/?limit=20&utm_campaign=pubmed-2&fc=20251128131431",
+      "category": "clinicalTrials",
+      "name": "PubMed Stem Cell Clinical Trials Phase 2/3/4"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/14MpKbWO9zvEebs3RZ_MPW6-m8YgDPYKKde4jz2qcLT4OwUs_4/?limit=15&utm_campaign=pubmed-2&fc=20251128131544",
+      "category": "regenerativeMedicine",
+      "name": "PubMed Regenerative Medicine"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/18ervbTh5APQvfhRqjltg7csRGgQIAT7Oulq-KZv7iHqMw7cqd/?limit=15&utm_campaign=pubmed-2&fc=20251128131609",
+      "category": "supplements",
+      "name": "PubMed Vitamins"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1tUjNYI-_9Jm-9D-1hLyBzY-BHIoCZ2wWMF6XbPZR2LHKBgYWl/?limit=15&utm_campaign=pubmed-2&fc=20251128131631",
+      "category": "chronicDisease",
+      "name": "PubMed Inflammation"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/1671MaA5CeAI2o7Om5-8rpgFOXvDr2xCkSKtDQGDhriNOUTo2l/?limit=15&utm_campaign=pubmed-2&fc=20251128131713",
+      "category": "chronicDisease",
+      "name": "PubMed Chronic Pain"
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/18qVEVbjJjor2lBglGU9aAW-4fdjG_x2SE-dsMdEOX3dco1w3I/?limit=20&utm_campaign=pubmed-2&fc=20251128131812",
+      "category": "longevity",
+      "name": "PubMed Healthy Aging",
+      "ignoreFreshness": true
+    },
+    {
+      "url": "https://www.science.org/rss/news_and_articles.xml",
+      "category": "regenerativeMedicine",
+      "name": "Science Magazine News"
+    },
+    {
+      "url": "https://www.thelancet.com/journals/lancet/rss",
+      "category": "chronicDisease",
+      "name": "The Lancet RSS"
+    },
+    {
+      "url": "https://www.thelancet.com/journals/eclinm/rss",
+      "category": "clinicalTrials",
+      "name": "EClinicalMedicine RSS"
+    },
+    {
+      "url": "https://jamanetwork.com/journals/jama/rss",
+      "category": "regenerativeMedicine",
+      "name": "JAMA RSS"
+    },
+    {
+      "url": "https://www.tandfonline.com/action/showFeed?jc=irme20&type=feedsAtom",
+      "category": "regenerativeMedicine",
+      "name": "Regenerative Medicine Journal"
+    },
+    {
+      "url": "https://www.sciencedirect.com/journal/regenerative-therapy/rss",
+      "category": "regenerativeMedicine",
+      "name": "Regenerative Therapy Journal"
+    },
+    {
+      "url": "https://link.springer.com/journal/40883/rss",
+      "category": "regenerativeMedicine",
+      "name": "Regenerative Engineering and Translational Medicine"
+    },
+    {
+      "url": "https://www.benthamdirect.com/content/journals/cscr/rss",
+      "category": "stemCells",
+      "name": "Current Stem Cell Research & Therapy"
+    },
+    {
+      "url": "https://www.lifespan.io/feed/",
+      "category": "longevity",
+      "name": "Lifespan.io"
+    },
+    {
+      "url": "https://www.fightaging.org/feed",
+      "category": "longevity",
+      "name": "Fight Aging!"
+    },
+    {
+      "url": "https://longevity.technology/feed/",
+      "category": "longevity",
+      "name": "Longevity.Technology"
+    },
+    {
+      "url": "https://www.afar.org/rss/news",
+      "category": "longevity",
+      "name": "AFAR Gerontology Advances"
+    },
+    {
+      "url": "https://www.aging-us.com/rss",
+      "category": "longevity",
+      "name": "Aging-US Journal"
+    },
+    {
+      "url": "https://www.healthrising.org/feed/",
+      "category": "chronicDisease",
+      "name": "Health Rising ME/CFS"
+    },
+    {
+      "url": "https://www.parkinson.org/rss/research",
+      "category": "chronicDisease",
+      "name": "Parkinson's Foundation Research"
+    },
+    {
+      "url": "https://www.alzforum.org/rss.xml",
+      "category": "chronicDisease",
+      "name": "ALZFORUM Alzheimer's News"
+    },
+    {
+      "url": "https://newsnetwork.mayoclinic.org/publication_type/research/rss/",
+      "category": "clinicalTrials",
+      "name": "Mayo Clinic Research"
+    },
+    {
+      "url": "https://www.nutraingredients.com/RSS",
+      "category": "supplements",
+      "name": "NutraIngredients"
+    },
+    {
+      "url": "https://examine.com/feed/",
+      "category": "supplements",
+      "name": "Examine.com Evidence Reviews"
+    },
+    {
+      "url": "https://newsinhealth.nih.gov/rss.xml",
+      "category": "nutrition",
+      "name": "NIH News in Health Nutrition"
+    },
+    {
+      "url": "https://nutritionfacts.org/feed/",
+      "category": "nutrition",
+      "name": "NutritionFacts.org"
+    },
+    {
+      "url": "https://www.isscr.org/rss/news",
+      "category": "stemCells",
+      "name": "ISSCR News"
+    },
+    {
+      "url": "https://www.biospace.com/feed/",
+      "category": "regenerativeMedicine",
+      "name": "BioSpace Biotech"
+    },
+    {
+      "url": "https://www.statnews.com/topic/stem-cells/feed/",
+      "category": "stemCells",
+      "name": "Stat News Stem Cells"
+    },
+    {
+      "url": "https://www.eurekalert.org/rss.jsp",
+      "category": "clinicalTrials",
+      "name": "EurekAlert Research News"
+    },
+    {
+      "url": "https://www.medicalxpress.com/rss/",
+      "category": "regenerativeMedicine",
+      "name": "Medical Xpress"
+    },
+    {
+      "url": "https://www.sciencedaily.com/rss/health_medicine/stem_cells.xml",
+      "category": "stemCells",
+      "name": "ScienceDaily Stem Cells"
+    },
+    {
+      "url": "https://www.sciencedaily.com/rss/health_medicine/chronic_illness.xml",
+      "category": "chronicDisease",
+      "name": "ScienceDaily Chronic Illness"
+    },
+    {
+      "url": "https://blog.cirm.ca.gov/feed/",
+      "category": "regenerativeMedicine",
+      "name": "CIRM Blog"
+    },
+    {
+      "url": "https://www.signalsblog.ca/feed/",
+      "category": "regenerativeMedicine",
+      "name": "Signals Blog"
+    },
+    {
+      "url": "https://www.regmednet.com/feed/",
+      "category": "regenerativeMedicine",
+      "name": "RegMedNet"
+    },
+    {
+      "url": "https://www.healthline.com/health-news/rss",
+      "category": "chronicDisease",
+      "name": "Healthline Health News"
+    },
+    {
+      "url": "https://www.verywellhealth.com/health-news-rss-5222115",
+      "category": "chronicDisease",
+      "name": "Verywell Health News"
+    },
+    {
+      "url": "https://www.webmd.com/rss/default.aspx",
+      "category": "regenerativeMedicine",
+      "name": "WebMD Health News"
+    },
+    {
+      "url": "https://www.webmd.com/healthy-aging/rss.xml",
+      "category": "longevity",
+      "name": "WebMD Healthy Aging"
+    },
+    {
+      "url": "https://newsnetwork.mayoclinic.org/feed/",
+      "category": "nutrition",
+      "name": "Mayo Clinic News Network"
+    },
+    {
+      "url": "https://rss.cnn.com/rss/cnn_health.rss",
+      "category": "longevity",
+      "name": "CNN Health"
+    },
+    {
+      "url": "https://rss.nytimes.com/services/xml/rss/nyt/Health.xml",
+      "category": "chronicDisease",
+      "name": "NYT Health"
+    }
+  ]
+}

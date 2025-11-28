@@ -943,7 +943,7 @@ NO preamble. Start directly with [`
         requestBody.tools = [{
           type: 'web_search_20250305',
           name: 'web_search',
-          max_uses: 3  // Reduced to avoid rate limits
+          max_uses: 5  // Good balance of quality vs rate limits
         }];
       }
 
@@ -2131,34 +2131,14 @@ Translation: The treatments we're writing about today may be routine options in 
       answer: ''
     });
 
-    setAiStatus('🚀 Creating your newsletter with new 3-phase workflow...');
+    setAiStatus('🚀 Creating your newsletter...');
 
     try {
       const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
 
-      // ===== NEW 3-PHASE WORKFLOW =====
-
-      // PHASE 1: Research - Find articles for our audience
-      setAiStatus('🔬 PHASE 1: Researching articles for your audience...');
-      const researchedArticles = await researchArticles();
-
+      // Skip 3-phase research to reduce API calls - each section does its own search
       let articleDistribution = null;
-      if (researchedArticles && researchedArticles.length > 0) {
-        // PHASE 2: Distribute - Assign articles to sections
-        setAiStatus('📋 PHASE 2: Distributing articles to sections...');
-        articleDistribution = distributeArticles(researchedArticles);
-
-        // Store researched articles in state for reference
-        setAiStatus(`✓ Found ${researchedArticles.length} articles, distributed to sections`);
-        await delay(1000);
-      } else {
-        setAiStatus('⚠️ Research phase returned no articles, falling back to individual searches...');
-      }
-
-      // ===== END PHASE 1 & 2 =====
-
-      // Now continue with content generation, using article data when available
 
       // Step 1: Fetch PubMed data and update Metrics Dashboard
       setAiStatus('📊 Fetching research metrics... (1/15)');

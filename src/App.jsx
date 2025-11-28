@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { getStyleRules, getAudienceContext, getSourceGuidance, getWordLimits, sources, audience } from './config';
+import { fetchArticlePool, buildMatchingPrompt, CONTENT_TO_AVOID } from './services/rss';
 
 // Error Boundary Component to catch rendering errors and prevent white screen
 class ErrorBoundary extends Component {
@@ -150,207 +151,144 @@ const RenewalWeeklyCompiler = () => {
 
   // ===== NEW 3-PHASE ARCHITECTURE =====
 
-  // PHASE 1: Research - Find 15-20 articles that would excite our audience
+  // PHASE 1: Research - Fetch articles from curated RSS feeds (no web search!)
+  // This replaces unreliable web search with guaranteed real URLs from RSS.app
   const researchArticles = async () => {
     if (!anthropicApiKey) return null;
 
-    setAiStatus('🔬 Phase 1: Researching articles for your audience...');
-
-    // Build preferred domains from sources.json for domain allow list
-    const allDomains = [
-      ...(sources.stemCell?.domains || []),
-      ...(sources.longevity?.domains || []),
-      ...(sources.wellness?.domains || []),
-      ...(sources.supplements?.domains || []),
-      ...(sources.nutrition?.domains || []),
-      ...(sources.fitness?.domains || []),
-      ...(sources.antiAging?.domains || [])
-    ];
-    // Add mainstream health sources not in sources.json
-    const mainstreamSources = [
-      'menshealth.com', 'healthline.com', 'webmd.com', 'prevention.com',
-      'cnn.com', 'npr.org', 'mayoclinic.org', 'clevelandclinic.org',
-      'health.harvard.edu', 'statnews.com', 'endpoints.news',
-      'biospace.com', 'fiercebiotech.com', 'medicalxpress.com'
-    ];
-    // Domains that block Anthropic's crawler - exclude these
-    const blockedDomains = [
-      'nytimes.com', 'washingtonpost.com', 'verywellmind.com', 'verywellfit.com',
-      'verywellhealth.com', 'everydayhealth.com', 'bbc.com', 'newscientist.com',
-      'technologyreview.com', 'newsweek.com', 'theatlantic.com', 'wired.com',
-      'forbes.com', 'businessinsider.com', 'time.com', 'usatoday.com',
-      'wsj.com', 'bloomberg.com', 'theguardian.com'
-    ];
-    const uniqueDomains = [...new Set([...allDomains, ...mainstreamSources])]
-      .filter(d => !blockedDomains.includes(d));
-
-    // Build audience context from audience.json
-    const audienceInterests = audience.interests?.join(', ') || 'stem cells, regenerative medicine';
-    const audienceConditions = audience.conditions?.slice(0, 5).join(', ') || 'chronic conditions';
-    const highEngagement = audience.engagementTriggers?.highEngagement?.slice(0, 4).join(', ') || 'FDA approvals, clinical trials';
-
-    const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    const twoWeeksAgo = new Date(Date.now() - 14*24*60*60*1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-
-    // Randomize topic focus each time to get different results
-    const topicFocuses = [
-      'diabetes and blood sugar management',
-      'joint pain and arthritis treatments',
-      'heart disease and cardiovascular health',
-      'vision loss and eye treatments',
-      'neurological conditions (Parkinsons, MS, Alzheimers)',
-      'chronic pain management',
-      'skin aging and wound healing',
-      'immune system and autoimmune conditions',
-      'muscle and bone regeneration',
-      'organ repair and transplant alternatives'
-    ];
-    const randomFocus = topicFocuses[Math.floor(Math.random() * topicFocuses.length)];
-    const secondaryFocus = topicFocuses[Math.floor(Math.random() * topicFocuses.length)];
-
-    // Build exclusion list from previous newsletters
-    const excludeUrls = usedUrls.slice(-30).join(', ');
-    const excludeTopics = usedStories.slice(-15).join('; ');
-
-    const researchPrompt = `You are a research assistant for a health newsletter. Find 15-20 articles that would EXCITE our specific audience.
-
-TODAY'S DATE: ${today}
-ONLY INCLUDE: Articles published between ${twoWeeksAgo} and ${today}
-
-=== OUR AUDIENCE ===
-Demographics: ${audience.demographics?.ageRange || '45-75'}, ${audience.demographics?.education || 'educated professionals'}
-Interests: ${audienceInterests}
-Conditions they care about: ${audienceConditions}
-HIGH ENGAGEMENT topics: ${highEngagement}
-
-=== WHAT THEY WANT ===
-${audience.contentPreferences?.want?.slice(0, 5).map(w => `• ${w}`).join('\n')}
-
-=== WHAT THEY DON'T WANT ===
-${audience.contentPreferences?.dontWant?.slice(0, 4).map(w => `• ${w}`).join('\n')}
-
-=== CRITICAL RULES ===
-- NO ANIMAL STUDIES - Only human clinical trials, treatments, or research with direct human relevance
-- ALL URLs must link to SPECIFIC ARTICLES, never to a website's homepage
-- ONLY articles from the PAST 14 DAYS - reject anything older
-
-=== DO 3 SEPARATE WEB SEARCHES ===
-You MUST do 3 separate, focused web searches to ensure balanced coverage:
-
-**SEARCH 1 - STEM CELL & REGENERATIVE MEDICINE:**
-Search for: "stem cell therapy clinical trial human 2025" OR "regenerative medicine breakthrough"
-Target: 5-6 articles from Nature, Cell, STAT News, Endpoints, NIH, university medical centers
-Focus on: ${randomFocus}
-EXCLUDE: Animal studies, mouse models, pre-clinical research
-
-**SEARCH 2 - LONGEVITY & ANTI-AGING:**
-Search for: "longevity research human 2025" OR "anti-aging science breakthrough"
-Target: 4-5 articles from longevity.technology, lifespan.io, aging-us.com, Nature Aging
-Focus on: senolytics, NAD+, epigenetic clocks, healthspan research
-EXCLUDE: Animal studies, mouse models
-
-**SEARCH 3 - WELLNESS & LIFESTYLE:**
-Search for: "health wellness nutrition news 2025" OR "fitness science research"
-Target: 5-6 articles from Healthline, Men's Health, CNN Health, NPR, Mayo Clinic
-Focus on: ${secondaryFocus}, practical health tips, diet research
-
-=== PREFERRED SOURCES ===
-MAINSTREAM: CNN Health, NPR, Men's Health, Healthline, WebMD, Prevention
-MEDICAL: Mayo Clinic, Cleveland Clinic, Harvard Health, Johns Hopkins
-BIOTECH: STAT News, Endpoints News, BioPharma Dive, Fierce Biotech
-SCIENTIFIC: ${uniqueDomains.slice(0, 10).join(', ')}
-
-${excludeTopics ? `=== EXCLUDE THESE (already covered) ===
-${excludeTopics}
-Find DIFFERENT stories - different conditions, different institutions.` : ''}
-
-${excludeUrls ? `=== SKIP THESE URLs (already used) ===
-${excludeUrls}` : ''}
-
-After completing all 3 searches, combine results and return ONLY valid JSON array:
-[
-  {
-    "title": "Article headline",
-    "url": "https://site.com/full/path/to/specific-article",
-    "source": "Source Name",
-    "date": "Nov 25, 2025",
-    "category": "mainstream|stemcell|longevity|wellness|biotech",
-    "audienceScore": 8,
-    "summary": "2 sentence summary of why this matters to our audience",
-    "suggestedSection": "leadStory|researchRoundup|onOurRadar|deepDive|quickHits|statOfWeek"
-  }
-]
-
-CRITICAL URL RULES:
-- ONLY include URLs that appear in your search results - NEVER fabricate URLs
-- URL must be SPECIFIC ARTICLE (with /article/ or /news/ path), NOT homepage
-- INVALID: sciencedaily.com (homepage) - VALID: sciencedaily.com/releases/2025/11/article.htm
-- If no real article URL exists, don't include that result
-
-CRITICAL SOURCE DIVERSITY:
-- Do NOT use the same website more than 2 times across all 15-20 results
-- Spread results across MANY different publications
-- If you find 5 articles from sciencedaily, only include 2
-
-CRITICAL DATE RULES:
-- REJECT any article older than 14 days - CHECK THE DATE
-- audienceScore 1-10 (10 = highly relevant)
-- Mix of accessible + scientific content`;
+    setAiStatus('📡 Phase 1: Fetching articles from RSS feeds...');
 
     try {
-      // Use retry logic for rate limits
-      const makeResearchRequest = async () => {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': anthropicApiKey,
-            'anthropic-version': '2023-06-01',
-            'anthropic-dangerous-direct-browser-access': 'true',
-            'anthropic-beta': 'web-search-2025-03-05,prompt-caching-2024-07-31'
-          },
-          body: JSON.stringify({
-            model: testMode ? 'claude-3-5-haiku-20241022' : 'claude-sonnet-4-20250514',
-            max_tokens: 4000,
-            system: [{
-              type: 'text',
-              text: 'You are a research assistant finding articles for a health newsletter. Return ONLY valid JSON. No preamble.',
-              cache_control: { type: 'ephemeral' }
-            }],
-            tools: [{
-              type: 'web_search_20250305',
-              name: 'web_search',
-              max_uses: 5  // Reduced to avoid rate limits
-            }],
-            messages: [{ role: 'user', content: researchPrompt }]
-          })
-        });
+      // Step 1: Fetch articles from RSS feed (real URLs guaranteed!)
+      const articlePool = await fetchArticlePool(7); // Last 7 days
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error?.message || 'Research API request failed');
-        }
+      if (!articlePool || articlePool.length === 0) {
+        setAiStatus('⚠️ No articles found in RSS feed');
+        return null;
+      }
 
-        return response.json();
-      };
+      setAiStatus(`📰 Found ${articlePool.length} articles, AI is selecting best matches...`);
 
-      // Retry up to 3 times on rate limit with status feedback
-      const data = await retryWithBackoff(makeResearchRequest, 3, 20000, setAiStatus);
+      // Filter out previously used URLs
+      const freshArticles = articlePool.filter(a => !usedUrls.includes(a.url));
+
+      if (freshArticles.length < 5) {
+        setAiStatus('⚠️ Not enough fresh articles (most already used)');
+        // Fall back to all articles if too few fresh ones
+      }
+
+      const articlesToUse = freshArticles.length >= 5 ? freshArticles : articlePool;
+
+      // Step 2: AI matches articles to newsletter sections (no web search needed)
+      const matchingPrompt = buildMatchingPrompt(articlesToUse, audience);
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicApiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+          'anthropic-beta': 'prompt-caching-2024-07-31'
+        },
+        body: JSON.stringify({
+          model: testMode ? 'claude-3-5-haiku-20241022' : 'claude-sonnet-4-20250514',
+          max_tokens: 2000,
+          system: [{
+            type: 'text',
+            text: 'You are selecting articles for a health newsletter. Match articles to sections based on audience relevance. Return ONLY valid JSON.',
+            cache_control: { type: 'ephemeral' }
+          }],
+          // NO web search tool - just reasoning!
+          messages: [{ role: 'user', content: matchingPrompt }]
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'AI matching failed');
+      }
+
+      const data = await response.json();
       let content = '';
       for (const block of data.content) {
         if (block.type === 'text') content += block.text;
       }
 
-      // Parse JSON response
-      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      // Parse the AI's selection
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const articles = JSON.parse(jsonMatch[0]);
-        setAiStatus(`✓ Found ${articles.length} articles for your audience`);
-        return articles;
+        const selections = JSON.parse(jsonMatch[0]);
+
+        // Convert selections to article objects with real data
+        const selectedArticles = [];
+
+        // Helper to get article by index
+        const getArticle = (sel) => {
+          if (!sel || !sel.index) return null;
+          const article = articlesToUse[sel.index - 1]; // 1-indexed in prompt
+          if (article) {
+            return {
+              ...article,
+              suggestedSection: sel.reason,
+              audienceScore: 9 // AI selected it, so high score
+            };
+          }
+          return null;
+        };
+
+        // Lead Story
+        if (selections.leadStory) {
+          const a = getArticle(selections.leadStory);
+          if (a) selectedArticles.push({ ...a, suggestedSection: 'leadStory' });
+        }
+
+        // Research Roundup
+        if (selections.researchRoundup) {
+          const a = getArticle(selections.researchRoundup);
+          if (a) selectedArticles.push({ ...a, suggestedSection: 'researchRoundup' });
+        }
+
+        // On Our Radar (3 articles)
+        if (selections.onOurRadar && Array.isArray(selections.onOurRadar)) {
+          selections.onOurRadar.forEach(sel => {
+            const a = getArticle(sel);
+            if (a) selectedArticles.push({ ...a, suggestedSection: 'onOurRadar' });
+          });
+        }
+
+        // Deep Dive
+        if (selections.deepDive) {
+          const a = getArticle(selections.deepDive);
+          if (a) selectedArticles.push({ ...a, suggestedSection: 'deepDive' });
+        }
+
+        // Stat of Week
+        if (selections.statOfWeek) {
+          const a = getArticle(selections.statOfWeek);
+          if (a) selectedArticles.push({ ...a, suggestedSection: 'statOfWeek' });
+        }
+
+        // Quick Hits (5-7 articles)
+        if (selections.quickHits && Array.isArray(selections.quickHits)) {
+          selections.quickHits.forEach(sel => {
+            const a = getArticle(sel);
+            if (a) selectedArticles.push({ ...a, suggestedSection: 'quickHits' });
+          });
+        }
+
+        setAiStatus(`✓ Selected ${selectedArticles.length} articles for newsletter`);
+
+        // Store the full article pool for reference
+        window.__rssArticlePool = articlesToUse;
+
+        return selectedArticles;
       }
+
       return null;
     } catch (error) {
-      setAiStatus(`Research error: ${error.message}`);
+      console.error('RSS research error:', error);
+      setAiStatus(`RSS error: ${error.message}`);
       return null;
     }
   };
@@ -2364,18 +2302,22 @@ Translation: The treatments we're writing about today may be routine options in 
       // Step 2: Generate Lead Story (using pre-researched article if available)
       setAiStatus('🔍 Writing lead story... (2/15)');
 
-      // Build prompt with pre-researched article context
+      // Build prompt with pre-researched article context from RSS
       let leadPromptContext = '';
       if (articleDistribution?.leadStory) {
         const article = articleDistribution.leadStory;
         leadPromptContext = `
-USE THIS PRE-RESEARCHED ARTICLE (already verified for audience and recency):
+USE THIS ARTICLE FROM OUR CURATED RSS FEED:
 Title: "${article.title}"
-Source: ${article.source} (${article.date})
+Source: ${article.source} (${article.dateFormatted || article.date})
 URL: ${article.url}
 Summary: ${article.summary}
 
-Write the lead story based on this article. Include the URL as {{LINK:source|${article.url}}}.`;
+CRITICAL: This URL is VERIFIED and REAL from our RSS feed. Use it exactly as provided.
+Embed the link naturally in your text: "{{LINK:meaningful text|${article.url}}}"
+Example: "Researchers at {{LINK:${article.source}|${article.url}}} found that..."
+
+Write the lead story based on this article.`;
       }
 
       // Combine avoid topics and article context
@@ -2424,13 +2366,16 @@ Write the lead story based on this article. Include the URL as {{LINK:source|${a
       let researchPromptContext = '';
       if (articleDistribution?.researchRoundup) {
         const article = articleDistribution.researchRoundup;
-        researchPromptContext = `USE THIS PRE-RESEARCHED ARTICLE:
+        researchPromptContext = `USE THIS ARTICLE FROM OUR CURATED RSS FEED:
 Title: "${article.title}"
-Source: ${article.source} (${article.date})
+Source: ${article.source} (${article.dateFormatted || article.date})
 URL: ${article.url}
 Summary: ${article.summary}
 
-Write the research roundup based on this article. Include the URL as {{LINK:source|${article.url}}}.`;
+CRITICAL: This URL is VERIFIED and REAL. Use it exactly as provided.
+Embed naturally: "A {{LINK:new study from ${article.source}|${article.url}}} found..."
+
+Write the research roundup based on this article.`;
       }
 
       // Skip web search if we have pre-researched article
@@ -2458,14 +2403,28 @@ Write the research roundup based on this article. Include the URL as {{LINK:sour
       // Step 4: Generate Secondary Stories / On Our Radar (using pre-researched articles if available)
       setAiStatus('📰 Writing secondary stories... (4/15)');
 
-      // Build prompt with pre-researched articles context
+      // Build prompt with pre-researched articles context (from RSS feed)
       let secondaryPromptContext = '';
       if (articleDistribution?.onOurRadar && articleDistribution.onOurRadar.length > 0) {
         const articles = articleDistribution.onOurRadar;
-        secondaryPromptContext = `USE THESE PRE-RESEARCHED ARTICLES:
-${articles.map((a, i) => `${i+1}. "${a.title}" (${a.source}, ${a.date}) - ${a.summary} [${a.url}]`).join('\n')}
+        secondaryPromptContext = `
+USE THESE ARTICLES FROM OUR CURATED RSS FEED:
 
-Write 3 secondary stories based on these articles. Include URLs as {{LINK:source|url}}.`;
+${articles.map((a, i) => `ARTICLE ${i+1}:
+Title: "${a.title}"
+Source: ${a.source} (${a.dateFormatted || a.date})
+URL: ${a.url}
+Summary: ${a.summary}
+`).join('\n')}
+
+CRITICAL RULES:
+1. These URLs are VERIFIED and REAL from our RSS feed - use them exactly as provided
+2. Each story MUST be from a DIFFERENT source (diversity requirement already met by selection)
+3. Embed links naturally in your text using {{LINK:meaningful text|url}}
+   Example: "A new {{LINK:study from Mayo Clinic|${articles[0]?.url}}} found that..."
+4. Do NOT use "Source: Publisher" format - links should flow naturally in sentences
+
+Write 3 "On Our Radar" stories based on these articles.`;
       }
 
       // Skip web search if we have pre-researched articles
@@ -2501,17 +2460,27 @@ Write 3 secondary stories based on these articles. Include URLs as {{LINK:source
       // Step 5: Generate Deep Dive (using pre-researched article if available)
       setAiStatus('🔬 Writing deep dive... (5/15)');
 
-      // Build prompt with pre-researched article context
+      // Build prompt with pre-researched article context (from RSS feed)
       let deepDivePromptContext = '';
       if (articleDistribution?.deepDive) {
         const article = articleDistribution.deepDive;
-        deepDivePromptContext = `USE THIS PRE-RESEARCHED ARTICLE:
+        deepDivePromptContext = `
+USE THIS ARTICLE FROM OUR CURATED RSS FEED:
+
 Title: "${article.title}"
-Source: ${article.source} (${article.date})
+Source: ${article.source} (${article.dateFormatted || article.date})
 URL: ${article.url}
 Summary: ${article.summary}
 
-Write the deep dive based on this wellness/nutrition article. Include the URL as {{LINK:source|${article.url}}}.`;
+CRITICAL RULES:
+1. This URL is VERIFIED and REAL from our RSS feed - use it exactly as provided
+2. This is a deep-dive on wellness, nutrition, or lifestyle content
+3. Embed the link naturally in your text using {{LINK:meaningful text|${article.url}}}
+   Example: "According to {{LINK:new research from ${article.source}|${article.url}}}, the benefits include..."
+4. Do NOT use "Source: Publisher" format - the link should flow naturally within sentences
+5. Extract actionable tips and practical takeaways for readers
+
+Write the deep dive based on this article.`;
       }
 
       // Skip web search if we have pre-researched article
@@ -2538,17 +2507,27 @@ Write the deep dive based on this wellness/nutrition article. Include the URL as
       // Step 6: Generate Stat Section (using pre-researched article if available)
       setAiStatus('📊 Writing stat of the week... (6/15)');
 
-      // Build prompt with pre-researched article context
+      // Build prompt with pre-researched article context (from RSS feed)
       let statPromptContext = '';
       if (articleDistribution?.statOfWeek) {
         const article = articleDistribution.statOfWeek;
-        statPromptContext = `USE THIS PRE-RESEARCHED ARTICLE:
+        statPromptContext = `
+USE THIS ARTICLE FROM OUR CURATED RSS FEED:
+
 Title: "${article.title}"
-Source: ${article.source} (${article.date})
+Source: ${article.source} (${article.dateFormatted || article.date})
 URL: ${article.url}
 Summary: ${article.summary}
 
-Find a compelling statistic from this article. Include the URL as {{LINK:source|${article.url}}}.`;
+CRITICAL RULES:
+1. This URL is VERIFIED and REAL from our RSS feed - use it exactly as provided
+2. Find a compelling statistic from this article (percentage, number, comparison)
+3. The statistic should be attention-grabbing and relevant to our 45-75 year old audience
+4. Embed the link naturally: {{LINK:meaningful text|${article.url}}}
+   Example: "A {{LINK:recent study|${article.url}}} found that 73% of patients..."
+5. Do NOT use "Source: Publisher" format - the link should flow naturally
+
+Extract the stat of the week from this article.`;
       }
 
       // Skip web search if we have pre-researched article
@@ -2583,14 +2562,28 @@ Find a compelling statistic from this article. Include the URL as {{LINK:source|
       // Step 7: Generate The Pulse / Quick Hits (using pre-researched articles if available)
       setAiStatus('⚡ Writing quick hits... (7/15)');
 
-      // Build prompt with pre-researched articles context
+      // Build prompt with pre-researched articles context (from RSS feed)
       let pulsePromptContext = '';
       if (articleDistribution?.quickHits && articleDistribution.quickHits.length > 0) {
         const articles = articleDistribution.quickHits;
-        pulsePromptContext = `USE THESE PRE-RESEARCHED ARTICLES:
-${articles.map((a, i) => `${i+1}. "${a.title}" (${a.source}, ${a.date}) [${a.url}]`).join('\n')}
+        pulsePromptContext = `
+USE THESE ARTICLES FROM OUR CURATED RSS FEED:
 
-Write 7 quick hit news items based on these articles. Include URLs as {{LINK:text|url}}.`;
+${articles.map((a, i) => `ARTICLE ${i+1}:
+Title: "${a.title}"
+Source: ${a.source} (${a.dateFormatted || a.date})
+URL: ${a.url}
+`).join('\n')}
+
+CRITICAL RULES:
+1. These URLs are VERIFIED and REAL from our RSS feed - use them exactly as provided
+2. Each quick hit should be ONE concise sentence (max 25 words)
+3. Embed the link naturally: {{LINK:meaningful text|url}}
+   Example: "{{LINK:New research|url}} shows omega-3s may reduce inflammation by 40%."
+4. Do NOT use "Source: Publisher" format - the link should be part of the sentence
+5. Variety of topics across the articles provided
+
+Write 5-7 quick hit news items based on these articles.`;
       }
 
       // Skip web search if we have pre-researched articles

@@ -312,17 +312,17 @@ const RenewalWeeklyCompiler = () => {
       statOfWeek: null
     };
 
-    // Lead Story: Highest scoring mainstream/accessible article
+    // Lead Story: Highest scoring stem cell, regenerative medicine, or clinical trial article
     const leadCandidates = sorted.filter(a =>
-      a.category === 'mainstream' || a.category === 'stemcell' || a.audienceScore >= 8
+      ['stemCells', 'regenerativeMedicine', 'clinicalTrials', 'chronicDisease'].includes(a.category) || a.audienceScore >= 8
     );
     distribution.leadStory = leadCandidates[0] || sorted[0];
 
-    // Research Roundup: Best scientific/stemcell article
+    // Research Roundup: Best scientific/stem cell article
     const researchCandidates = sorted.filter(a =>
-      a.category === 'stemcell' || a.category === 'longevity'
+      ['stemCells', 'regenerativeMedicine', 'longevity', 'clinicalTrials'].includes(a.category)
     ).filter(a => a !== distribution.leadStory);
-    distribution.researchRoundup = researchCandidates[0];
+    distribution.researchRoundup = researchCandidates[0] || sorted.filter(a => a !== distribution.leadStory)[0];
 
     // On Our Radar: 3 diverse articles
     const radarCandidates = sorted.filter(a =>
@@ -330,11 +330,11 @@ const RenewalWeeklyCompiler = () => {
     );
     distribution.onOurRadar = radarCandidates.slice(0, 3);
 
-    // Deep Dive: Best wellness/nutrition article
+    // Deep Dive: Best wellness/nutrition/supplements article
     const deepDiveCandidates = sorted.filter(a =>
-      a.category === 'wellness' || a.category === 'nutrition'
-    ).filter(a => !distribution.onOurRadar.includes(a));
-    distribution.deepDive = deepDiveCandidates[0];
+      ['nutrition', 'supplements', 'longevity'].includes(a.category)
+    ).filter(a => !distribution.onOurRadar.includes(a) && a !== distribution.leadStory && a !== distribution.researchRoundup);
+    distribution.deepDive = deepDiveCandidates[0] || radarCandidates[3];
 
     // Quick Hits: 7 remaining diverse articles
     const usedArticles = [
@@ -346,11 +346,20 @@ const RenewalWeeklyCompiler = () => {
     const quickHitCandidates = sorted.filter(a => !usedArticles.includes(a));
     distribution.quickHits = quickHitCandidates.slice(0, 7);
 
-    // Stat of Week: Look for article with compelling number
+    // Stat of Week: Look for article with compelling number or clinical trials
     const statCandidates = sorted.filter(a =>
-      a.category === 'biotech' || /\$|\%|billion|million|[0-9]{3,}/.test(a.summary || '')
+      a.category === 'clinicalTrials' || /\$|\%|billion|million|[0-9]{3,}/.test(a.summary || '')
     ).filter(a => !usedArticles.includes(a));
-    distribution.statOfWeek = statCandidates[0] || quickHitCandidates[7];
+    distribution.statOfWeek = statCandidates[0] || quickHitCandidates[0] || sorted[sorted.length - 1];
+
+    console.log('Article distribution:', {
+      leadStory: distribution.leadStory?.title,
+      researchRoundup: distribution.researchRoundup?.title,
+      onOurRadar: distribution.onOurRadar.map(a => a?.title),
+      deepDive: distribution.deepDive?.title,
+      statOfWeek: distribution.statOfWeek?.title,
+      quickHits: distribution.quickHits.length
+    });
 
     setAiStatus('✓ Articles distributed to sections');
     return distribution;
@@ -560,7 +569,7 @@ DO NOT mention stem cells, regenerative medicine, or newsletter content.
 DO NOT end with a sign-off - that comes later in the template.
 
 EXAMPLE (follow this exact length and tone):
-It's almost Thanksgiving, and perhaps unsurprisingly, we're feeling thankful today. Thankful for you, dear reader, as well as for having the opportunity each week to share the latest healthcare analyses with you. Thanks for being here, and we hope you continue to stay tuned for more.`,
+As we head into the weekend, we're reminded why we started this newsletter - to keep you informed about the science that could change your life. Thank you for being part of our community. Here's to another week of discovery and hope.`,
 
       leadStory: `Search for a BROADLY ACCESSIBLE health/wellness story related to stem cells or regenerative medicine.
 
@@ -1204,11 +1213,47 @@ NO preamble. Start directly with [`
     if (!content) return [];
     const linkRegex = /\{\{LINK:([^|]+)\|([^}]+)\}\}/g;
     const sources = [];
+    const seenUrls = new Set(); // Deduplicate by URL
     let match;
     while ((match = linkRegex.exec(content)) !== null) {
+      const url = match[2];
+      if (seenUrls.has(url)) continue;
+      seenUrls.add(url);
+
+      // Extract source name from URL hostname instead of link text
+      let sourceName = match[1]; // Fallback to link text
+      try {
+        const hostname = new URL(url).hostname;
+        // Map hostnames to friendly source names
+        const sourceMap = {
+          'www.sciencedaily.com': 'ScienceDaily',
+          'sciencedaily.com': 'ScienceDaily',
+          'www.nature.com': 'Nature',
+          'nature.com': 'Nature',
+          'www.cell.com': 'Cell',
+          'www.statnews.com': 'STAT News',
+          'statnews.com': 'STAT News',
+          'www.nih.gov': 'NIH',
+          'nih.gov': 'NIH',
+          'pubmed.ncbi.nlm.nih.gov': 'PubMed',
+          'www.mayoclinic.org': 'Mayo Clinic',
+          'newsnetwork.mayoclinic.org': 'Mayo Clinic',
+          'www.healthline.com': 'Healthline',
+          'www.webmd.com': 'WebMD',
+          'www.cnn.com': 'CNN Health',
+          'www.nytimes.com': 'New York Times',
+          'www.fightaging.org': 'Fight Aging!',
+          'longevity.technology': 'Longevity Technology',
+          'www.lifespan.io': 'Lifespan.io'
+        };
+        sourceName = sourceMap[hostname] || hostname.replace('www.', '').split('.')[0].charAt(0).toUpperCase() + hostname.replace('www.', '').split('.')[0].slice(1);
+      } catch (e) {
+        // Keep link text as fallback
+      }
+
       sources.push({
-        title: match[1],
-        url: match[2],
+        title: sourceName,
+        url: url,
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       });
     }
@@ -1372,7 +1417,7 @@ D) Collagen synthesis and immune function`,
 
     // 1. OPENING HOOK (short, 2-3 sentences)
     openingHook: {
-      content: `It's almost Thanksgiving, and perhaps unsurprisingly, we're feeling thankful today. Thankful for you, dear reader, as well as for having the opportunity each week to share the latest healthcare analyses with you. Thanks for being here, and we hope you continue to stay tuned for more.`,
+      content: `Welcome to this week's edition of Renewal Weekly. We're excited to share the latest breakthroughs in regenerative medicine and longevity research with you. Let's dive into what's making headlines in health this week.`,
       sources: []
     },
 
